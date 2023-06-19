@@ -1,0 +1,10 @@
+select  count(*) from badges as b, 		posts as p where b.UserId = p.OwnerUserId  AND p.PostTypeId=2  AND p.Score>=0  AND p.Score<=20  AND p.CommentCount<=12  AND p.CreationDate>='2010-09-05 08:36:31'::timestamp;
+select  count(*) from badges as b, 		posts as p where b.UserId = p.OwnerUserId  AND b.Date<='2014-09-02 22:30:29'::timestamp  AND p.PostTypeId=1  AND p.Score>=-2  AND p.Score<=34  AND p.CommentCount>=0  AND p.CommentCount<=9;
+select  count(*) from badges as b, 		posts as p where b.UserId = p.OwnerUserId  AND p.Score>=-2  AND p.Score<=12  AND p.AnswerCount>=0  AND p.AnswerCount<=4;
+select  count(*) from badges as b, 		posts as p where b.UserId = p.OwnerUserId  AND p.ViewCount>=0  AND p.ViewCount<=3164  AND p.CommentCount>=0  AND p.CommentCount<=10  AND p.CreationDate>='2010-07-30 17:10:24'::timestamp;
+select  count(*) from badges as b, 		posts as p where b.UserId = p.OwnerUserId  AND b.Date<='2014-09-12 19:44:59'::timestamp  AND p.Score>=-1  AND p.Score<=37  AND p.AnswerCount<=9;
+select  count(*) from badges as b, 		posts as p where b.UserId = p.OwnerUserId  AND p.PostTypeId=2  AND p.CreationDate<='2014-08-27 17:13:50'::timestamp;
+select  count(*) from badges as b, 		posts as p where b.UserId = p.OwnerUserId  AND p.AnswerCount>=0  AND p.AnswerCount<=5  AND p.CommentCount<=12  AND p.CreationDate>='2010-07-27 04:27:33'::timestamp  AND p.CreationDate<='2014-09-04 01:57:15'::timestamp;
+select  count(*) from badges as b, 		posts as p where b.UserId = p.OwnerUserId  AND b.Date>='2010-07-27 11:43:44'::timestamp  AND p.AnswerCount>=0  AND p.CreationDate>='2010-08-16 11:36:42'::timestamp  AND p.CreationDate<='2014-09-13 23:46:05'::timestamp;
+select  count(*) from badges as b, 		posts as p where b.UserId = p.OwnerUserId  AND p.PostTypeId=2;
+select  count(*) from badges as b, 		users as u where b.UserId= u.Id  AND b.Date<='2014-09-08 03:19:45'::timestamp  AND u.Reputation>=1  AND u.DownVotes>=0  AND u.CreationDate<='2014-08-16 13:30:24'::timestamp;
