@@ -1,3 +1,4 @@
+import json
 from copy import deepcopy
 
 from pandas import DataFrame
@@ -8,6 +9,7 @@ from Dao.PilotUserDataManager import PilotUserDataManager
 from Factory.DBControllerFectory import DBControllerFactory
 from PilotConfig import PilotConfig
 from PilotSysConfig import PilotSysConfig
+from common.Util import is_number
 
 
 class PilotTrainDataManager:
@@ -32,9 +34,27 @@ class PilotTrainDataManager:
 
     def save_data(self, table_name, column_2_value):
         if len(column_2_value) > 0:
-            print("enter")
+            column_2_value = self.convert_data_type(column_2_value)
             self.create_table_if_absence(table_name, column_2_value)
             self.insert(table_name, column_2_value)
+
+    def save_data_batch(self, table_name, column_2_value_list):
+        for column_2_value in column_2_value_list:
+            self.save_data(table_name, column_2_value)
+
+    def convert_data_type(self, column_2_value: dict):
+        res = {}
+        for key, value in column_2_value.items():
+            if is_number(value) or isinstance(value, str):
+                pass
+            elif isinstance(value, dict):
+                value = json.dumps(value)
+            else:
+                raise RuntimeError(
+                    "the data written into table should be number, dict and str, the {} is not allowed".format(
+                        type(value)))
+            res[key] = value
+        return res
 
     def insert(self, table_name, column_2_value: dict):
         self.db_controller.insert(table_name, column_2_value)

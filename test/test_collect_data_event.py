@@ -16,7 +16,7 @@ class UserDataCollector(PeriodCollectDataEventInterface):
     def get_table_name(self):
         return "collect_data_event_test"
 
-    def collect(self) -> dict:
+    def custom_collect(self) -> dict:
         return {"name": "name1", "age": 18}
 
 

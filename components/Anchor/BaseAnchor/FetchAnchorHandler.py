@@ -84,7 +84,7 @@ class ExecutionTimeFetchAnchorHandler(FetchAnchorHandler):
 
     def add_data_to_table(self, column_2_value, data: PilotTransData):
         if data.execution_time is not None:
-            column_2_value["execution_time"] = json.dumps(data.execution_time)
+            column_2_value["execution_time"] = data.execution_time
 
 
 class OptimizedSqlFetchAnchorHandler(FetchAnchorHandler):

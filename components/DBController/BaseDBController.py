@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
+
 from pandas import DataFrame
 from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table
 from sqlalchemy_utils import database_exists, create_database
-from PilotSysConfig import PilotSysConfig
 
 
 class BaseDBController(ABC):
@@ -26,6 +26,10 @@ class BaseDBController(ABC):
             create_database(self.conn_str, encoding="SQL_ASCII")
         return create_engine(self.conn_str, echo=self.echo, pool_size=1, pool_recycle=3600,
                              pool_pre_ping=True)
+
+    @abstractmethod
+    def modify_sql_for_ignore_records(self, sql, is_execute):
+        pass
 
     @abstractmethod
     def explain_physical_plan(self, sql):

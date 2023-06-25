@@ -1,5 +1,7 @@
 import json
 
+from common.Util import is_number
+
 
 class PilotTransData:
 
@@ -13,12 +15,25 @@ class PilotTransData:
         self.subquery_2_card: dict = {}
 
     @classmethod
-    def parse_2_instance(cls, target_json: str):
+    def parse_2_instance(cls, target_json: str, sql):
         target_json = json.loads(target_json)
         data = PilotTransData()
+        data.sql = sql
         for key, value in target_json.items():
             if key in data.__dict__:
+                if is_number(value):
+                    value = float(value)
+                # elif isinstance(value, dict):
+                #     value = json.dumps(value)
+                # elif isinstance(value, str):
+                #     pass
+                # else:
+                #     raise RuntimeError(
+                #         "the data from database should be number, dict and str, the {} is not allowed".format(
+                #             type(value)))
+
                 setattr(data, key, value)
+
         cls._fill_subquery_2_card(data, target_json)
         return data
 

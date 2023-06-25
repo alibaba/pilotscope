@@ -69,11 +69,12 @@ class LeroJSONHandler(socketserver.BaseRequestHandler):
         qid = json_obj['query_id']
         print("init query", qid)
         card_picker = CardPicker(json_obj['rows_array'], json_obj['table_array'],
-                                self.server.swing_factor_lower_bound, self.server.swing_factor_upper_bound, self.server.swing_factor_step)
+                                 self.server.swing_factor_lower_bound, self.server.swing_factor_upper_bound,
+                                 self.server.swing_factor_step)
         print(json_obj['table_array'], json_obj['rows_array'])
         plan_card_replacer = PlanCardReplacer(json_obj['table_array'], json_obj['rows_array'])
         opt_state = OptState(card_picker, plan_card_replacer, self.server.dump_card)
-        
+
         self.server.opt_state_dict[qid] = opt_state
         reply_msg['msg_type'] = "succ"
 
@@ -152,8 +153,8 @@ def start_server(listen_on, port, model: LeroModel):
         server.best_plan = None
         server.best_score = None
 
-        server.swing_factor_lower_bound = 0.1**2
-        server.swing_factor_upper_bound = 10**2
+        server.swing_factor_lower_bound = 0.1 ** 2
+        server.swing_factor_upper_bound = 10 ** 2
         server.swing_factor_step = 10
         print("swing_factor_lower_bound", server.swing_factor_lower_bound)
         print("swing_factor_upper_bound", server.swing_factor_upper_bound)

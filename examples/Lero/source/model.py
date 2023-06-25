@@ -270,7 +270,7 @@ class LeroModelPairWise(LeroModel):
         losses = []
         sigmoid = nn.Sigmoid()
         start_time = time()
-        for epoch in range(100):
+        for epoch in range(10):
             loss_accum = 0
             for x1, x2, label in dataset:
 

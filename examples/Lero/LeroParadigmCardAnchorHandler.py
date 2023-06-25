@@ -4,6 +4,8 @@ from PilotConfig import PilotConfig
 from DataFetcher.PilotStateManager import PilotStateManager
 from PilotModel import PilotModel
 from PilotTransData import PilotTransData
+from examples.utils import scale_card
+from model import LeroModelPairWise
 
 
 class LeroParadigmCardAnchorHandler(CardAnchorHandler):
@@ -13,30 +15,34 @@ class LeroParadigmCardAnchorHandler(CardAnchorHandler):
         self.model = model
         self.config = config
         self.db_controller = DBControllerFactory.get_db_controller(config)
-        self.data_fetcher = PilotStateManager(config)
+        self.pilot_state_manager = PilotStateManager(config)
 
     def predict(self, plans):
-        return plans[0]
+        leroModel: LeroModelPairWise = self.model.user_model
+        feature_generator = leroModel._feature_generator
+        best_idx = -1
+        best_time = float("inf")
+        for i, plan in enumerate(plans):
+            x, _ = feature_generator.transform([plan])
+            time = float(leroModel.predict(x)[0][0])
+            if time < best_time:
+                best_idx = i
+                best_time = time
+        return best_idx
 
     def user_custom_task(self, sql):
-        # self.data_fetcher.fetch_subquery_card()
-        # result: PilotTransData = self.data_fetcher.execute(sql)
-        # subquery_2_card = result.subquery_2_card
-        #
-        # factors = [-10, -1, 1, 10]
-        # plans = []
-        # for factor in factors:
-        #     new_subquery_2_card = self.scale_card(subquery_2_card, factor)
-        #     self.data_fetcher.set_card(new_subquery_2_card)
-        #     self.data_fetcher.fetch_physical_plan()
-        #     result: PilotTransData = self.data_fetcher.execute(sql)
-        #     plans.append(result.physical_plan)
+        factors = [0.1, 1, 10]
+        self.pilot_state_manager.fetch_subquery_card()
+        data: PilotTransData = self.pilot_state_manager.execute(sql)
+        subquery_2_card = data.subquery_2_card
 
-        return {"subquery1": 1, "subquery2": 2}
+        plans = []
+        for f in factors:
+            scale_subquery_2_card = scale_card(subquery_2_card, f)
+            self.pilot_state_manager.set_card(scale_subquery_2_card)
+            self.pilot_state_manager.fetch_physical_plan()
+            data: PilotTransData = self.pilot_state_manager.execute(sql)
+            plans.append(data.physical_plan)
 
-
-def scale_card(subquery_2_card: dict, factor):
-    res = {}
-    for key, value in subquery_2_card.items():
-        res[key] = value * factor
-    return res
+        selected_factor = factors[self.predict(plans)]
+        return scale_card(subquery_2_card, selected_factor)

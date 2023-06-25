@@ -12,11 +12,14 @@ SCAN_TYPES = ["Seq Scan", "Index Scan", "Index Only Scan", 'Bitmap Heap Scan']
 JOIN_TYPES = ["Nested Loop", "Hash Join", "Merge Join"]
 OTHER_TYPES = ['Bitmap Index Scan']
 OP_TYPES = [UNKNOWN_OP_TYPE, "Hash", "Materialize", "Sort", "Aggregate", "Incremental Sort", "Limit"] \
-    + SCAN_TYPES + JOIN_TYPES + OTHER_TYPES
+           + SCAN_TYPES + JOIN_TYPES + OTHER_TYPES
 
 
 def json_str_to_json_obj(json_data):
-    json_obj = json.loads(json_data)
+    if not isinstance(json_data, dict):
+        json_obj = json.loads(json_data)
+    else:
+        json_obj = json_data
     if type(json_obj) == list:
         assert len(json_obj) == 1
         json_obj = json_obj[0]
@@ -133,10 +136,10 @@ class SampleEntity():
 
     def __str__(self):
         return "{%s, %s, %s, %s, %s, [%s], [%s], %s, %s, [%s], [%s]}" % (self.node_type,
-                                                                        self.startup_cost, self.total_cost, self.rows,
-                                                                        self.width, self.left, self.right,
-                                                                        self.startup_time, self.total_time,
-                                                                        self.input_tables, self.encoded_input_tables)
+                                                                         self.startup_cost, self.total_cost, self.rows,
+                                                                         self.width, self.left, self.right,
+                                                                         self.startup_time, self.total_time,
+                                                                         self.input_tables, self.encoded_input_tables)
 
     def get_feature(self):
         # return np.hstack((self.node_type, np.array([self.width, self.rows])))

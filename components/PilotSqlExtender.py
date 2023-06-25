@@ -4,10 +4,11 @@ from Anchor.AnchorEnum import AnchorEnum
 from Anchor.BaseAnchor.FetchAnchorHandler import FetchAnchorHandler
 from Anchor.BaseAnchor.replaceAnchorHandler import ReplaceAnchorHandler
 from DBController.BaseDBController import BaseDBController
+from DataFetcher.PilotCommentCreator import PilotCommentCreator
 from PilotConfig import PilotConfig
 from PilotEnum import FetchMethod
 from PilotSysConfig import PilotSysConfig
-from utlis import connect_pilot_comment_sql
+from utlis import connect_comment_and_sql, create_comment, add_terminate_flag_to_comment
 
 
 class PilotSqlExtender:
@@ -17,29 +18,17 @@ class PilotSqlExtender:
         self.config = config
 
         self.anchor_to_handlers: dict = {}
-        self.anchor_json_key = PilotSysConfig.ANCHOR_TRANS_JSON_KEY
-
-        self.params = {self.anchor_json_key: {}}
-
-    def register_params(self, key_2_value: dict):
-        self.params.update(key_2_value)
 
     def register_anchors(self, anchor_to_handlers: dict):
         self.anchor_to_handlers.update(anchor_to_handlers)
 
-    def get_extend_sqls(self, sql):
+    def get_extend_sqls(self, sql, comment_creator: PilotCommentCreator):
         sqls = []
         self._add_sqls(sqls)
         anchor_params = self._get_anchor_params_as_comment()
-        self.params[self.anchor_json_key] = anchor_params
-
-        json_str = json.dumps(self.params)
-
-        if AnchorEnum.RECORD_FETCH_ANCHOR not in self.anchor_to_handlers:
-            sql = "explain {}".format(sql)
-
-        comment = "/*{}*/".format(json_str)
-        sqls.append(connect_pilot_comment_sql(comment, sql))
+        comment_creator.add_anchor_params(anchor_params)
+        comment = comment_creator.create_comment()
+        sqls.append(connect_comment_and_sql(comment, sql))
         return comment, sqls
 
     def _add_sqls(self, sqls):

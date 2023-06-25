@@ -1,6 +1,11 @@
 import os
 
 from PilotEnum import DataFetchMethodEnum, DatabaseEnum, TrainSwitchMode
+import logging
+
+# 配置日志记录器
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+pilot_logger = logging.getLogger("PilotScope")
 
 
 class PilotConfig:
@@ -14,7 +19,6 @@ class PilotConfig:
         self.SEP = "###"
         self.data_fetch_method = DataFetchMethodEnum.HTTP
         self.once_request_timeout = 200
-        self.http_port = 54523
 
         # example
         self.stats_train_sql_file_path = "../examples/stats_train_10_sql.txt"

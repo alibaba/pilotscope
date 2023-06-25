@@ -58,19 +58,25 @@ class PostgreSQLController(BaseDBController):
         result = self.execute(stmt, fetch=True)
         return result[0][0]
 
+    def modify_sql_for_ignore_records(self, sql, is_execute):
+        return self.get_explain_sql(sql, is_execute)
+
     def explain_physical_plan(self, sql, comment=""):
         return self._explain(sql, comment, False)
 
     def explain_execution_plan(self, sql, comment=""):
         return self._explain(sql, comment, True)
 
+    def get_explain_sql(self, sql, execute: bool, comment=""):
+        return "{} explain (ANALYZE {}, VERBOSE, SETTINGS, SUMMARY, FORMAT JSON) {}".format(comment,
+                                                                                            "" if execute else "False",
+                                                                                            sql)
+
     def _explain(self, sql, comment, execute: bool):
         conn = self.engine.raw_connection()
         try:
             cursor = conn.cursor()
-            cursor.execute("{} explain (ANALYZE {}, VERBOSE, SETTINGS, SUMMARY, FORMAT JSON) {}".format(comment,
-                                                                                                        "" if execute else "False",
-                                                                                                        sql))
+            cursor.execute(self.get_explain_sql(sql, execute, comment))
             result = cursor.fetchall()
             return result[0][0][0]
         finally:

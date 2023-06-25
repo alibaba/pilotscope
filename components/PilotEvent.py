@@ -3,9 +3,12 @@ import threading
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from Dao.PilotTrainDataManager import PilotTrainDataManager
+from Interface.ModelTrainingOnCountEventInterface import ModelTrainingOnCountEventInterface
 from Interface.PeriodCollectDataEventInterface import *
 from Interface.PretrainingEventInterface import PretrainingEventInterface
 from PilotConfig import PilotConfig
+from PilotModel import PilotModel
+from common.Thread import ValueThread
 
 
 class Event(ABC):
@@ -13,36 +16,30 @@ class Event(ABC):
         self.config = config
 
 
-class PeriodTrainingEvent(Event):
-    def __init__(self, config, period, func):
+class PeriodTrainingEvent(Event, ABC):
+    def __init__(self, config, per_query_count, model: PilotModel):
         super().__init__(config)
-        self.func = func
-        self.period = period
-        self.cur_count = 0
-
-    # def __init__(self, config, period, func) -> None:
-    #     super.__init__(config)
-    #     self.func = func
-    #     self.period = period
-    #     self.cur_count = 0
+        self.per_query_count = per_query_count
+        self.query_count = 0
+        self.model = model
 
     def update(self, pilot_data_manager: PilotTrainDataManager):
-        self.cur_count += 1
-        if self.cur_count >= self.period:
-            self.cur_count = 0
-            self.trigger(pilot_data_manager)
+        self.query_count += 1
+        if self.query_count >= self.per_query_count:
+            self.query_count = 0
+            self.model.user_model = self.custom_update(self.model.user_model, pilot_data_manager)
 
-    def trigger(self, pilot_data_manager: PilotTrainDataManager):
-        self.func(pilot_data_manager)
+    @abstractmethod
+    def custom_update(self, user_model, pilot_data_manager: PilotTrainDataManager):
+        pass
 
 
 class PeriodCollectionDataEvent(Event):
 
-    def __init__(self, config, seconds, data_collector: PeriodCollectDataEventInterface):
+    def __init__(self, config, seconds, ):
         super().__init__(config)
-        self._table_name = data_collector.get_table_name()
+        self._table_name = self.get_table_name()
         self._seconds = seconds
-        self._data_collector = data_collector
         self._training_data_manager = PilotTrainDataManager(config)
         self._scheduler = scheduler = BackgroundScheduler()
 
@@ -52,36 +49,83 @@ class PeriodCollectionDataEvent(Event):
         self._scheduler.start()
 
     def _trigger(self):
-        column_2_value = self._data_collector.collect()
+        column_2_value = self.custom_collect()
         self._training_data_manager.save_data(self._table_name, column_2_value)
 
     def stop(self):
         self._scheduler.shutdown()
 
+    @abstractmethod
+    def get_table_name(self):
+        pass
+
+    @abstractmethod
+    def custom_collect(self) -> dict:
+        pass
+
 
 class ContinuousCollectionDataEvent(Event):
-    def __init__(self, config, data_collector: ContinuousCollectDataEventInterface):
+    def __init__(self, config):
         super().__init__(config)
-        self._table_name = data_collector.get_table_name()
-        self._data_collector = data_collector
+        self._table_name = self.get_table_name()
         self._training_data_manager = PilotTrainDataManager(config)
 
     def start(self):
-        while self._data_collector.has_next():
-            column_2_value = self._data_collector.next()
+        while self.has_next():
+            column_2_value = self.next()
             self._training_data_manager.save_data(self._table_name, column_2_value)
+
+    @abstractmethod
+    def get_table_name(self):
+        pass
+
+    @abstractmethod
+    def has_next(self):
+        pass
+
+    @abstractmethod
+    def next(self) -> dict:
+        pass
 
 
 class PretrainingModelEvent(Event):
-    def __init__(self, config: PilotConfig, pretraining_controller: PretrainingEventInterface):
+    def __init__(self, config: PilotConfig, bind_model: PilotModel, enable_collection=True, enable_training=True):
         super().__init__(config)
-        self.pretraining_controller = pretraining_controller
+        self.config = config
+        self._model: PilotModel = bind_model
+        self._train_data_manager = PilotTrainDataManager(config)
+        self.enable_collection = enable_collection
+        self.enable_training = enable_training
 
     def async_start(self):
-        t = threading.Thread(target=self._run)
+        t = ValueThread(target=self._run, name="pretraining_async_start")
+        t.daemon = True
         t.start()
         return t
 
     def _run(self):
-        self.pretraining_controller.collect_and_write()
-        self.pretraining_controller.train()
+        self.collect_and_write()
+        self.train()
+
+    def collect_and_write(self):
+        if self.enable_collection:
+            column_2_value_list = self._custom_collect_data()
+            table = self._get_table_name()
+            self._train_data_manager.save_data_batch(table, column_2_value_list)
+
+    def train(self):
+        if self.enable_training:
+            self._model.user_model = self._custom_pretrain_model(self._train_data_manager, self._model.user_model)
+            self._model.save()
+
+    @abstractmethod
+    def _custom_collect_data(self):
+        pass
+
+    @abstractmethod
+    def _get_table_name(self):
+        pass
+
+    @abstractmethod
+    def _custom_pretrain_model(self, train_data_manager: PilotTrainDataManager, existed_user_model):
+        pass

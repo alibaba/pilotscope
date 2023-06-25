@@ -1,6 +1,7 @@
 from Anchor.BaseAnchor.FetchAnchorHandler import *
 from Anchor.BaseAnchor.replaceAnchorHandler import *
 from DataFetcher.BaseDataFetcher import DataFetcher
+from DataFetcher.PilotCommentCreator import PilotCommentCreator
 from Factory.AnchorHandlerFactory import AnchorHandlerFactory
 from Factory.DataFetchFactory import DataFetchFactory
 from Factory.DBControllerFectory import DBControllerFactory
@@ -8,6 +9,7 @@ from PilotConfig import PilotConfig
 from PilotEnum import FetchMethod
 from PilotSqlExtender import PilotSqlExtender
 from PilotTransData import PilotTransData
+from utlis import create_comment, add_terminate_flag_to_comment
 
 
 class PilotStateManager:
@@ -19,19 +21,21 @@ class PilotStateManager:
         self.port = None
         self.data_fetcher: DataFetcher = DataFetchFactory.get_data_fetcher(config)
 
-    def execute(self, sql) -> PilotTransData:
+    def execute(self, sql, enable_clear=True) -> PilotTransData:
         origin_sql = sql
-
         self.data_fetcher.prepare_to_receive_data()
+
+        comment_creator = PilotCommentCreator()
+        # add params for different data fetcher
+        enable_terminate = False if AnchorEnum.RECORD_FETCH_ANCHOR in self.anchor_to_handlers else True
+        comment_creator.add_params(self.data_fetcher.get_additional_info())
+        comment_creator.enable_terminate(enable_terminate)
 
         sql_extender = PilotSqlExtender(self.db_controller, self.config)
         sql_extender.register_anchors(self._remove_outer_fetch_anchor(self.anchor_to_handlers))
 
-        # add params for different data fetcher
-        sql_extender.register_params(self.data_fetcher.get_additional_info())
-
         # sqls contain multiple "set" sql and one query sql (at last).
-        comment, sqls = sql_extender.get_extend_sqls(sql)
+        _, sqls = sql_extender.get_extend_sqls(sql, comment_creator)
 
         # execution sqls
         records = self._execute_sqls(sqls)
@@ -41,13 +45,18 @@ class PilotStateManager:
 
         # arrange all data
         if receive_data is not None:
-            data: PilotTransData = PilotTransData.parse_2_instance(receive_data)
+            data: PilotTransData = PilotTransData.parse_2_instance(receive_data,origin_sql)
             # fetch data from outer
-            self._fetch_data_from_outer(comment, origin_sql, data)
+            self._fetch_data_from_outer(origin_sql, data)
         else:
             data = PilotTransData()
         data.records = records
+        if enable_clear:
+            self.clear()
         return data
+
+    def clear(self):
+        self.anchor_to_handlers.clear()
 
     def _execute_sqls(self, sqls):
         records = None
@@ -56,7 +65,8 @@ class PilotStateManager:
                 records = self.db_controller.execute(sql, fetch=True)
             return records
         except Exception as e:
-            print(e)
+            if "PilotScopeFetchEnd" not in str(e):
+                raise e
         return records
 
     def _remove_outer_fetch_anchor(self, anchor_to_handlers):
@@ -67,15 +77,28 @@ class PilotStateManager:
             result[anchor] = handle
         return result
 
-    def _fetch_data_from_outer(self, comment, sql, data: PilotTransData):
+    def _fetch_data_from_outer(self, sql, data: PilotTransData):
+        replace_anchor_params = self._get_replace_anchor_params(self.anchor_to_handlers.values())
         anchor_data = AnchorTransData()
         handles = self.anchor_to_handlers.values()
         for handle in handles:
             if isinstance(handle, FetchAnchorHandler) and handle.fetch_method == FetchMethod.OUTER:
-                handle.fetch_from_outer(sql, None, anchor_data, data)
+                comment_creator = PilotCommentCreator(anchor_params=replace_anchor_params, enable_terminate_flag=False)
+                comment = comment_creator.create_comment()
+                handle.fetch_from_outer(sql, comment, anchor_data, data)
 
-    def add_anchors(self, anchor_to_handlers: dict):
-        self.anchor_to_handlers.update(anchor_to_handlers)
+    def _get_replace_anchor_params(self, handles):
+        anchor_params = {}
+        for handle in handles:
+            params = {}
+            if isinstance(handle, ReplaceAnchorHandler):
+                handle.add_params_to_db_core(params)
+                anchor_params[handle.anchor_name] = params
+        return anchor_params
+
+    def add_anchors(self, handlers):
+        for handler in handlers:
+            self.anchor_to_handlers[AnchorEnum.to_anchor_enum(handler.anchor_name)] = handler
 
     def add_anchor(self, anchor, handler):
         if isinstance(anchor, str):
