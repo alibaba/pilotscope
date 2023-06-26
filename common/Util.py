@@ -1,5 +1,5 @@
 from Anchor.BaseAnchor.replaceAnchorHandler import ReplaceAnchorHandler
-
+all_https = []
 
 def is_number(value):
     try:
@@ -24,3 +24,8 @@ def extract_table_data_from_anchor(fetch_anchors, data):
         else:
             raise RuntimeError
     return column_2_value
+
+
+def pilotscope_exit():
+    for http in all_https:
+        http.shutdown()

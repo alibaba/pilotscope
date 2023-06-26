@@ -9,6 +9,7 @@ from PilotConfig import PilotConfig
 from PilotEnum import FetchMethod
 from PilotSqlExtender import PilotSqlExtender
 from PilotTransData import PilotTransData
+from Server.Server import all_https
 from utlis import create_comment, add_terminate_flag_to_comment
 
 
@@ -62,11 +63,13 @@ class PilotStateManager:
         records = None
         try:
             for sql in sqls:
-                print("execute sql is {}".format(sql))
+                # print("execute sql is {}".format(sql))
                 records = self.db_controller.execute(sql, fetch=True)
             return records
         except Exception as e:
             if "PilotScopeFetchEnd" not in str(e):
+                for http in all_https:
+                    http.shut_down()
                 raise e
         return records
 

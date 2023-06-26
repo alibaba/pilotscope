@@ -66,7 +66,7 @@ class PilotScheduler:
 
         # wait until finishing pretraining
         if pretraining_thread is not None and self.config.pretraining_model == TrainSwitchMode.WAIT:
-            pretraining_thread.join(200)
+            pretraining_thread.join(5)
         pass
 
     def _deal_execution_end_events(self):

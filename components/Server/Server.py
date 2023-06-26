@@ -1,7 +1,9 @@
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from time import sleep
 
 from common.Thread import ValueThread
+from common.Util import all_https
 
 
 class ServerManager:
@@ -17,6 +19,7 @@ class ServerManager:
         http_thread = ValueThread(target=self.httpd.serve_forever, name="serve_forever", args=())
         http_thread.daemon = True
         http_thread.start()
+        all_https.append(self.httpd)
 
         # 如果服务器未能处理请求，则永久等待，直到接收到信号
 
