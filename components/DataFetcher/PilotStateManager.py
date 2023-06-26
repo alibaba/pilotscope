@@ -62,6 +62,7 @@ class PilotStateManager:
         records = None
         try:
             for sql in sqls:
+                print("execute sql is {}".format(sql))
                 records = self.db_controller.execute(sql, fetch=True)
             return records
         except Exception as e:

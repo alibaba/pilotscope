@@ -1,11 +1,8 @@
-import threading
+from abc import ABC, abstractmethod
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from Dao.PilotTrainDataManager import PilotTrainDataManager
-from Interface.ModelTrainingOnCountEventInterface import ModelTrainingOnCountEventInterface
-from Interface.PeriodCollectDataEventInterface import *
-from Interface.PretrainingEventInterface import PretrainingEventInterface
 from PilotConfig import PilotConfig
 from PilotModel import PilotModel
 from common.Thread import ValueThread

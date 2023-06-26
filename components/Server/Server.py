@@ -25,7 +25,6 @@ class ServerManager:
         # 如果服务器未能处理请求，则永久等待，直到接收到信号
 
     def receive_once_data(self, timeout):
-        print()
         self.httpd.user_data = None
         self.receive_signal.clear()
         timeout_stop = not self.receive_signal.wait(timeout)
@@ -39,7 +38,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         content_length = int(self.headers.get('content-length'))
         data = self.rfile.read(content_length).decode('utf-8')
-        print("接收到数据{}".format(data))
+        # print("接收到数据{}".format(data))
 
         # 在这里处理收到的 POST 请求数据
         self.server.user_data = data

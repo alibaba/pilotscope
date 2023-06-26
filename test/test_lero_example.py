@@ -49,8 +49,10 @@ class LeroTest(unittest.TestCase):
         # start
         scheduler.start()
 
+        print("start to test sql")
         sqls = self.load_test_sqls()
-        for sql in sqls:
+        for i, sql in enumerate(sqls):
+            print("current is the {}-th sql, and it is {}".format(i, sql))
             scheduler.simulate_db_console(sql)
 
     def load_training_sqls(self):
