@@ -4,10 +4,12 @@ from pandas import DataFrame
 from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table
 from sqlalchemy_utils import database_exists, create_database
 
+from PilotConfig import PilotConfig
+
 
 class BaseDBController(ABC):
     def __init__(self, config, echo=False, allow_to_create_db=False):
-        self.config = config
+        self.config: PilotConfig = config
         self.allow_to_create_db = allow_to_create_db
 
         self.echo = echo
@@ -24,8 +26,9 @@ class BaseDBController(ABC):
     def _create_engine(self):
         if not database_exists(self.conn_str):
             create_database(self.conn_str, encoding="SQL_ASCII")
-        return create_engine(self.conn_str, echo=self.echo, pool_size=1, pool_recycle=3600,
-                             pool_pre_ping=True)
+        return create_engine(self.conn_str, echo=self.echo, pool_size=10, pool_recycle=3600,
+                             pool_pre_ping=True, connect_args={
+                "options": "-c statement_timeout={}".format(self.config.sql_execution_timeout*1000)})
 
     @abstractmethod
     def modify_sql_for_ignore_records(self, sql, is_execute):

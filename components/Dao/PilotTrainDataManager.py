@@ -39,8 +39,9 @@ class PilotTrainDataManager:
             self.insert(table_name, column_2_value)
 
     def save_data_batch(self, table_name, column_2_value_list):
-        for column_2_value in column_2_value_list:
+        for i, column_2_value in enumerate(column_2_value_list):
             self.save_data(table_name, column_2_value)
+        pass
 
     def convert_data_type(self, column_2_value: dict):
         res = {}

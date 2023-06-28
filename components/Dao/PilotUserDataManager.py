@@ -6,17 +6,7 @@ from sqlalchemy import Table, select, update, insert
 from Factory.DBControllerFectory import DBControllerFactory
 from PilotConfig import PilotConfig
 from PilotSysConfig import PilotSysConfig
-
-
-def singleton(class_):
-    instances = {}
-
-    def getinstance(*args, **kwargs):
-        if class_ not in instances:
-            instances[class_] = class_(*args, **kwargs)
-        return instances[class_]
-
-    return getinstance
+from common.Util import singleton
 
 
 @singleton
@@ -34,7 +24,7 @@ class PilotUserDataManager:
         self.db_controller.create_table_if_absences(PilotSysConfig.COLLECT_DATA_VISIT_RECORD_TABLE, {
             "table": "",
             "last_read_id": 1
-        }, primary_key_column="table",enable_autoincrement_id_key=False)
+        }, primary_key_column="table", enable_autoincrement_id_key=False)
 
     def update_training_data_visit_id(self, table_name, cur_id):
         table: Table = self.db_controller.get_sqla_table(self.collect_data_visit_table)

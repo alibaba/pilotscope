@@ -16,7 +16,8 @@ class PilotTransData:
 
     @classmethod
     def parse_2_instance(cls, target_json: str, sql):
-        target_json = json.loads(target_json)
+        if target_json is str:
+            target_json = json.loads(target_json)
         data = PilotTransData()
         data.sql = sql
         for key, value in target_json.items():
@@ -47,7 +48,7 @@ class PilotTransData:
         assert len(cards) == len(subquery)
 
         for i in range(0, len(cards)):
-            data.subquery_2_card[subquery[i]] = int(cards[i])
+            data.subquery_2_card[subquery[i]] = float(cards[i])
 
     def add_property(self, key, value):
         self.__dict__[key] = value

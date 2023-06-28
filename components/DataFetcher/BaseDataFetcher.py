@@ -12,17 +12,9 @@ class DataFetcher(ABC):
         self.config = config
 
     @abstractmethod
-    def prepare_to_receive_data(self):
-        pass
-
-    @abstractmethod
     def get_additional_info(self) -> dict:
         return {}
 
     @abstractmethod
-    def wait_until_get_result(self) -> str:
-        pass
-
-    @abstractmethod
-    def stop(self):
+    def wait_until_get_data(self) -> str:
         pass

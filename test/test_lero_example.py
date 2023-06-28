@@ -45,12 +45,12 @@ class LeroTest(unittest.TestCase):
 
             # allow to pretrain model
             pretraining_event = LeroPretrainingModelEvent(config, lero_pilot_model, enable_collection=False,
-                                                          enable_training=False)
+                                                          enable_training=True)
             scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
 
             # start
             scheduler.start()
-
+            exit()
             print("start to test sql")
             sqls = self.load_test_sqls()
             for i, sql in enumerate(sqls):
@@ -60,10 +60,10 @@ class LeroTest(unittest.TestCase):
             pilotscope_exit()
 
     def load_training_sqls(self):
-        return load_sql("../examples/stats_train_10_sql.txt")
+        return load_sql("../examples/stats_train.txt")
 
     def load_test_sqls(self):
-        return load_sql("../examples/stats_test_10_sql.txt")
+        return load_sql("../examples/stats_test.txt")
 
 
 if __name__ == '__main__':

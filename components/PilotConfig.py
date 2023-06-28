@@ -18,10 +18,10 @@ class PilotConfig:
         self.db = "stats"
         self.SEP = "###"
         self.data_fetch_method = DataFetchMethodEnum.HTTP
-        self.once_request_timeout = 5
 
-        # example
-        self.stats_train_sql_file_path = "../examples/stats_train_10_sql.txt"
+        # ms
+        self.sql_execution_timeout = 30
+        self.once_request_timeout = self.sql_execution_timeout
 
         # pretraining
         self.pretraining_model = TrainSwitchMode.WAIT

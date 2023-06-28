@@ -1,16 +1,19 @@
+import threading
+from typing import Optional
+
 from Anchor.BaseAnchor.FetchAnchorHandler import *
 from Anchor.BaseAnchor.replaceAnchorHandler import *
 from DataFetcher.BaseDataFetcher import DataFetcher
 from DataFetcher.PilotCommentCreator import PilotCommentCreator
+from Exception.Exception import DBStatementTimeoutException
 from Factory.AnchorHandlerFactory import AnchorHandlerFactory
-from Factory.DataFetchFactory import DataFetchFactory
 from Factory.DBControllerFectory import DBControllerFactory
+from Factory.DataFetchFactory import DataFetchFactory
 from PilotConfig import PilotConfig
 from PilotEnum import FetchMethod
 from PilotSqlExtender import PilotSqlExtender
 from PilotTransData import PilotTransData
-from Server.Server import all_https
-from utlis import create_comment, add_terminate_flag_to_comment
+from common.Util import pilotscope_exit
 
 
 class PilotStateManager:
@@ -22,55 +25,54 @@ class PilotStateManager:
         self.port = None
         self.data_fetcher: DataFetcher = DataFetchFactory.get_data_fetcher(config)
 
-    def execute(self, sql, enable_clear=True) -> PilotTransData:
-        origin_sql = sql
-        self.data_fetcher.prepare_to_receive_data()
+    def execute(self, sql, enable_clear=True) -> Optional[PilotTransData]:
+        try:
+            origin_sql = sql
 
-        comment_creator = PilotCommentCreator()
-        # add params for different data fetcher
-        enable_terminate = False if AnchorEnum.RECORD_FETCH_ANCHOR in self.anchor_to_handlers else True
-        comment_creator.add_params(self.data_fetcher.get_additional_info())
-        comment_creator.enable_terminate(enable_terminate)
+            # set comments
+            comment_creator = PilotCommentCreator()
+            enable_terminate = False if AnchorEnum.RECORD_FETCH_ANCHOR in self.anchor_to_handlers else True
+            comment_creator.add_params(self.data_fetcher.get_additional_info())
+            comment_creator.enable_terminate(enable_terminate)
 
-        sql_extender = PilotSqlExtender(self.db_controller, self.config)
-        sql_extender.register_anchors(self._remove_outer_fetch_anchor(self.anchor_to_handlers))
+            sql_extender = PilotSqlExtender(self.db_controller, self.config)
+            sql_extender.register_anchors(self._remove_outer_fetch_anchor(self.anchor_to_handlers))
 
-        # sqls contain multiple "set" sql and one query sql (at last).
-        _, sqls = sql_extender.get_extend_sqls(sql, comment_creator)
+            # sqls contain multiple "set" sql and one query sql (at last).
+            _, sqls = sql_extender.get_extend_sqls(sql, comment_creator)
+            # print(sqls[-1])
+            # execution sqls
+            records = self._execute_sqls(sqls)
+            # wait to fetch data
+            receive_data = self.data_fetcher.wait_until_get_data()
 
-        # execution sqls
-        records = self._execute_sqls(sqls)
+            if receive_data is not None:
+                data: PilotTransData = PilotTransData.parse_2_instance(receive_data, origin_sql)
+                # fetch data from outer
+                self._fetch_data_from_outer(origin_sql, data)
+            else:
+                data = PilotTransData()
+            data.records = records
 
-        # wait to fetch data by inner method
-        receive_data = self.data_fetcher.wait_until_get_result()
-
-        # arrange all data
-        if receive_data is not None:
-            data: PilotTransData = PilotTransData.parse_2_instance(receive_data,origin_sql)
-            # fetch data from outer
-            self._fetch_data_from_outer(origin_sql, data)
-        else:
-            data = PilotTransData()
-        data.records = records
-        if enable_clear:
-            self.clear()
-        return data
+            # clear state
+            if enable_clear:
+                self.clear()
+            return data
+        except DBStatementTimeoutException as e:
+            print(e)
+            return None
+        except Exception as e:
+            pilotscope_exit()
+            raise e
 
     def clear(self):
         self.anchor_to_handlers.clear()
 
     def _execute_sqls(self, sqls):
         records = None
-        try:
-            for sql in sqls:
-                # print("execute sql is {}".format(sql))
-                records = self.db_controller.execute(sql, fetch=True)
-            return records
-        except Exception as e:
-            if "PilotScopeFetchEnd" not in str(e):
-                for http in all_https:
-                    http.shut_down()
-                raise e
+        for sql in sqls:
+            # print("execute sql is {}".format(sql))
+            records = self.db_controller.execute(sql, fetch=True)
         return records
 
     def _remove_outer_fetch_anchor(self, anchor_to_handlers):

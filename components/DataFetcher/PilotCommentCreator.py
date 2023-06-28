@@ -1,4 +1,5 @@
 import json
+import threading
 
 from PilotSysConfig import PilotSysConfig
 
@@ -25,4 +26,5 @@ class PilotCommentCreator:
             "enableTerminate": self.enable_terminate_flag
         }
         res.update(self.other)
+        res.update({"tid": str(threading.get_ident())})
         return "/*pilotscope {} pilotscope*/".format(json.dumps(res))

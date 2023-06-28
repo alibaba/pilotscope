@@ -2,8 +2,10 @@ from pandas import DataFrame
 
 from pandas import DataFrame
 from sqlalchemy import Table, Column, Integer, MetaData, select, func, text
+from sqlalchemy.exc import OperationalError
 
 from DBController.BaseDBController import BaseDBController
+from Exception.Exception import DBStatementTimeoutException
 
 
 class PostgreSQLController(BaseDBController):
@@ -17,11 +19,21 @@ class PostgreSQLController(BaseDBController):
 
     def execute(self, sql, fetch=False):
         row = None
-        with self.engine.connect() as conn:
-            result = conn.execute(text(sql) if isinstance(sql, str) else sql)
-            if fetch:
-                row = result.fetchall()
-            conn.commit()
+        try:
+            with self.engine.connect() as conn:
+                result = conn.execute(text(sql) if isinstance(sql, str) else sql)
+                if fetch:
+                    row = result.fetchall()
+                conn.commit()
+        except OperationalError as e:
+            if "canceling statement due to statement timeout" in str(e):
+                raise DBStatementTimeoutException(str(e))
+            else:
+                raise e
+        except Exception as e:
+            if "PilotScopeFetchEnd" not in str(e):
+                raise e
+            conn.close()
         return row
 
     def get_hint_sql(self, key, value):

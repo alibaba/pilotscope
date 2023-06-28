@@ -46,16 +46,21 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
         self.pilot_state_manager = PilotStateManager(self.config)
 
     def load_sql(self):
-        self.sqls = load_sql(self.config.stats_train_sql_file_path)[:1]
+        self.sqls = load_sql("../examples/stats_train.txt")[0:200]
 
     def _custom_collect_data(self):
+        print("start to collect data fro pretraining")
         self.load_sql()
         factors = [0.1, 1, 10]
+        # factors = [10]
         column_2_value_list = []
 
         for i, sql in enumerate(self.sqls):
+            print("current  is {}-th sql, and total sqls is {}".format(i, len(self.sqls)))
             self.pilot_state_manager.fetch_subquery_card()
             data: PilotTransData = self.pilot_state_manager.execute(sql)
+            if data is None:
+                continue
             subquery_2_card = data.subquery_2_card
             for f in factors:
                 column_2_value = {}
@@ -64,6 +69,8 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
                 self.pilot_state_manager.fetch_physical_plan()
                 self.pilot_state_manager.fetch_execution_time()
                 data: PilotTransData = self.pilot_state_manager.execute(sql)
+                if data is None:
+                    continue
                 column_2_value["sql"] = sql
                 column_2_value["plan"] = data.physical_plan
                 column_2_value["time"] = data.execution_time

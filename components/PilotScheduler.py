@@ -42,9 +42,11 @@ class PilotScheduler:
             replace_handle.apply_replace_data(sql)
 
         result = state_manager.execute(sql, enable_clear=False)
+        if result is not None:
+            self._post_process(result)
+            return result.records
 
-        self._post_process(result)
-        return result.records if result is not None else None
+        return None
 
     def _post_process(self, data: PilotTransData):
         self._collect_training_data(data)
@@ -66,7 +68,7 @@ class PilotScheduler:
 
         # wait until finishing pretraining
         if pretraining_thread is not None and self.config.pretraining_model == TrainSwitchMode.WAIT:
-            pretraining_thread.join(5)
+            pretraining_thread.join()
         pass
 
     def _deal_execution_end_events(self):
