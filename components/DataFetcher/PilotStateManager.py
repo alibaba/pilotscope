@@ -35,29 +35,35 @@ class PilotStateManager:
             origin_sql = sql
 
             # set comments
-            comment_creator = PilotCommentCreator()
-            enable_terminate = False if AnchorEnum.RECORD_FETCH_ANCHOR in self.anchor_to_handlers else True
-            comment_creator.add_params(self.data_fetcher.get_additional_info())
-            comment_creator.enable_terminate(enable_terminate)
+            all_inner_fetch_anchor = self._remove_outer_fetch_anchor(self.anchor_to_handlers)
+            if len(all_inner_fetch_anchor) > 0 :
+                comment_creator = PilotCommentCreator()
+                enable_terminate = False if AnchorEnum.RECORD_FETCH_ANCHOR in self.anchor_to_handlers else True
+                comment_creator.add_params(self.data_fetcher.get_additional_info())
+                comment_creator.enable_terminate(enable_terminate)
 
-            sql_extender = PilotSqlExtender(self.db_controller, self.config)
-            sql_extender.register_anchors(self._remove_outer_fetch_anchor(self.anchor_to_handlers))
+                sql_extender = PilotSqlExtender(self.db_controller, self.config)
+                sql_extender.register_anchors(all_inner_fetch_anchor)
 
-            # sqls contain multiple "set" sql and one query sql (at last).
-            _, sqls = sql_extender.get_extend_sqls(sql, comment_creator)
-            # print(sqls[-1])
-            # execution sqls
-            records = self._execute_sqls(sqls)
-            # wait to fetch data
-            receive_data = self.data_fetcher.wait_until_get_data()
+                # sqls contain multiple "set" sql and one query sql (at last).
+                _, sqls = sql_extender.get_extend_sqls(sql, comment_creator)
+                # print(sqls[-1])
+                # execution sqls
+                records = self._execute_sqls(sqls)
+                # wait to fetch data
+                receive_data = self.data_fetcher.wait_until_get_data()
 
-            if receive_data is not None:
-                data: PilotTransData = PilotTransData.parse_2_instance(receive_data, origin_sql)
-                # fetch data from outer
-                self._fetch_data_from_outer(origin_sql, data)
+                if receive_data is not None:
+                    data: PilotTransData = PilotTransData.parse_2_instance(receive_data, origin_sql)
+                    # fetch data from outer
+                    self._fetch_data_from_outer(origin_sql, data)
+                else:
+                    data = PilotTransData()
+                data.records = records
             else:
                 data = PilotTransData()
-            data.records = records
+                data.sql = origin_sql
+                self._fetch_data_from_outer(origin_sql, data)
 
             # clear state
             if enable_clear:
@@ -80,11 +86,7 @@ class PilotStateManager:
         self._roll_back_db()
 
     def _execute_sqls(self, sqls):
-        records = None
-        for sql in sqls:
-            # print("execute sql is {}".format(sql))
-            records = self.db_controller.execute(sql, fetch=True)
-        return records
+        return self.db_controller.execute_batch(sqls,fetch=True)
 
     def _remove_outer_fetch_anchor(self, anchor_to_handlers):
         result = {}
@@ -102,7 +104,7 @@ class PilotStateManager:
             if isinstance(handle, FetchAnchorHandler) and handle.fetch_method == FetchMethod.OUTER:
                 comment_creator = PilotCommentCreator(anchor_params=replace_anchor_params, enable_terminate_flag=False)
                 comment = comment_creator.create_comment()
-                handle.fetch_from_outer(sql, comment, anchor_data, data)
+                handle.fetch_from_outer(self.db_controller, sql, comment, anchor_data, data)
 
     def _get_replace_anchor_params(self, handles):
         anchor_params = {}
@@ -169,6 +171,11 @@ class PilotStateManager:
     def fetch_execution_time(self):
         anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR] = anchor
+
+    def fetch_record(self):
+        anchor: RecordFetchAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
+                                                                                         AnchorEnum.RECORD_FETCH_ANCHOR)
+        self.anchor_to_handlers[AnchorEnum.RECORD_FETCH_ANCHOR] = anchor
 
     def fetch_real_node_cost(self):
         pass

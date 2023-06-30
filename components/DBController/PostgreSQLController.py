@@ -6,26 +6,29 @@ from sqlalchemy.exc import OperationalError
 from common.Index import Index
 from DBController.BaseDBController import BaseDBController
 from Exception.Exception import DBStatementTimeoutException
+from PilotEnum import DatabaseEnum
 
 
 class PostgreSQLController(BaseDBController):
 
     def __init__(self, config, echo=False, allow_to_create_db=False):
         super().__init__(config, echo, allow_to_create_db)
+
         self.simulate_index_controller = None
+
+        self.engine = self.engine.execution_options(isolation_level="AUTOCOMMIT")
+        self.connect()
 
     def _create_conn_str(self):
         # postgresql://postgres@localhost/stats
         return "{}://{}@{}/{}".format("postgresql", self.config.user, self.config.host, self.config.db)
 
-    def execute(self, sql, fetch=False):
+    def execute(self, sql, fetch=False, conn=None):
         row = None
         try:
-            with self.engine.connect() as conn:
-                result = conn.execute(text(sql) if isinstance(sql, str) else sql)
-                if fetch:
-                    row = result.fetchall()
-                conn.commit()
+            result = self.connection.execute(text(sql) if isinstance(sql, str) else sql)
+            if fetch:
+                row = result.all()
         except OperationalError as e:
             if "canceling statement due to statement timeout" in str(e):
                 raise DBStatementTimeoutException(str(e))
@@ -34,11 +37,28 @@ class PostgreSQLController(BaseDBController):
         except Exception as e:
             if "PilotScopeFetchEnd" not in str(e):
                 raise e
-            conn.close()
         return row
 
-    def get_hint_sql(self, key, value):
-        raise RuntimeError
+    def execute_batch(self, sqls, fetch=False):
+        try:
+            for sql in sqls[:-1]:
+                print(sql)
+                self.connection.execute(text(sql) if isinstance(sql, str) else sql)
+            result = self.connection.execute(text(sqls[-1]) if isinstance(sqls[-1], str) else sqls[-1])
+            if fetch:
+                return result.all()
+        except OperationalError as e:
+            if "canceling statement due to statement timeout" in str(e):
+                raise DBStatementTimeoutException(str(e))
+            else:
+                raise e
+        except Exception as e:
+            if "PilotScopeFetchEnd" not in str(e):
+                raise e
+
+    @staticmethod
+    def get_hint_sql(key, value):
+        return "SET {} TO {}".format(key, value)
 
     def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
                                  enable_autoincrement_id_key=True):
@@ -138,14 +158,11 @@ class PostgreSQLController(BaseDBController):
                                                                                             sql)
 
     def _explain(self, sql, comment, execute: bool):
-        conn = self.engine.raw_connection()
         try:
-            cursor = conn.cursor()
-            cursor.execute(self.get_explain_sql(sql, execute, comment))
-            result = cursor.fetchall()
-            return result[0][0][0]
-        finally:
-            conn.close()
+            return self.connection.execute(text(self.get_explain_sql(sql, execute, comment))).all()[0][0][0]
+        except Exception as e:
+            print(e)
+            raise e
 
 
 class SimulateIndexController:

@@ -24,7 +24,7 @@ class FetchAnchorHandler(BaseAnchorHandler):
         super().add_params_to_db_core(params)
         params.update({})
 
-    def fetch_from_outer(self, sql, pilot_comment, anchor_data: AnchorTransData, fill_data: PilotTransData):
+    def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData, fill_data: PilotTransData):
         pass
 
     def _assign_priority(self):
