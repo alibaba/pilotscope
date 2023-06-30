@@ -1,11 +1,10 @@
-import threading
-from typing import Optional
+from typing import Optional, List
 
 from Anchor.BaseAnchor.FetchAnchorHandler import *
 from Anchor.BaseAnchor.replaceAnchorHandler import *
 from DataFetcher.BaseDataFetcher import DataFetcher
 from DataFetcher.PilotCommentCreator import PilotCommentCreator
-from Exception.Exception import DBStatementTimeoutException
+from Exception.Exception import DBStatementTimeoutException, HttpReceiveTimeoutException
 from Factory.AnchorHandlerFactory import AnchorHandlerFactory
 from Factory.DBControllerFectory import DBControllerFactory
 from Factory.DataFetchFactory import DataFetchFactory
@@ -13,7 +12,7 @@ from PilotConfig import PilotConfig
 from PilotEnum import FetchMethod
 from PilotSqlExtender import PilotSqlExtender
 from PilotTransData import PilotTransData
-from common.Util import pilotscope_exit
+from common.Util import pilotscope_exit, extract_anchor_handlers
 
 
 class PilotStateManager:
@@ -24,6 +23,12 @@ class PilotStateManager:
         self.config = config
         self.port = None
         self.data_fetcher: DataFetcher = DataFetchFactory.get_data_fetcher(config)
+
+    def execute_batch(self, sqls) -> List[Optional[PilotTransData]]:
+        datas = []
+        for sql in sqls:
+            datas.append(self.execute(sql, enable_clear=False))
+        return datas
 
     def execute(self, sql, enable_clear=True) -> Optional[PilotTransData]:
         try:
@@ -58,15 +63,21 @@ class PilotStateManager:
             if enable_clear:
                 self.clear()
             return data
-        except DBStatementTimeoutException as e:
+
+        except (DBStatementTimeoutException, HttpReceiveTimeoutException) as e:
             print(e)
             return None
         except Exception as e:
             pilotscope_exit()
             raise e
 
+    def _roll_back_db(self):
+        handlers = extract_anchor_handlers(self.anchor_to_handlers.values(), is_fetch_anchor=False)
+        [handler.roll_back() for handler in handlers]
+
     def clear(self):
         self.anchor_to_handlers.clear()
+        self._roll_back_db()
 
     def _execute_sqls(self, sqls):
         records = None
@@ -129,6 +140,14 @@ class PilotStateManager:
     def set_rule(self):
         pass
 
+    def set_index(self, indexes: List[Index], drop_other=True):
+        anchor: IndexAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
+                                                                             AnchorEnum.INDEX_REPLACE_ANCHOR)
+        anchor.indexes = indexes
+        anchor.drop_other = drop_other
+        self.anchor_to_handlers[AnchorEnum.INDEX_REPLACE_ANCHOR] = anchor
+        pass
+
     def fetch_hint(self):
         pass
 
@@ -144,13 +163,11 @@ class PilotStateManager:
         pass
 
     def fetch_physical_plan(self):
-        anchor: PhysicalPlanFetchAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
-                                                                                         AnchorEnum.PHYSICAL_PLAN_FETCH_ANCHOR)
+        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.PHYSICAL_PLAN_FETCH_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.PHYSICAL_PLAN_FETCH_ANCHOR] = anchor
 
     def fetch_execution_time(self):
-        anchor: ExecutionTimeFetchAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
-                                                                                          AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR)
+        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR] = anchor
 
     def fetch_real_node_cost(self):
@@ -158,3 +175,7 @@ class PilotStateManager:
 
     def fetch_real_node_card(self):
         pass
+
+    def fetch_estimated_cost(self):
+        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.ESTIMATED_COST_FETCH_ANCHOR)
+        self.anchor_to_handlers[AnchorEnum.ESTIMATED_COST_FETCH_ANCHOR] = anchor

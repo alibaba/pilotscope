@@ -75,6 +75,21 @@ class PhysicalPlanFetchAnchorHandler(FetchAnchorHandler):
             column_2_value["physical_plan"] = json.dumps(data.physical_plan)
 
 
+class EstimatedCostFetchAnchorHandler(FetchAnchorHandler):
+
+    def __init__(self, config) -> None:
+        super().__init__(config)
+        self.fetch_method = FetchMethod.OUTER
+        self.anchor_name = AnchorEnum.ESTIMATED_COST_FETCH_ANCHOR.name
+
+    def add_params_to_db_core(self, params: dict):
+        super().add_params_to_db_core(params)
+
+    def add_data_to_table(self, column_2_value, data: PilotTransData):
+        if data.estimated_cost is not None:
+            column_2_value["estimated_cost"] = data.estimated_cost
+
+
 class ExecutionTimeFetchAnchorHandler(FetchAnchorHandler):
 
     def __init__(self, config) -> None:

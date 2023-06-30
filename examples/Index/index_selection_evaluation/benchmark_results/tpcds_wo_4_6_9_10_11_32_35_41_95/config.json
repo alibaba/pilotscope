@@ -1,0 +1,79 @@
+{
+    "database_system": "postgres",
+    "benchmark_name": "tpcds",
+    "scale_factor": 10,
+    "algorithms": [
+        {
+            "name": "no_index",
+            "parameters": {
+            },
+            "timeout": 300
+        },
+        {
+            "name": "dexter",
+            "parameters": {
+                "min_saving_percentage": [10, 50, 90, 95, 99]
+            },
+            "timeout": 300
+        },
+        {
+            "name": "db2advis",
+            "parameters": {
+                "max_index_width": 2,
+                "budget_MB": [250, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4250, 5000, 5750, 6500, 8000, 10000, 12500, 15000],
+                "try_variations_seconds": 0
+            },
+            "timeout": 300
+        },
+        {
+            "name": "extend",
+            "parameters": {
+                "budget_MB": [250, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4250, 5000, 5750, 6500, 8000, 10000, 12500, 15000],
+                "max_index_width": 2
+            },
+            "timeout": 300
+        },
+        {
+            "name": "anytime",
+            "parameters": {
+                "max_index_width": 2,
+                "budget_MB": [250, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4250, 5000, 5750, 6500, 8000, 10000, 12500, 15000],
+                "max_runtime_minutes": 30
+            },
+            "timeout": 300
+        },
+        {
+            "name": "cophy",
+            "parameters": {
+                "max_index_width": 2,
+                "max_indexes_per_query": 1
+            },
+            "timeout": 300
+        },
+        {
+            "name": "auto_admin",
+            "parameters": {
+                "max_indexes": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+                "max_indexes_naive": 1,
+                "max_index_width": 2
+            },
+            "timeout": 300
+        },
+        {
+            "name": "relaxation",
+            "parameters": {
+                "budget_MB": [250, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4250, 5000, 5750, 6500, 8000, 10000, 12500, 15000],
+                "max_index_width": 2
+            },
+            "timeout": 300
+        },
+        {
+            "name": "drop",
+            "parameters": {
+                "max_indexes": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+            },
+            "timeout": 300
+        }
+    ],
+    "queries": [1, 2, 3, 5, 7, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 36, 37, 38, 39, 40, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 96, 97, 98, 99]
+}

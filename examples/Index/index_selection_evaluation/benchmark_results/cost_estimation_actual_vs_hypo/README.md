@@ -1,0 +1,3 @@
+# Comparison of cost estimations for hypothetical and actual indexes
+
+In this experiment, we have compared the costs estimated by the PostgreSQL optimizer in the presence of actual and hypothetical indexes for the TPC-H and TPC-DS (both with a scale factor of 10) benchmark. We created single-attribute indexes for all attributes that are accessed in at least a single query. See the contained PDFs or excel files for results. Small discrepancies in cost estimations (below 1%) can be caused by sampling effects.

@@ -50,7 +50,6 @@ class LeroTest(unittest.TestCase):
 
             # start
             scheduler.start()
-            exit()
             print("start to test sql")
             sqls = self.load_test_sqls()
             for i, sql in enumerate(sqls):

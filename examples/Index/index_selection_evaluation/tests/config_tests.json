@@ -1,0 +1,23 @@
+{
+    "database_system": "postgres",
+    "benchmark_name": "tpch",
+    "scale_factor": 0.001,
+    "seed": 1556097050.8199081,
+    "algorithms": [
+        {
+            "name": "auto_admin",
+            "parameters": {
+                "max_indexes": 1,
+                "max_indexes_naive": 1
+            },
+            "number_of_actual_runs": 1,
+            "timeout": 10
+        },
+        {
+            "name": "no_index",
+            "parameters": null,
+            "number_of_actual_runs": 1,
+            "timeout": 10
+        }
+    ]
+}

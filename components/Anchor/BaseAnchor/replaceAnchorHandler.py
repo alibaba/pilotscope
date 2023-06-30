@@ -1,11 +1,17 @@
+from typing import List
+
 from Anchor.AnchorEnum import AnchorEnum
 from Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
+from PilotEnum import ReplaceAnchorTriggerEnum
+from common.Index import Index
 
 
 class ReplaceAnchorHandler(BaseAnchorHandler):
 
     def __init__(self, config) -> None:
         super().__init__(config)
+        self.trigger_type = ReplaceAnchorTriggerEnum.QUERY
+        self.have_been_triggered = False
 
     def get_additional_sqls(self):
         return []
@@ -17,6 +23,12 @@ class ReplaceAnchorHandler(BaseAnchorHandler):
         pass
 
     def apply_replace_data(self, sql):
+        pass
+
+    def is_can_trigger(self):
+        return self.trigger_type == ReplaceAnchorTriggerEnum.QUERY or not self.have_been_triggered
+
+    def roll_back(self):
         pass
 
 
@@ -67,3 +79,31 @@ class HintAnchorHandler(ReplaceAnchorHandler):
 
     def add_params_to_db_core(self, params: dict):
         pass
+
+
+class IndexAnchorHandler(ReplaceAnchorHandler):
+
+    def __init__(self, config, indexes: List[Index], drop_other=True) -> None:
+        super().__init__(config)
+        self.anchor_name = AnchorEnum.HINT_REPLACE_ANCHOR.name
+        self.indexes = indexes
+        self.drop_other = drop_other
+        self.trigger_type = ReplaceAnchorTriggerEnum.WORKLOAD
+
+    def apply_replace_data(self, sql):
+        if self.is_can_trigger():
+            self.indexes = self.user_custom_task(sql)
+
+    def get_additional_sqls(self):
+        if self.is_can_trigger():
+            sqls = []
+            for index in self.indexes:
+                sqls.append(self.db_controller.get_create_index_sql(index))
+            self.have_been_triggered = True
+
+    def add_params_to_db_core(self, params: dict):
+        pass
+
+    def roll_back(self):
+        for index in self.indexes:
+            self.db_controller.drop_index(index.get_index_name())

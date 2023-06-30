@@ -29,6 +29,7 @@ def extract_table_data_from_anchor(fetch_anchors, data):
 
 
 def pilotscope_exit():
+    print("pilotscope occur exception, clearing http service")
     for http in all_https:
         http.shutdown()
 
@@ -42,3 +43,6 @@ def singleton(class_):
         return instances[class_]
 
     return getinstance
+
+
+
