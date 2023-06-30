@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 
 from pandas import DataFrame
-from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table
+from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table, NullPool
 from sqlalchemy_utils import database_exists, create_database
 
 from PilotConfig import PilotConfig
+from PilotEnum import DatabaseEnum
 
 
 class BaseDBController(ABC):
@@ -15,7 +16,7 @@ class BaseDBController(ABC):
         self.echo = echo
         self.conn_str = self._create_conn_str()
         self.engine = self._create_engine()
-
+        self.connection = None
         # update info of existed tables
         self.metadata = MetaData()
         self.metadata.reflect(self.engine)
@@ -29,6 +30,14 @@ class BaseDBController(ABC):
         return create_engine(self.conn_str, echo=self.echo, pool_size=10, pool_recycle=3600,
                              pool_pre_ping=True, connect_args={
                 "options": "-c statement_timeout={}".format(self.config.sql_execution_timeout*1000)})
+
+    def connect(self):
+        self.disconnect()
+        self.connection = self.engine.connect()
+    
+    def disconnect(self):
+        if self.connection is not None:
+            self.connection.close()      
 
     @abstractmethod
     def modify_sql_for_ignore_records(self, sql, is_execute):
@@ -51,8 +60,13 @@ class BaseDBController(ABC):
         pass
 
     @abstractmethod
-    def get_hint_sql(self, key, value):
+    def execute_batch(self, sql, fetch=False):
         pass
+
+    @classmethod
+    @abstractmethod
+    def get_hint_sql(database:DatabaseEnum, key, value):
+       pass
 
     @abstractmethod
     def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
