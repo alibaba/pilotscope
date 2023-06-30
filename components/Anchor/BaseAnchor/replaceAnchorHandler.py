@@ -1,6 +1,7 @@
 from Anchor.AnchorEnum import AnchorEnum
 from Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
-
+from PilotEnum import DatabaseEnum
+from DBController.PostgreSQLController import PostgreSQLController
 
 class ReplaceAnchorHandler(BaseAnchorHandler):
 
@@ -62,8 +63,13 @@ class HintAnchorHandler(ReplaceAnchorHandler):
 
     def get_additional_sqls(self):
         sqls = []
+        if self.config.db_type == DatabaseEnum.POSTGRESQL:
+            now_get_hint_sql = PostgreSQLController.get_hint_sql
+        else:
+            raise NotImplementedError
         for hint, value in self.key_2_value_for_hint.items():
-            sqls.append(self.db_controller.get_hint_sql(hint, value))
+            sqls.append(now_get_hint_sql(hint, value))
+        return sqls
 
     def add_params_to_db_core(self, params: dict):
         pass

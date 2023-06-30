@@ -34,7 +34,7 @@ class PilotSqlExtender:
     def _add_sqls(self, sqls):
         for anchor, handle in self.anchor_to_handlers.items():
             if isinstance(handle, ReplaceAnchorHandler):
-                sqls += handle.get_additional_sqls()
+                sqls.extend(handle.get_additional_sqls())
 
     def _get_anchor_params_as_comment(self):
         anchor_params = {}
@@ -44,5 +44,6 @@ class PilotSqlExtender:
                 handle.add_params_to_db_core(params)
             elif isinstance(handle, FetchAnchorHandler) and handle.fetch_method == FetchMethod.INNER:
                 handle.add_params_to_db_core(params)
-            anchor_params[anchor.name] = params
+            if len(params) > 0 :
+                anchor_params[anchor.name] = params
         return anchor_params
