@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 
 from pandas import DataFrame
-from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table
+from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table, NullPool, inspect
 from sqlalchemy_utils import database_exists, create_database
 
+from Common.Index import Index
 from PilotConfig import PilotConfig
+from PilotEnum import DatabaseEnum
 
 
 class BaseDBController(ABC):
@@ -15,7 +17,7 @@ class BaseDBController(ABC):
         self.echo = echo
         self.conn_str = self._create_conn_str()
         self.engine = self._create_engine()
-
+        self.connection = None
         # update info of existed tables
         self.metadata = MetaData()
         self.metadata.reflect(self.engine)
@@ -28,7 +30,15 @@ class BaseDBController(ABC):
             create_database(self.conn_str, encoding="SQL_ASCII")
         return create_engine(self.conn_str, echo=self.echo, pool_size=10, pool_recycle=3600,
                              pool_pre_ping=True, connect_args={
-                "options": "-c statement_timeout={}".format(self.config.sql_execution_timeout*1000)})
+                "options": "-c statement_timeout={}".format(self.config.sql_execution_timeout * 1000)})
+
+    def connect(self):
+        self.disconnect()
+        self.connection = self.engine.connect()
+
+    def disconnect(self):
+        if self.connection is not None:
+            self.connection.close()
 
     @abstractmethod
     def modify_sql_for_ignore_records(self, sql, is_execute):
@@ -51,8 +61,12 @@ class BaseDBController(ABC):
         pass
 
     @abstractmethod
-    def get_hint_sql(self, key, value):
+    def execute_batch(self, sql, fetch=False):
         pass
+
+    @abstractmethod
+    def get_hint_sql(self, key, value):
+        raise NotImplementedError
 
     @abstractmethod
     def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
@@ -70,6 +84,47 @@ class BaseDBController(ABC):
     @abstractmethod
     def exist_table(self, table_name) -> bool:
         pass
+
+    @abstractmethod
+    def create_index(self, index):
+        pass
+
+    @abstractmethod
+    def create_index(self, index):
+        pass
+
+    @abstractmethod
+    def drop_index(self, index_name):
+        pass
+
+    @abstractmethod
+    def drop_all_index(self):
+        pass
+
+    @abstractmethod
+    def get_all_indexes_byte(self):
+        pass
+
+    @abstractmethod
+    def get_table_indexes_byte(self, table):
+        pass
+
+    @abstractmethod
+    def get_index_byte(self, index_name):
+        pass
+
+    def get_index_number(self, table):
+        inspector = inspect(self.engine)
+        return len(inspector.get_indexes(table))
+
+    def get_existed_index(self, table):
+        inspector = inspect(self.engine)
+        db_indexes = inspector.get_indexes(table)
+
+        indexes = []
+        for db_index in db_indexes:
+            indexes.append(Index(columns=db_index["column_names"], table=table, index_name=db_index["name"]))
+        return indexes
 
     def get_sqla_table(self, table_name) -> Table:
         if table_name not in self.name_2_table:

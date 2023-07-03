@@ -1,17 +1,21 @@
-from pandas import DataFrame
-
-from pandas import DataFrame
-from sqlalchemy import Table, Column, Integer, MetaData, select, func, text
+from sqlalchemy import Table, Column, select, func, text, inspect
 from sqlalchemy.exc import OperationalError
+from typing_extensions import deprecated
 
 from DBController.BaseDBController import BaseDBController
 from Exception.Exception import DBStatementTimeoutException
+from common.Index import Index
 
 
 class PostgreSQLController(BaseDBController):
 
     def __init__(self, config, echo=False, allow_to_create_db=False):
         super().__init__(config, echo, allow_to_create_db)
+
+        self.simulate_index_controller = None
+
+        self.engine = self.engine.execution_options(isolation_level="AUTOCOMMIT")
+        self.connect()
 
     def _create_conn_str(self):
         # postgresql://postgres@localhost/stats
@@ -20,11 +24,9 @@ class PostgreSQLController(BaseDBController):
     def execute(self, sql, fetch=False):
         row = None
         try:
-            with self.engine.connect() as conn:
-                result = conn.execute(text(sql) if isinstance(sql, str) else sql)
-                if fetch:
-                    row = result.fetchall()
-                conn.commit()
+            result = self.connection.execute(text(sql) if isinstance(sql, str) else sql)
+            if fetch:
+                row = result.all()
         except OperationalError as e:
             if "canceling statement due to statement timeout" in str(e):
                 raise DBStatementTimeoutException(str(e))
@@ -33,11 +35,28 @@ class PostgreSQLController(BaseDBController):
         except Exception as e:
             if "PilotScopeFetchEnd" not in str(e):
                 raise e
-            conn.close()
         return row
 
+    @deprecated('use execute instead')
+    def execute_batch(self, sqls, fetch=False):
+        try:
+            for sql in sqls[:-1]:
+                print(sql)
+                self.connection.execute(text(sql) if isinstance(sql, str) else sql)
+            result = self.connection.execute(text(sqls[-1]) if isinstance(sqls[-1], str) else sqls[-1])
+            if fetch:
+                return result.all()
+        except OperationalError as e:
+            if "canceling statement due to statement timeout" in str(e):
+                raise DBStatementTimeoutException(str(e))
+            else:
+                raise e
+        except Exception as e:
+            if "PilotScopeFetchEnd" not in str(e):
+                raise e
+
     def get_hint_sql(self, key, value):
-        raise RuntimeError
+        return "SET {} TO {}".format(key, value)
 
     def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
                                  enable_autoincrement_id_key=True):
@@ -58,6 +77,44 @@ class PostgreSQLController(BaseDBController):
     def insert(self, table_name, column_2_value: dict):
         table = self.name_2_table[table_name]
         self.execute(table.insert().values(column_2_value))
+
+    def create_index(self, index: Index):
+        table_name = index.table
+        sql = f"create index {index.get_index_name()} on {table_name} ({index.joined_column_names()})"
+        self.execute(sql, fetch=False)
+
+    def drop_index(self, index_name):
+        statement = (
+            f"DROP INDEX IF EXISTS {index_name}"
+        )
+        self.execute(statement, fetch=False)
+
+    def drop_all_index(self):
+        stmt = "select indexname from pg_indexes where schemaname='public'"
+        indexes = self.execute(stmt, fetch=True)
+        for index in indexes:
+            index_name: str = index[0]
+            if not index_name.startswith("pgsysml_"):
+                self.drop_index(index_name)
+
+    def get_all_indexes_byte(self):
+        # Returns size in bytes
+        sql = ("select sum(pg_indexes_size(table_name::text)) from "
+               "(select table_name from information_schema.tables "
+               "where table_schema='public') as all_tables")
+        result = self.execute(sql, fetch=True)
+        return float(result[0][0])
+
+    def get_table_indexes_byte(self, table):
+        # Returns size in bytes
+        sql = f"select pg_indexes_size('{table}');"
+        result = self.execute(sql, fetch=True)
+        return float(result[0][0])
+
+    def get_index_byte(self, index_name):
+        sql = f"select pg_table_size('{index_name}')"
+        result = self.execute(sql, fetch=True)
+        return float(result[0][0])
 
     def exist_table(self, table_name) -> bool:
         has_table = self.engine.dialect.has_table(self.engine.connect(), table_name)
@@ -85,229 +142,20 @@ class PostgreSQLController(BaseDBController):
                                                                                             sql)
 
     def _explain(self, sql, comment, execute: bool):
-        conn = self.engine.raw_connection()
         try:
-            cursor = conn.cursor()
-            cursor.execute(self.get_explain_sql(sql, execute, comment))
-            result = cursor.fetchall()
-            return result[0][0][0]
-        finally:
-            conn.close()
+            return self.connection.execute(text(self.get_explain_sql(sql, execute, comment))).all()[0][0][0]
+        except Exception as e:
+            print(e)
+            raise e
 
-        # def database_name(self):
-    #     return self.conn_str.split('/')[-1]
 
-    # def database_names(self):
-    #     result = self.exec_fetch("select datname from pg_database", False)
-    #     return [x[0] for x in result]
-
-    # def create_database(self, database_name):
-    #     self.exec_only("create database {}".format(database_name))
-
-    # def drop_database(self, database_name):
-    #     statement = f"DROP DATABASE {database_name};"
-    #     self.exec_only(statement)
-
-    # def import_data(self, table, path, delimiter="|"):
-    #     with open(path, "rb") as file:
-    #         s = file.read().decode()
-    #         fs = StringIO(s.encode("ascii", "ignore").decode("ascii"))
-    #         self.cursor.copy_from(fs, table, sep=delimiter, null="")
-
-    # def dump_data(self, table, path=".", delimiter=',', null=""):
-    #     if (os.path.isdir(path)):
-    #         path = os.path.join(path, f"{table}.csv")
-    #     with open(path, "w") as file:
-    #         self.cursor.copy_to(file, table, sep=delimiter, null=null)
-
-    # def drop_index(self, index_name):
-    #     statement = f"drop index {index_name}"
-    #     self.exec_only(statement)
-
-    # # give columns and table of a index, create it and return estimated size
-    # def create_index(self, table_of_index, column_names):
-    #     table_name = table_of_index
-    #     columns = ",".join(column_names)
-    #     index_idx = "{}_{}_idx".format(table_name, "_".join(column_names))
-    #     statement = (f"create index {index_idx} "
-    #                  f"on {table_name} ({columns})")
-    #     # print(statement)
-    #     self.exec_only(statement)
-    #     size = self.exec_fetch(f"select relpages from pg_class c "
-    #                            f"where c.relname = '{index_idx}'")
-    #     size = size[0]
-    #     return size * 8 * 1024
-
-    # def drop_indexes(self):
-    #     stmt = "select indexname from pg_indexes where schemaname='public'"
-    #     indexes = self.exec_fetch(stmt, one=False)
-    #     for index in indexes:
-    #         index_name = index[0]
-    #         if (index_name.startswith("pgsysml_")):
-    #             continue
-    #         drop_stmt = "drop index {}".format(index_name)
-    #         print("Dropping index {}".format(index_name))
-    #         self.exec_only(drop_stmt)
-
-    # def table_names(self):
-    #     stmt = "select table_name from information_schema.tables where table_schema='public'"
-    #     return [x[0] for x in self.exec(stmt).all()]
-
-    # def get_rows_of_table(self, table):
-    #     return self.exec(f"select count(*) from {table}").all()[0][0]
-
-    # def columns_of_table(self, table):
-    #     return {
-    #         row[0]: row[1]
-    #         for row in self.exec(f"select column_name,data_type,identity_maximum from information_schema.columns where table_name='{table}'").all()
-    #     }
-
-    # def number_of_distinct_val(self, table, column):
-    #     return self.exec(f"select count(distinct {column}) from {table};").all()[0][0]
-
-    # def info_of_col(self, table, column, info):
-    #     info_stmt = None
-    #     if isinstance(info, str):
-    #         info_stmt = f"{info}({column})"
-    #     else:
-    #         for x in info:
-    #             if info_stmt == None:
-    #                 info_stmt = f"{x}({column})"
-    #             else:
-    #                 info_stmt += f",{x}({column})"
-    #     # print(f"select {info_stmt} from {table};")
-    #     res = self.exec(f"select {info_stmt} from {table};").all()[0]
-    #     return res
-
-    # def indexes_size(self):
-    #     # Returns size in bytes
-    #     statement = ("select sum(pg_indexes_size(table_name::text)) from "
-    #                  "(select table_name from information_schema.tables "
-    #                  "where table_schema='public') as all_tables")
-    #     result = self.exec_fetch(statement)
-    #     return result[0]
-
-    # def number_of_indexes(self):
-    #     statement = """select count(*) from pg_indexes
-    #                    where schemaname = 'public'"""
-    #     result = self.exec_fetch(statement)
-    #     return result[0]
-
-    # def create_statistics(self):
-    #     self.commit()
-    #     self.exec_only("analyze")
-    #     self.commit()
-
-    # def set_random_seed(self, value=0):
-    #     self.exec_only(f"SELECT setseed({value})")
-
-    # # To support query with create view, create the view and return its query.
-    # def _prepare_query(self, query):
-    #     for query_statement in query.text.split(";"):
-    #         if "create view" in query_statement:
-    #             try:
-    #                 self.exec_only(query_statement)
-    #             except Exception as e:
-    #                 print(e)
-    #         elif "select" in query_statement or "SELECT" in query_statement:
-    #             return query_statement
-
-    # #Use it after _prepare_query, drop the view in query
-    # def _cleanup_query(self, query):
-    #     for query_statement in query.text.split(";"):
-    #         if "drop view" in query_statement:
-    #             self.exec_only(query_statement)
-    #             self.commit()
-
-    # # giving a query, run it and return total time and plan
-    # # PostgreSQL expects the timeout in milliseconds
-    # def exec_query(self, query, timeout=None):
-    #     query_text = self._prepare_query(query)
-    #     if timeout:
-    #         set_timeout = f"set statement_timeout={timeout}"
-    #         self.exec_only(set_timeout)
-    #     statement = f"explain (analyze, buffers, format json) {query_text}"
-    #     try:
-    #         plan = self.exec_fetch(statement, one=True)[0][0]
-    #         result = plan["Execution Time"] + plan["Planning Time"], plan["Plan"]
-    #     except Exception as e:
-    #         print(f"{query.nr}, {e}")
-    #         self.connection.rollback()
-    #         result = None, self.get_plan(query)
-    #     # Disable timeout
-    #     self.cursor.execute("set statement_timeout = 0")
-    #     self._cleanup_query(query)
-    #     return result
-
-    # def get_cost(self, query):
-    #     query_plan = self.get_plan(query)
-    #     total_cost = query_plan["Total Cost"]
-    #     return total_cost
-
-    # def get_plan(self, query):
-    #     query_text = self.prepare_query(query)
-    #     statement = f"explain (format json) {query_text}"
-    #     query_plan = self.exec_fetch(statement)[0][0]["Plan"]
-    #     self._cleanup_query(query)
-    #     return query_plan
-
-    # def table_exists(self, table_name):
-    #     statement = f"""SELECT EXISTS (
-    #         SELECT 1
-    #         FROM pg_tables
-    #         WHERE tablename = '{table_name}');"""
-    #     result = self.exec_fetch(statement)
-    #     return result[0]
-
-    # def database_exists(self, database_name):
-    #     statement = f"""SELECT EXISTS (
-    #         SELECT 1
-    #         FROM pg_database
-    #         WHERE datname = '{database_name}');"""
-    #     result = self.exec_fetch(statement)
-    #     return result[0]
-
-    # def execute(self, sqls) -> PilotTransData:
-    #     pass
-
-    # def get_set_hint_sql(self, key, value):
-    #     return ""
-
-    # # def backup_config(self, backup_path=None):
-    # #     if (backup_path == None):
-    # #         backup_path = self.backup_path
-    # #     with open(self.config_path, "r") as fr:
-    # #         config_file = fr.read()
-    # #         with open(backup_path, "w") as fw:
-    # #             fw.write(config_file)
-
-    # # # recover postgresql.conf from file
-    # # def recover_config(self, backup_path=None):
-    # #     if (backup_path == None):
-    # #         backup_path = self.backup_path
-    # #     with open(backup_path, "r") as fr:
-    # #         backup_file = fr.read()
-    # #         with open(self.config_path, "w") as fw:
-    # #             fw.write(backup_file)
-
-    # # def write_knob_to_file(self, knobs):
-    # #     with open(self.config_path, "w") as f:
-    # #         f.write(self.config_file)
-    # #         f.write("\n")
-    # #         for k, v in knobs.items():
-    # #             if k.startswith("pgsysml."):
-    # #                 continue
-    # #             f.write("{} = {}\n".format(k, v))
-
-    # # def surun(self, cmd):
-    # #     os.system("su {} -c '{}'".format(self.username, cmd))
-
-    # # def start(self):
-    # #     self.surun("{} start -D {}".format(self.pg_ctl, self.pgdata))
-
-    # # def shutdown(self):
-    # #     self.surun("{} stop -D {}".format(self.pg_ctl, self.pgdata))
-
-    # # def status(self):
-    # #     res = os.popen("su {} -c '{} status -D {}'".format(self.username, self.pg_ctl, self.pgdata))
-    # #     return res.read()
+class SimulateIndexController:
+    def create_index(self, index: Index):
+        table_name = index.table()
+        statement = (
+            "select * from hypopg_create_index( "
+            f"'create index on {table_name} "
+            f"({index.joined_column_names()})')"
+        )
+        result = self.exec_fetch(statement)
+        return result

@@ -1,0 +1,6 @@
+psycopg2-binary
+coverage
+pyhdb
+black
+flake8
+isort

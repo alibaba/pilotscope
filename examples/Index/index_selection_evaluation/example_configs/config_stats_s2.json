@@ -1,0 +1,24 @@
+{
+    "database_system": "postgres",
+    "benchmark_name": "stats",
+    "scale_factor": 10,
+    "generated": true,
+    "queries_file":"../../stats_light.sql" ,
+    "algorithms": [
+        {
+            "name": "extend",
+            "parameters": {
+                "budget_MB": [250],
+                "max_index_width": 2
+            },
+            "timeout": 50
+        }
+    ],
+    "queries": [
+        1,
+        3,
+        4,
+        5,
+        6
+    ]
+}

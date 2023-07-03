@@ -7,7 +7,7 @@ from PilotConfig import PilotConfig
 from PilotEnum import *
 from PilotEvent import PeriodTrainingEvent, Event, PretrainingModelEvent,PeriodCollectionDataEvent
 from PilotTransData import PilotTransData
-from common.Util import extract_anchor_handlers, extract_table_data_from_anchor
+from common.Util import extract_anchor_handlers, extract_table_data_from_anchor, extract_handlers
 
 
 class PilotScheduler:
@@ -56,7 +56,7 @@ class PilotScheduler:
 
 
     def _collect_training_data(self, data: PilotTransData):
-        fetch_anchors = extract_anchor_handlers(self.collect_data_state_manager.anchor_to_handlers.values(), True)
+        fetch_anchors = extract_handlers(self.collect_data_state_manager.anchor_to_handlers.values(), True)
         column_2_value = extract_table_data_from_anchor(fetch_anchors, data)
         self.pilot_data_manager.save_data(self.training_data_save_table, column_2_value)
 

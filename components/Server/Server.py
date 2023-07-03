@@ -4,6 +4,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from time import sleep
 
+from Exception.Exception import HttpReceiveTimeoutException
 from common.Thread import ValueThread
 from common.Util import all_https, singleton
 
@@ -74,8 +75,12 @@ class ServerManager:
             if tid not in tid_2_data:
                 timeout_stop = not cond.wait(timeout)
 
-        receive_data = tid_2_data[tid] if not timeout_stop else None
-        return receive_data
+
+        if timeout_stop:
+            raise HttpReceiveTimeoutException()
+
+        return tid_2_data[tid]
+
 
 
 class RequestHandler(BaseHTTPRequestHandler):

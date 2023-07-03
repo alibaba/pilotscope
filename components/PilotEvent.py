@@ -2,7 +2,9 @@ from abc import ABC, abstractmethod
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
+from DBController.BaseDBController import BaseDBController
 from Dao.PilotTrainDataManager import PilotTrainDataManager
+from Factory.DBControllerFectory import DBControllerFactory
 from PilotConfig import PilotConfig
 from PilotModel import PilotModel
 from common.Thread import ValueThread
@@ -33,7 +35,7 @@ class PeriodTrainingEvent(Event, ABC):
 
 class PeriodCollectionDataEvent(Event):
 
-    def __init__(self, config, seconds, ):
+    def __init__(self, config, seconds):
         super().__init__(config)
         self._table_name = self.get_table_name()
         self._seconds = seconds
@@ -149,4 +151,23 @@ class PretrainingModelEvent(Event):
 
     @abstractmethod
     def _custom_pretrain_model(self, train_data_manager: PilotTrainDataManager, existed_user_model):
+        pass
+
+
+class PeriodicDbControllerEvent(Event):
+    def __init__(self, config, per_query_count, exec_in_init=True):
+        super().__init__(config)
+        self.per_query_count = per_query_count
+        self.query_count = 0 if not exec_in_init else per_query_count
+        self._db_controller = DBControllerFactory.get_db_controller(config)
+        self._training_data_manager = PilotTrainDataManager(config)
+
+    def update(self):
+        self.query_count += 1
+        if self.query_count >= self.per_query_count:
+            self.query_count = 0
+            self._custom_update(self._db_controller, self._training_data_manager)
+
+    @abstractmethod
+    def _custom_update(self, db_controller: BaseDBController, training_data_manager: PilotTrainDataManager):
         pass

@@ -10,7 +10,6 @@ class BaseAnchorHandler(ABC):
         self.enable = True
         self.anchor_name = AnchorEnum.BASE_ANCHOR.name
         self.config = config
-        self.db_controller = DBControllerFactory.get_db_controller(config)
 
     def add_params_to_db_core(self, params: dict):
         return params.update({"enable": self.enable, "name": self.anchor_name})

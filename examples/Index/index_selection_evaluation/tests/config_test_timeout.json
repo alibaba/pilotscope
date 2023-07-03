@@ -1,0 +1,15 @@
+{
+    "database_system": "postgres",
+    "benchmark_name": "tpch",
+    "scale_factor": 1,
+    "seed": 1556097050.8199081,
+    "algorithms": [
+        {
+            "name": "no_index",
+            "parameters": null,
+            "number_of_actual_runs": 1,
+            "timeout": 1
+        }
+    ],
+    "queries": [1]
+}

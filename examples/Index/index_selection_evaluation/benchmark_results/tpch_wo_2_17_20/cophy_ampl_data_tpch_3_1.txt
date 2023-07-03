@@ -1,0 +1,5007 @@
+# what-if time: 151.91098499298096
+# cost_requests: 82676	cache_hits: 45776
+
+# no 2 17 20
+set QUERIES := 1 3 4 5 6 7 8 9 10 11 12 13 14 15 16 18 19 21 22;
+param NUMBER_OF_INDEXES := 1215;
+param NUMBER_OF_INDEX_COMBINATIONS := 1215;
+
+
+param size :=
+1 39182336 # ['c_custkey']
+2 1567498240 # ['l_orderkey']
+3 1567498240 # ['l_partkey']
+4 1645871104 # ['l_quantity']
+5 1567498240 # ['l_shipdate']
+6 1567498240 # ['l_suppkey']
+7 8192 # ['n_nationkey']
+8 391921664 # ['o_custkey']
+9 391921664 # ['o_orderkey']
+10 70541312 # ['p_brand']
+11 70541312 # ['p_container']
+12 52248576 # ['p_partkey']
+13 52248576 # ['p_size']
+14 96665600 # ['p_type']
+15 208994304 # ['ps_partkey']
+16 208994304 # ['ps_suppkey']
+17 229892096 # ['ps_supplycost']
+18 2605056 # ['s_nationkey']
+19 2605056 # ['s_suppkey']
+20 76414976 # ['c_mktsegment', 'c_custkey']
+21 62701568 # ['c_nationkey', 'c_custkey']
+22 2507997184 # ['l_commitdate', 'l_partkey']
+23 2507997184 # ['l_commitdate', 'l_suppkey']
+24 2507997184 # ['l_discount', 'l_partkey']
+25 2507997184 # ['l_discount', 'l_suppkey']
+26 2821496832 # ['l_extendedprice', 'l_partkey']
+27 2821496832 # ['l_extendedprice', 'l_suppkey']
+28 2351243264 # ['l_linestatus', 'l_partkey']
+29 2429624320 # ['l_linestatus', 'l_quantity']
+30 2351243264 # ['l_linestatus', 'l_suppkey']
+31 2507997184 # ['l_orderkey', 'l_commitdate']
+32 2507997184 # ['l_orderkey', 'l_discount']
+33 2821496832 # ['l_orderkey', 'l_extendedprice']
+34 2351243264 # ['l_orderkey', 'l_linestatus']
+35 2507997184 # ['l_orderkey', 'l_partkey']
+36 2586370048 # ['l_orderkey', 'l_quantity']
+37 2507997184 # ['l_orderkey', 'l_receiptdate']
+38 2351243264 # ['l_orderkey', 'l_returnflag']
+39 2507997184 # ['l_orderkey', 'l_shipdate']
+40 4232249344 # ['l_orderkey', 'l_shipinstruct']
+41 3056623616 # ['l_orderkey', 'l_shipmode']
+42 2507997184 # ['l_orderkey', 'l_suppkey']
+43 2507997184 # ['l_orderkey', 'l_tax']
+44 2507997184 # ['l_partkey', 'l_commitdate']
+45 2507997184 # ['l_partkey', 'l_discount']
+46 2821496832 # ['l_partkey', 'l_extendedprice']
+47 2351243264 # ['l_partkey', 'l_linestatus']
+48 2507997184 # ['l_partkey', 'l_orderkey']
+49 2586370048 # ['l_partkey', 'l_quantity']
+50 2507997184 # ['l_partkey', 'l_receiptdate']
+51 2351243264 # ['l_partkey', 'l_returnflag']
+52 2507997184 # ['l_partkey', 'l_shipdate']
+53 4232249344 # ['l_partkey', 'l_shipinstruct']
+54 3056623616 # ['l_partkey', 'l_shipmode']
+55 2507997184 # ['l_partkey', 'l_suppkey']
+56 2507997184 # ['l_partkey', 'l_tax']
+57 2586370048 # ['l_quantity', 'l_partkey']
+58 2586370048 # ['l_quantity', 'l_suppkey']
+59 2507997184 # ['l_receiptdate', 'l_partkey']
+60 2507997184 # ['l_receiptdate', 'l_suppkey']
+61 2351243264 # ['l_returnflag', 'l_partkey']
+62 2429624320 # ['l_returnflag', 'l_quantity']
+63 2351243264 # ['l_returnflag', 'l_suppkey']
+64 2507997184 # ['l_shipdate', 'l_commitdate']
+65 2507997184 # ['l_shipdate', 'l_discount']
+66 2821496832 # ['l_shipdate', 'l_extendedprice']
+67 2351243264 # ['l_shipdate', 'l_linestatus']
+68 2507997184 # ['l_shipdate', 'l_orderkey']
+69 2507997184 # ['l_shipdate', 'l_partkey']
+70 2586370048 # ['l_shipdate', 'l_quantity']
+71 2507997184 # ['l_shipdate', 'l_receiptdate']
+72 2351243264 # ['l_shipdate', 'l_returnflag']
+73 4232249344 # ['l_shipdate', 'l_shipinstruct']
+74 3056623616 # ['l_shipdate', 'l_shipmode']
+75 2507997184 # ['l_shipdate', 'l_suppkey']
+76 2507997184 # ['l_shipdate', 'l_tax']
+77 4232249344 # ['l_shipinstruct', 'l_partkey']
+78 3056623616 # ['l_shipmode', 'l_partkey']
+79 3056623616 # ['l_shipmode', 'l_suppkey']
+80 2507997184 # ['l_suppkey', 'l_commitdate']
+81 2507997184 # ['l_suppkey', 'l_discount']
+82 2821496832 # ['l_suppkey', 'l_extendedprice']
+83 2351243264 # ['l_suppkey', 'l_linestatus']
+84 2507997184 # ['l_suppkey', 'l_orderkey']
+85 2507997184 # ['l_suppkey', 'l_partkey']
+86 2586370048 # ['l_suppkey', 'l_quantity']
+87 2507997184 # ['l_suppkey', 'l_receiptdate']
+88 2351243264 # ['l_suppkey', 'l_returnflag']
+89 2507997184 # ['l_suppkey', 'l_shipdate']
+90 4232249344 # ['l_suppkey', 'l_shipinstruct']
+91 3056623616 # ['l_suppkey', 'l_shipmode']
+92 2507997184 # ['l_suppkey', 'l_tax']
+93 2507997184 # ['l_tax', 'l_partkey']
+94 2507997184 # ['l_tax', 'l_suppkey']
+95 8192 # ['n_nationkey', 'n_name']
+96 8192 # ['n_nationkey', 'n_regionkey']
+97 1508900864 # ['o_custkey', 'o_comment']
+98 627073024 # ['o_custkey', 'o_orderdate']
+99 627073024 # ['o_custkey', 'o_orderkey']
+100 862224384 # ['o_custkey', 'o_orderpriority']
+101 587882496 # ['o_custkey', 'o_orderstatus']
+102 627073024 # ['o_custkey', 'o_shippriority']
+103 705462272 # ['o_custkey', 'o_totalprice']
+104 1508900864 # ['o_orderkey', 'o_comment']
+105 627073024 # ['o_orderkey', 'o_custkey']
+106 627073024 # ['o_orderkey', 'o_orderdate']
+107 862224384 # ['o_orderkey', 'o_orderpriority']
+108 587882496 # ['o_orderkey', 'o_orderstatus']
+109 627073024 # ['o_orderkey', 'o_shippriority']
+110 705462272 # ['o_orderkey', 'o_totalprice']
+111 587882496 # ['o_orderstatus', 'o_orderkey']
+112 120184832 # ['p_brand', 'p_container']
+113 159375360 # ['p_brand', 'p_mfgr']
+114 177659904 # ['p_brand', 'p_name']
+115 101892096 # ['p_brand', 'p_partkey']
+116 101892096 # ['p_brand', 'p_size']
+117 146309120 # ['p_brand', 'p_type']
+118 120184832 # ['p_container', 'p_brand']
+119 159375360 # ['p_container', 'p_mfgr']
+120 177659904 # ['p_container', 'p_name']
+121 101892096 # ['p_container', 'p_partkey']
+122 101892096 # ['p_container', 'p_size']
+123 146309120 # ['p_container', 'p_type']
+124 101892096 # ['p_partkey', 'p_brand']
+125 101892096 # ['p_partkey', 'p_container']
+126 141082624 # ['p_partkey', 'p_mfgr']
+127 159375360 # ['p_partkey', 'p_name']
+128 83599360 # ['p_partkey', 'p_size']
+129 128016384 # ['p_partkey', 'p_type']
+130 101892096 # ['p_size', 'p_brand']
+131 101892096 # ['p_size', 'p_container']
+132 83599360 # ['p_size', 'p_partkey']
+133 146309120 # ['p_type', 'p_brand']
+134 146309120 # ['p_type', 'p_container']
+135 185499648 # ['p_type', 'p_mfgr']
+136 203792384 # ['p_type', 'p_name']
+137 128016384 # ['p_type', 'p_partkey']
+138 128016384 # ['p_type', 'p_size']
+139 334389248 # ['ps_availqty', 'ps_partkey']
+140 334389248 # ['ps_availqty', 'ps_suppkey']
+141 355287040 # ['ps_availqty', 'ps_supplycost']
+142 334389248 # ['ps_partkey', 'ps_availqty']
+143 334389248 # ['ps_partkey', 'ps_suppkey']
+144 355287040 # ['ps_partkey', 'ps_supplycost']
+145 334389248 # ['ps_suppkey', 'ps_availqty']
+146 334389248 # ['ps_suppkey', 'ps_partkey']
+147 355287040 # ['ps_suppkey', 'ps_supplycost']
+148 355287040 # ['ps_supplycost', 'ps_availqty']
+149 355287040 # ['ps_supplycost', 'ps_partkey']
+150 355287040 # ['ps_supplycost', 'ps_suppkey']
+151 4440064 # ['s_nationkey', 's_acctbal']
+152 6922240 # ['s_nationkey', 's_address']
+153 11886592 # ['s_nationkey', 's_comment']
+154 7053312 # ['s_nationkey', 's_name']
+155 5742592 # ['s_nationkey', 's_phone']
+156 4177920 # ['s_nationkey', 's_suppkey']
+157 4440064 # ['s_suppkey', 's_acctbal']
+158 6922240 # ['s_suppkey', 's_address']
+159 11886592 # ['s_suppkey', 's_comment']
+160 7053312 # ['s_suppkey', 's_name']
+161 4177920 # ['s_suppkey', 's_nationkey']
+162 5742592 # ['s_suppkey', 's_phone']
+163 129327104 # ['c_acctbal', 'c_custkey', 'c_phone']
+164 129327104 # ['c_acctbal', 'c_phone', 'c_custkey']
+165 119529472 # ['c_mktsegment', 'c_acctbal', 'c_custkey']
+166 156753920 # ['c_mktsegment', 'c_address', 'c_custkey']
+167 250814464 # ['c_mktsegment', 'c_comment', 'c_custkey']
+168 119529472 # ['c_mktsegment', 'c_custkey', 'c_acctbal']
+169 156753920 # ['c_mktsegment', 'c_custkey', 'c_address']
+170 250814464 # ['c_mktsegment', 'c_custkey', 'c_comment']
+171 144998400 # ['c_mktsegment', 'c_custkey', 'c_name']
+172 115605504 # ['c_mktsegment', 'c_custkey', 'c_nationkey']
+173 139124736 # ['c_mktsegment', 'c_custkey', 'c_phone']
+174 144998400 # ['c_mktsegment', 'c_name', 'c_custkey']
+175 115605504 # ['c_mktsegment', 'c_nationkey', 'c_custkey']
+176 139124736 # ['c_mktsegment', 'c_phone', 'c_custkey']
+177 105807872 # ['c_nationkey', 'c_acctbal', 'c_custkey']
+178 143040512 # ['c_nationkey', 'c_address', 'c_custkey']
+179 237092864 # ['c_nationkey', 'c_comment', 'c_custkey']
+180 105807872 # ['c_nationkey', 'c_custkey', 'c_acctbal']
+181 143040512 # ['c_nationkey', 'c_custkey', 'c_address']
+182 237092864 # ['c_nationkey', 'c_custkey', 'c_comment']
+183 115605504 # ['c_nationkey', 'c_custkey', 'c_mktsegment']
+184 131284992 # ['c_nationkey', 'c_custkey', 'c_name']
+185 125403136 # ['c_nationkey', 'c_custkey', 'c_phone']
+186 115605504 # ['c_nationkey', 'c_mktsegment', 'c_custkey']
+187 131284992 # ['c_nationkey', 'c_name', 'c_custkey']
+188 125403136 # ['c_nationkey', 'c_phone', 'c_custkey']
+189 4153868288 # ['l_commitdate', 'l_partkey', 'l_quantity']
+190 4153868288 # ['l_commitdate', 'l_quantity', 'l_partkey']
+191 4153868288 # ['l_discount', 'l_partkey', 'l_quantity']
+192 4153868288 # ['l_discount', 'l_quantity', 'l_partkey']
+193 4467367936 # ['l_extendedprice', 'l_partkey', 'l_quantity']
+194 4467367936 # ['l_extendedprice', 'l_quantity', 'l_partkey']
+195 3997122560 # ['l_linestatus', 'l_commitdate', 'l_quantity']
+196 3997122560 # ['l_linestatus', 'l_discount', 'l_quantity']
+197 4310622208 # ['l_linestatus', 'l_extendedprice', 'l_quantity']
+198 3997122560 # ['l_linestatus', 'l_orderkey', 'l_quantity']
+199 3997122560 # ['l_linestatus', 'l_partkey', 'l_quantity']
+200 3761995776 # ['l_linestatus', 'l_partkey', 'l_returnflag']
+201 3997122560 # ['l_linestatus', 'l_quantity', 'l_commitdate']
+202 3997122560 # ['l_linestatus', 'l_quantity', 'l_discount']
+203 4310622208 # ['l_linestatus', 'l_quantity', 'l_extendedprice']
+204 3997122560 # ['l_linestatus', 'l_quantity', 'l_orderkey']
+205 3997122560 # ['l_linestatus', 'l_quantity', 'l_partkey']
+206 3997122560 # ['l_linestatus', 'l_quantity', 'l_receiptdate']
+207 3840368640 # ['l_linestatus', 'l_quantity', 'l_returnflag']
+208 3997122560 # ['l_linestatus', 'l_quantity', 'l_shipdate']
+209 4545748992 # ['l_linestatus', 'l_quantity', 'l_shipmode']
+210 3997122560 # ['l_linestatus', 'l_quantity', 'l_suppkey']
+211 3997122560 # ['l_linestatus', 'l_quantity', 'l_tax']
+212 3997122560 # ['l_linestatus', 'l_receiptdate', 'l_quantity']
+213 3761995776 # ['l_linestatus', 'l_returnflag', 'l_partkey']
+214 3840368640 # ['l_linestatus', 'l_returnflag', 'l_quantity']
+215 3761995776 # ['l_linestatus', 'l_returnflag', 'l_suppkey']
+216 3997122560 # ['l_linestatus', 'l_shipdate', 'l_quantity']
+217 4545748992 # ['l_linestatus', 'l_shipmode', 'l_quantity']
+218 3997122560 # ['l_linestatus', 'l_suppkey', 'l_quantity']
+219 3761995776 # ['l_linestatus', 'l_suppkey', 'l_returnflag']
+220 3997122560 # ['l_linestatus', 'l_tax', 'l_quantity']
+221 4075495424 # ['l_orderkey', 'l_commitdate', 'l_discount']
+222 4388995072 # ['l_orderkey', 'l_commitdate', 'l_extendedprice']
+223 3918749696 # ['l_orderkey', 'l_commitdate', 'l_linestatus']
+224 4075495424 # ['l_orderkey', 'l_commitdate', 'l_partkey']
+225 4153868288 # ['l_orderkey', 'l_commitdate', 'l_quantity']
+226 4075495424 # ['l_orderkey', 'l_commitdate', 'l_receiptdate']
+227 3918749696 # ['l_orderkey', 'l_commitdate', 'l_returnflag']
+228 4075495424 # ['l_orderkey', 'l_commitdate', 'l_shipdate']
+229 5799747584 # ['l_orderkey', 'l_commitdate', 'l_shipinstruct']
+230 4624121856 # ['l_orderkey', 'l_commitdate', 'l_shipmode']
+231 4075495424 # ['l_orderkey', 'l_commitdate', 'l_suppkey']
+232 4075495424 # ['l_orderkey', 'l_commitdate', 'l_tax']
+233 4075495424 # ['l_orderkey', 'l_discount', 'l_commitdate']
+234 4388995072 # ['l_orderkey', 'l_discount', 'l_extendedprice']
+235 3918749696 # ['l_orderkey', 'l_discount', 'l_linestatus']
+236 4075495424 # ['l_orderkey', 'l_discount', 'l_partkey']
+237 4153868288 # ['l_orderkey', 'l_discount', 'l_quantity']
+238 4075495424 # ['l_orderkey', 'l_discount', 'l_receiptdate']
+239 3918749696 # ['l_orderkey', 'l_discount', 'l_returnflag']
+240 4075495424 # ['l_orderkey', 'l_discount', 'l_shipdate']
+241 5799747584 # ['l_orderkey', 'l_discount', 'l_shipinstruct']
+242 4624121856 # ['l_orderkey', 'l_discount', 'l_shipmode']
+243 4075495424 # ['l_orderkey', 'l_discount', 'l_suppkey']
+244 4075495424 # ['l_orderkey', 'l_discount', 'l_tax']
+245 4388995072 # ['l_orderkey', 'l_extendedprice', 'l_commitdate']
+246 4388995072 # ['l_orderkey', 'l_extendedprice', 'l_discount']
+247 4232249344 # ['l_orderkey', 'l_extendedprice', 'l_linestatus']
+248 4388995072 # ['l_orderkey', 'l_extendedprice', 'l_partkey']
+249 4467367936 # ['l_orderkey', 'l_extendedprice', 'l_quantity']
+250 4388995072 # ['l_orderkey', 'l_extendedprice', 'l_receiptdate']
+251 4232249344 # ['l_orderkey', 'l_extendedprice', 'l_returnflag']
+252 4388995072 # ['l_orderkey', 'l_extendedprice', 'l_shipdate']
+253 6113247232 # ['l_orderkey', 'l_extendedprice', 'l_shipinstruct']
+254 4937621504 # ['l_orderkey', 'l_extendedprice', 'l_shipmode']
+255 4388995072 # ['l_orderkey', 'l_extendedprice', 'l_suppkey']
+256 4388995072 # ['l_orderkey', 'l_extendedprice', 'l_tax']
+257 3918749696 # ['l_orderkey', 'l_linestatus', 'l_commitdate']
+258 3918749696 # ['l_orderkey', 'l_linestatus', 'l_discount']
+259 4232249344 # ['l_orderkey', 'l_linestatus', 'l_extendedprice']
+260 3918749696 # ['l_orderkey', 'l_linestatus', 'l_partkey']
+261 3997122560 # ['l_orderkey', 'l_linestatus', 'l_quantity']
+262 3918749696 # ['l_orderkey', 'l_linestatus', 'l_receiptdate']
+263 3761995776 # ['l_orderkey', 'l_linestatus', 'l_returnflag']
+264 3918749696 # ['l_orderkey', 'l_linestatus', 'l_shipdate']
+265 5642993664 # ['l_orderkey', 'l_linestatus', 'l_shipinstruct']
+266 4467367936 # ['l_orderkey', 'l_linestatus', 'l_shipmode']
+267 3918749696 # ['l_orderkey', 'l_linestatus', 'l_suppkey']
+268 3918749696 # ['l_orderkey', 'l_linestatus', 'l_tax']
+269 4075495424 # ['l_orderkey', 'l_partkey', 'l_commitdate']
+270 4075495424 # ['l_orderkey', 'l_partkey', 'l_discount']
+271 4388995072 # ['l_orderkey', 'l_partkey', 'l_extendedprice']
+272 3918749696 # ['l_orderkey', 'l_partkey', 'l_linestatus']
+273 4153868288 # ['l_orderkey', 'l_partkey', 'l_quantity']
+274 4075495424 # ['l_orderkey', 'l_partkey', 'l_receiptdate']
+275 3918749696 # ['l_orderkey', 'l_partkey', 'l_returnflag']
+276 4075495424 # ['l_orderkey', 'l_partkey', 'l_shipdate']
+277 5799747584 # ['l_orderkey', 'l_partkey', 'l_shipinstruct']
+278 4624121856 # ['l_orderkey', 'l_partkey', 'l_shipmode']
+279 4075495424 # ['l_orderkey', 'l_partkey', 'l_suppkey']
+280 4075495424 # ['l_orderkey', 'l_partkey', 'l_tax']
+281 4153868288 # ['l_orderkey', 'l_quantity', 'l_commitdate']
+282 4153868288 # ['l_orderkey', 'l_quantity', 'l_discount']
+283 4467367936 # ['l_orderkey', 'l_quantity', 'l_extendedprice']
+284 3997122560 # ['l_orderkey', 'l_quantity', 'l_linestatus']
+285 4153868288 # ['l_orderkey', 'l_quantity', 'l_partkey']
+286 4153868288 # ['l_orderkey', 'l_quantity', 'l_receiptdate']
+287 3997122560 # ['l_orderkey', 'l_quantity', 'l_returnflag']
+288 4153868288 # ['l_orderkey', 'l_quantity', 'l_shipdate']
+289 5878120448 # ['l_orderkey', 'l_quantity', 'l_shipinstruct']
+290 4702494720 # ['l_orderkey', 'l_quantity', 'l_shipmode']
+291 4153868288 # ['l_orderkey', 'l_quantity', 'l_suppkey']
+292 4153868288 # ['l_orderkey', 'l_quantity', 'l_tax']
+293 4075495424 # ['l_orderkey', 'l_receiptdate', 'l_commitdate']
+294 4075495424 # ['l_orderkey', 'l_receiptdate', 'l_discount']
+295 4388995072 # ['l_orderkey', 'l_receiptdate', 'l_extendedprice']
+296 3918749696 # ['l_orderkey', 'l_receiptdate', 'l_linestatus']
+297 4075495424 # ['l_orderkey', 'l_receiptdate', 'l_partkey']
+298 4153868288 # ['l_orderkey', 'l_receiptdate', 'l_quantity']
+299 3918749696 # ['l_orderkey', 'l_receiptdate', 'l_returnflag']
+300 4075495424 # ['l_orderkey', 'l_receiptdate', 'l_shipdate']
+301 5799747584 # ['l_orderkey', 'l_receiptdate', 'l_shipinstruct']
+302 4624121856 # ['l_orderkey', 'l_receiptdate', 'l_shipmode']
+303 4075495424 # ['l_orderkey', 'l_receiptdate', 'l_suppkey']
+304 4075495424 # ['l_orderkey', 'l_receiptdate', 'l_tax']
+305 3918749696 # ['l_orderkey', 'l_returnflag', 'l_commitdate']
+306 3918749696 # ['l_orderkey', 'l_returnflag', 'l_discount']
+307 4232249344 # ['l_orderkey', 'l_returnflag', 'l_extendedprice']
+308 3761995776 # ['l_orderkey', 'l_returnflag', 'l_linestatus']
+309 3918749696 # ['l_orderkey', 'l_returnflag', 'l_partkey']
+310 3997122560 # ['l_orderkey', 'l_returnflag', 'l_quantity']
+311 3918749696 # ['l_orderkey', 'l_returnflag', 'l_receiptdate']
+312 3918749696 # ['l_orderkey', 'l_returnflag', 'l_shipdate']
+313 5642993664 # ['l_orderkey', 'l_returnflag', 'l_shipinstruct']
+314 4467367936 # ['l_orderkey', 'l_returnflag', 'l_shipmode']
+315 3918749696 # ['l_orderkey', 'l_returnflag', 'l_suppkey']
+316 3918749696 # ['l_orderkey', 'l_returnflag', 'l_tax']
+317 4075495424 # ['l_orderkey', 'l_shipdate', 'l_commitdate']
+318 4075495424 # ['l_orderkey', 'l_shipdate', 'l_discount']
+319 4388995072 # ['l_orderkey', 'l_shipdate', 'l_extendedprice']
+320 3918749696 # ['l_orderkey', 'l_shipdate', 'l_linestatus']
+321 4075495424 # ['l_orderkey', 'l_shipdate', 'l_partkey']
+322 4153868288 # ['l_orderkey', 'l_shipdate', 'l_quantity']
+323 4075495424 # ['l_orderkey', 'l_shipdate', 'l_receiptdate']
+324 3918749696 # ['l_orderkey', 'l_shipdate', 'l_returnflag']
+325 5799747584 # ['l_orderkey', 'l_shipdate', 'l_shipinstruct']
+326 4624121856 # ['l_orderkey', 'l_shipdate', 'l_shipmode']
+327 4075495424 # ['l_orderkey', 'l_shipdate', 'l_suppkey']
+328 4075495424 # ['l_orderkey', 'l_shipdate', 'l_tax']
+329 5799747584 # ['l_orderkey', 'l_shipinstruct', 'l_commitdate']
+330 5799747584 # ['l_orderkey', 'l_shipinstruct', 'l_discount']
+331 6113247232 # ['l_orderkey', 'l_shipinstruct', 'l_extendedprice']
+332 5642993664 # ['l_orderkey', 'l_shipinstruct', 'l_linestatus']
+333 5799747584 # ['l_orderkey', 'l_shipinstruct', 'l_partkey']
+334 5878120448 # ['l_orderkey', 'l_shipinstruct', 'l_quantity']
+335 5799747584 # ['l_orderkey', 'l_shipinstruct', 'l_receiptdate']
+336 5642993664 # ['l_orderkey', 'l_shipinstruct', 'l_returnflag']
+337 5799747584 # ['l_orderkey', 'l_shipinstruct', 'l_shipdate']
+338 6348374016 # ['l_orderkey', 'l_shipinstruct', 'l_shipmode']
+339 5799747584 # ['l_orderkey', 'l_shipinstruct', 'l_suppkey']
+340 5799747584 # ['l_orderkey', 'l_shipinstruct', 'l_tax']
+341 4624121856 # ['l_orderkey', 'l_shipmode', 'l_commitdate']
+342 4624121856 # ['l_orderkey', 'l_shipmode', 'l_discount']
+343 4937621504 # ['l_orderkey', 'l_shipmode', 'l_extendedprice']
+344 4467367936 # ['l_orderkey', 'l_shipmode', 'l_linestatus']
+345 4624121856 # ['l_orderkey', 'l_shipmode', 'l_partkey']
+346 4702494720 # ['l_orderkey', 'l_shipmode', 'l_quantity']
+347 4624121856 # ['l_orderkey', 'l_shipmode', 'l_receiptdate']
+348 4467367936 # ['l_orderkey', 'l_shipmode', 'l_returnflag']
+349 4624121856 # ['l_orderkey', 'l_shipmode', 'l_shipdate']
+350 6348374016 # ['l_orderkey', 'l_shipmode', 'l_shipinstruct']
+351 4624121856 # ['l_orderkey', 'l_shipmode', 'l_suppkey']
+352 4624121856 # ['l_orderkey', 'l_shipmode', 'l_tax']
+353 4075495424 # ['l_orderkey', 'l_suppkey', 'l_commitdate']
+354 4075495424 # ['l_orderkey', 'l_suppkey', 'l_discount']
+355 4388995072 # ['l_orderkey', 'l_suppkey', 'l_extendedprice']
+356 3918749696 # ['l_orderkey', 'l_suppkey', 'l_linestatus']
+357 4075495424 # ['l_orderkey', 'l_suppkey', 'l_partkey']
+358 4153868288 # ['l_orderkey', 'l_suppkey', 'l_quantity']
+359 4075495424 # ['l_orderkey', 'l_suppkey', 'l_receiptdate']
+360 3918749696 # ['l_orderkey', 'l_suppkey', 'l_returnflag']
+361 4075495424 # ['l_orderkey', 'l_suppkey', 'l_shipdate']
+362 5799747584 # ['l_orderkey', 'l_suppkey', 'l_shipinstruct']
+363 4624121856 # ['l_orderkey', 'l_suppkey', 'l_shipmode']
+364 4075495424 # ['l_orderkey', 'l_suppkey', 'l_tax']
+365 4075495424 # ['l_orderkey', 'l_tax', 'l_commitdate']
+366 4075495424 # ['l_orderkey', 'l_tax', 'l_discount']
+367 4388995072 # ['l_orderkey', 'l_tax', 'l_extendedprice']
+368 3918749696 # ['l_orderkey', 'l_tax', 'l_linestatus']
+369 4075495424 # ['l_orderkey', 'l_tax', 'l_partkey']
+370 4153868288 # ['l_orderkey', 'l_tax', 'l_quantity']
+371 4075495424 # ['l_orderkey', 'l_tax', 'l_receiptdate']
+372 3918749696 # ['l_orderkey', 'l_tax', 'l_returnflag']
+373 4075495424 # ['l_orderkey', 'l_tax', 'l_shipdate']
+374 5799747584 # ['l_orderkey', 'l_tax', 'l_shipinstruct']
+375 4624121856 # ['l_orderkey', 'l_tax', 'l_shipmode']
+376 4075495424 # ['l_orderkey', 'l_tax', 'l_suppkey']
+377 4075495424 # ['l_partkey', 'l_commitdate', 'l_discount']
+378 4388995072 # ['l_partkey', 'l_commitdate', 'l_extendedprice']
+379 3918749696 # ['l_partkey', 'l_commitdate', 'l_linestatus']
+380 4075495424 # ['l_partkey', 'l_commitdate', 'l_orderkey']
+381 4153868288 # ['l_partkey', 'l_commitdate', 'l_quantity']
+382 4075495424 # ['l_partkey', 'l_commitdate', 'l_receiptdate']
+383 3918749696 # ['l_partkey', 'l_commitdate', 'l_returnflag']
+384 4075495424 # ['l_partkey', 'l_commitdate', 'l_shipdate']
+385 5799747584 # ['l_partkey', 'l_commitdate', 'l_shipinstruct']
+386 4624121856 # ['l_partkey', 'l_commitdate', 'l_shipmode']
+387 4075495424 # ['l_partkey', 'l_commitdate', 'l_suppkey']
+388 4075495424 # ['l_partkey', 'l_commitdate', 'l_tax']
+389 4075495424 # ['l_partkey', 'l_discount', 'l_commitdate']
+390 4388995072 # ['l_partkey', 'l_discount', 'l_extendedprice']
+391 3918749696 # ['l_partkey', 'l_discount', 'l_linestatus']
+392 4075495424 # ['l_partkey', 'l_discount', 'l_orderkey']
+393 4153868288 # ['l_partkey', 'l_discount', 'l_quantity']
+394 4075495424 # ['l_partkey', 'l_discount', 'l_receiptdate']
+395 3918749696 # ['l_partkey', 'l_discount', 'l_returnflag']
+396 4075495424 # ['l_partkey', 'l_discount', 'l_shipdate']
+397 5799747584 # ['l_partkey', 'l_discount', 'l_shipinstruct']
+398 4624121856 # ['l_partkey', 'l_discount', 'l_shipmode']
+399 4075495424 # ['l_partkey', 'l_discount', 'l_suppkey']
+400 4075495424 # ['l_partkey', 'l_discount', 'l_tax']
+401 4388995072 # ['l_partkey', 'l_extendedprice', 'l_commitdate']
+402 4388995072 # ['l_partkey', 'l_extendedprice', 'l_discount']
+403 4232249344 # ['l_partkey', 'l_extendedprice', 'l_linestatus']
+404 4388995072 # ['l_partkey', 'l_extendedprice', 'l_orderkey']
+405 4467367936 # ['l_partkey', 'l_extendedprice', 'l_quantity']
+406 4388995072 # ['l_partkey', 'l_extendedprice', 'l_receiptdate']
+407 4232249344 # ['l_partkey', 'l_extendedprice', 'l_returnflag']
+408 4388995072 # ['l_partkey', 'l_extendedprice', 'l_shipdate']
+409 6113247232 # ['l_partkey', 'l_extendedprice', 'l_shipinstruct']
+410 4937621504 # ['l_partkey', 'l_extendedprice', 'l_shipmode']
+411 4388995072 # ['l_partkey', 'l_extendedprice', 'l_suppkey']
+412 4388995072 # ['l_partkey', 'l_extendedprice', 'l_tax']
+413 3918749696 # ['l_partkey', 'l_linestatus', 'l_commitdate']
+414 3918749696 # ['l_partkey', 'l_linestatus', 'l_discount']
+415 4232249344 # ['l_partkey', 'l_linestatus', 'l_extendedprice']
+416 3918749696 # ['l_partkey', 'l_linestatus', 'l_orderkey']
+417 3997122560 # ['l_partkey', 'l_linestatus', 'l_quantity']
+418 3918749696 # ['l_partkey', 'l_linestatus', 'l_receiptdate']
+419 3761995776 # ['l_partkey', 'l_linestatus', 'l_returnflag']
+420 3918749696 # ['l_partkey', 'l_linestatus', 'l_shipdate']
+421 5642993664 # ['l_partkey', 'l_linestatus', 'l_shipinstruct']
+422 4467367936 # ['l_partkey', 'l_linestatus', 'l_shipmode']
+423 3918749696 # ['l_partkey', 'l_linestatus', 'l_suppkey']
+424 3918749696 # ['l_partkey', 'l_linestatus', 'l_tax']
+425 4075495424 # ['l_partkey', 'l_orderkey', 'l_commitdate']
+426 4075495424 # ['l_partkey', 'l_orderkey', 'l_discount']
+427 4388995072 # ['l_partkey', 'l_orderkey', 'l_extendedprice']
+428 3918749696 # ['l_partkey', 'l_orderkey', 'l_linestatus']
+429 4153868288 # ['l_partkey', 'l_orderkey', 'l_quantity']
+430 4075495424 # ['l_partkey', 'l_orderkey', 'l_receiptdate']
+431 3918749696 # ['l_partkey', 'l_orderkey', 'l_returnflag']
+432 4075495424 # ['l_partkey', 'l_orderkey', 'l_shipdate']
+433 5799747584 # ['l_partkey', 'l_orderkey', 'l_shipinstruct']
+434 4624121856 # ['l_partkey', 'l_orderkey', 'l_shipmode']
+435 4075495424 # ['l_partkey', 'l_orderkey', 'l_suppkey']
+436 4075495424 # ['l_partkey', 'l_orderkey', 'l_tax']
+437 4153868288 # ['l_partkey', 'l_quantity', 'l_commitdate']
+438 4153868288 # ['l_partkey', 'l_quantity', 'l_discount']
+439 4467367936 # ['l_partkey', 'l_quantity', 'l_extendedprice']
+440 3997122560 # ['l_partkey', 'l_quantity', 'l_linestatus']
+441 4153868288 # ['l_partkey', 'l_quantity', 'l_orderkey']
+442 4153868288 # ['l_partkey', 'l_quantity', 'l_receiptdate']
+443 3997122560 # ['l_partkey', 'l_quantity', 'l_returnflag']
+444 4153868288 # ['l_partkey', 'l_quantity', 'l_shipdate']
+445 5878120448 # ['l_partkey', 'l_quantity', 'l_shipinstruct']
+446 4702494720 # ['l_partkey', 'l_quantity', 'l_shipmode']
+447 4153868288 # ['l_partkey', 'l_quantity', 'l_suppkey']
+448 4153868288 # ['l_partkey', 'l_quantity', 'l_tax']
+449 4075495424 # ['l_partkey', 'l_receiptdate', 'l_commitdate']
+450 4075495424 # ['l_partkey', 'l_receiptdate', 'l_discount']
+451 4388995072 # ['l_partkey', 'l_receiptdate', 'l_extendedprice']
+452 3918749696 # ['l_partkey', 'l_receiptdate', 'l_linestatus']
+453 4075495424 # ['l_partkey', 'l_receiptdate', 'l_orderkey']
+454 4153868288 # ['l_partkey', 'l_receiptdate', 'l_quantity']
+455 3918749696 # ['l_partkey', 'l_receiptdate', 'l_returnflag']
+456 4075495424 # ['l_partkey', 'l_receiptdate', 'l_shipdate']
+457 5799747584 # ['l_partkey', 'l_receiptdate', 'l_shipinstruct']
+458 4624121856 # ['l_partkey', 'l_receiptdate', 'l_shipmode']
+459 4075495424 # ['l_partkey', 'l_receiptdate', 'l_suppkey']
+460 4075495424 # ['l_partkey', 'l_receiptdate', 'l_tax']
+461 3918749696 # ['l_partkey', 'l_returnflag', 'l_commitdate']
+462 3918749696 # ['l_partkey', 'l_returnflag', 'l_discount']
+463 4232249344 # ['l_partkey', 'l_returnflag', 'l_extendedprice']
+464 3761995776 # ['l_partkey', 'l_returnflag', 'l_linestatus']
+465 3918749696 # ['l_partkey', 'l_returnflag', 'l_orderkey']
+466 3997122560 # ['l_partkey', 'l_returnflag', 'l_quantity']
+467 3918749696 # ['l_partkey', 'l_returnflag', 'l_receiptdate']
+468 3918749696 # ['l_partkey', 'l_returnflag', 'l_shipdate']
+469 5642993664 # ['l_partkey', 'l_returnflag', 'l_shipinstruct']
+470 4467367936 # ['l_partkey', 'l_returnflag', 'l_shipmode']
+471 3918749696 # ['l_partkey', 'l_returnflag', 'l_suppkey']
+472 3918749696 # ['l_partkey', 'l_returnflag', 'l_tax']
+473 4075495424 # ['l_partkey', 'l_shipdate', 'l_commitdate']
+474 4075495424 # ['l_partkey', 'l_shipdate', 'l_discount']
+475 4388995072 # ['l_partkey', 'l_shipdate', 'l_extendedprice']
+476 3918749696 # ['l_partkey', 'l_shipdate', 'l_linestatus']
+477 4075495424 # ['l_partkey', 'l_shipdate', 'l_orderkey']
+478 4153868288 # ['l_partkey', 'l_shipdate', 'l_quantity']
+479 4075495424 # ['l_partkey', 'l_shipdate', 'l_receiptdate']
+480 3918749696 # ['l_partkey', 'l_shipdate', 'l_returnflag']
+481 5799747584 # ['l_partkey', 'l_shipdate', 'l_shipinstruct']
+482 4624121856 # ['l_partkey', 'l_shipdate', 'l_shipmode']
+483 4075495424 # ['l_partkey', 'l_shipdate', 'l_suppkey']
+484 4075495424 # ['l_partkey', 'l_shipdate', 'l_tax']
+485 5799747584 # ['l_partkey', 'l_shipinstruct', 'l_commitdate']
+486 5799747584 # ['l_partkey', 'l_shipinstruct', 'l_discount']
+487 6113247232 # ['l_partkey', 'l_shipinstruct', 'l_extendedprice']
+488 5642993664 # ['l_partkey', 'l_shipinstruct', 'l_linestatus']
+489 5799747584 # ['l_partkey', 'l_shipinstruct', 'l_orderkey']
+490 5878120448 # ['l_partkey', 'l_shipinstruct', 'l_quantity']
+491 5799747584 # ['l_partkey', 'l_shipinstruct', 'l_receiptdate']
+492 5642993664 # ['l_partkey', 'l_shipinstruct', 'l_returnflag']
+493 5799747584 # ['l_partkey', 'l_shipinstruct', 'l_shipdate']
+494 6348374016 # ['l_partkey', 'l_shipinstruct', 'l_shipmode']
+495 5799747584 # ['l_partkey', 'l_shipinstruct', 'l_suppkey']
+496 5799747584 # ['l_partkey', 'l_shipinstruct', 'l_tax']
+497 4624121856 # ['l_partkey', 'l_shipmode', 'l_commitdate']
+498 4624121856 # ['l_partkey', 'l_shipmode', 'l_discount']
+499 4937621504 # ['l_partkey', 'l_shipmode', 'l_extendedprice']
+500 4467367936 # ['l_partkey', 'l_shipmode', 'l_linestatus']
+501 4624121856 # ['l_partkey', 'l_shipmode', 'l_orderkey']
+502 4702494720 # ['l_partkey', 'l_shipmode', 'l_quantity']
+503 4624121856 # ['l_partkey', 'l_shipmode', 'l_receiptdate']
+504 4467367936 # ['l_partkey', 'l_shipmode', 'l_returnflag']
+505 4624121856 # ['l_partkey', 'l_shipmode', 'l_shipdate']
+506 6348374016 # ['l_partkey', 'l_shipmode', 'l_shipinstruct']
+507 4624121856 # ['l_partkey', 'l_shipmode', 'l_suppkey']
+508 4624121856 # ['l_partkey', 'l_shipmode', 'l_tax']
+509 4075495424 # ['l_partkey', 'l_suppkey', 'l_commitdate']
+510 4075495424 # ['l_partkey', 'l_suppkey', 'l_discount']
+511 4388995072 # ['l_partkey', 'l_suppkey', 'l_extendedprice']
+512 3918749696 # ['l_partkey', 'l_suppkey', 'l_linestatus']
+513 4075495424 # ['l_partkey', 'l_suppkey', 'l_orderkey']
+514 4153868288 # ['l_partkey', 'l_suppkey', 'l_quantity']
+515 4075495424 # ['l_partkey', 'l_suppkey', 'l_receiptdate']
+516 3918749696 # ['l_partkey', 'l_suppkey', 'l_returnflag']
+517 4075495424 # ['l_partkey', 'l_suppkey', 'l_shipdate']
+518 5799747584 # ['l_partkey', 'l_suppkey', 'l_shipinstruct']
+519 4624121856 # ['l_partkey', 'l_suppkey', 'l_shipmode']
+520 4075495424 # ['l_partkey', 'l_suppkey', 'l_tax']
+521 4075495424 # ['l_partkey', 'l_tax', 'l_commitdate']
+522 4075495424 # ['l_partkey', 'l_tax', 'l_discount']
+523 4388995072 # ['l_partkey', 'l_tax', 'l_extendedprice']
+524 3918749696 # ['l_partkey', 'l_tax', 'l_linestatus']
+525 4075495424 # ['l_partkey', 'l_tax', 'l_orderkey']
+526 4153868288 # ['l_partkey', 'l_tax', 'l_quantity']
+527 4075495424 # ['l_partkey', 'l_tax', 'l_receiptdate']
+528 3918749696 # ['l_partkey', 'l_tax', 'l_returnflag']
+529 4075495424 # ['l_partkey', 'l_tax', 'l_shipdate']
+530 5799747584 # ['l_partkey', 'l_tax', 'l_shipinstruct']
+531 4624121856 # ['l_partkey', 'l_tax', 'l_shipmode']
+532 4075495424 # ['l_partkey', 'l_tax', 'l_suppkey']
+533 4153868288 # ['l_quantity', 'l_commitdate', 'l_partkey']
+534 4153868288 # ['l_quantity', 'l_discount', 'l_partkey']
+535 4467367936 # ['l_quantity', 'l_extendedprice', 'l_partkey']
+536 3997122560 # ['l_quantity', 'l_linestatus', 'l_partkey']
+537 4153868288 # ['l_quantity', 'l_orderkey', 'l_partkey']
+538 4153868288 # ['l_quantity', 'l_partkey', 'l_commitdate']
+539 4153868288 # ['l_quantity', 'l_partkey', 'l_discount']
+540 4467367936 # ['l_quantity', 'l_partkey', 'l_extendedprice']
+541 3997122560 # ['l_quantity', 'l_partkey', 'l_linestatus']
+542 4153868288 # ['l_quantity', 'l_partkey', 'l_orderkey']
+543 4153868288 # ['l_quantity', 'l_partkey', 'l_receiptdate']
+544 3997122560 # ['l_quantity', 'l_partkey', 'l_returnflag']
+545 4153868288 # ['l_quantity', 'l_partkey', 'l_shipdate']
+546 5878120448 # ['l_quantity', 'l_partkey', 'l_shipinstruct']
+547 4702494720 # ['l_quantity', 'l_partkey', 'l_shipmode']
+548 4153868288 # ['l_quantity', 'l_partkey', 'l_suppkey']
+549 4153868288 # ['l_quantity', 'l_partkey', 'l_tax']
+550 4153868288 # ['l_quantity', 'l_receiptdate', 'l_partkey']
+551 3997122560 # ['l_quantity', 'l_returnflag', 'l_partkey']
+552 4153868288 # ['l_quantity', 'l_shipdate', 'l_partkey']
+553 5878120448 # ['l_quantity', 'l_shipinstruct', 'l_partkey']
+554 4702494720 # ['l_quantity', 'l_shipmode', 'l_partkey']
+555 4153868288 # ['l_quantity', 'l_suppkey', 'l_partkey']
+556 4153868288 # ['l_quantity', 'l_tax', 'l_partkey']
+557 4153868288 # ['l_receiptdate', 'l_partkey', 'l_quantity']
+558 4153868288 # ['l_receiptdate', 'l_quantity', 'l_partkey']
+559 3761995776 # ['l_returnflag', 'l_linestatus', 'l_partkey']
+560 3761995776 # ['l_returnflag', 'l_linestatus', 'l_suppkey']
+561 3761995776 # ['l_returnflag', 'l_partkey', 'l_linestatus']
+562 3997122560 # ['l_returnflag', 'l_partkey', 'l_quantity']
+563 3997122560 # ['l_returnflag', 'l_quantity', 'l_partkey']
+564 3761995776 # ['l_returnflag', 'l_suppkey', 'l_linestatus']
+565 4075495424 # ['l_shipdate', 'l_commitdate', 'l_discount']
+566 4388995072 # ['l_shipdate', 'l_commitdate', 'l_extendedprice']
+567 3918749696 # ['l_shipdate', 'l_commitdate', 'l_linestatus']
+568 4075495424 # ['l_shipdate', 'l_commitdate', 'l_orderkey']
+569 4075495424 # ['l_shipdate', 'l_commitdate', 'l_partkey']
+570 4153868288 # ['l_shipdate', 'l_commitdate', 'l_quantity']
+571 4075495424 # ['l_shipdate', 'l_commitdate', 'l_receiptdate']
+572 3918749696 # ['l_shipdate', 'l_commitdate', 'l_returnflag']
+573 5799747584 # ['l_shipdate', 'l_commitdate', 'l_shipinstruct']
+574 4624121856 # ['l_shipdate', 'l_commitdate', 'l_shipmode']
+575 4075495424 # ['l_shipdate', 'l_commitdate', 'l_suppkey']
+576 4075495424 # ['l_shipdate', 'l_commitdate', 'l_tax']
+577 4075495424 # ['l_shipdate', 'l_discount', 'l_commitdate']
+578 4388995072 # ['l_shipdate', 'l_discount', 'l_extendedprice']
+579 3918749696 # ['l_shipdate', 'l_discount', 'l_linestatus']
+580 4075495424 # ['l_shipdate', 'l_discount', 'l_orderkey']
+581 4075495424 # ['l_shipdate', 'l_discount', 'l_partkey']
+582 4153868288 # ['l_shipdate', 'l_discount', 'l_quantity']
+583 4075495424 # ['l_shipdate', 'l_discount', 'l_receiptdate']
+584 3918749696 # ['l_shipdate', 'l_discount', 'l_returnflag']
+585 5799747584 # ['l_shipdate', 'l_discount', 'l_shipinstruct']
+586 4624121856 # ['l_shipdate', 'l_discount', 'l_shipmode']
+587 4075495424 # ['l_shipdate', 'l_discount', 'l_suppkey']
+588 4075495424 # ['l_shipdate', 'l_discount', 'l_tax']
+589 4388995072 # ['l_shipdate', 'l_extendedprice', 'l_commitdate']
+590 4388995072 # ['l_shipdate', 'l_extendedprice', 'l_discount']
+591 4232249344 # ['l_shipdate', 'l_extendedprice', 'l_linestatus']
+592 4388995072 # ['l_shipdate', 'l_extendedprice', 'l_orderkey']
+593 4388995072 # ['l_shipdate', 'l_extendedprice', 'l_partkey']
+594 4467367936 # ['l_shipdate', 'l_extendedprice', 'l_quantity']
+595 4388995072 # ['l_shipdate', 'l_extendedprice', 'l_receiptdate']
+596 4232249344 # ['l_shipdate', 'l_extendedprice', 'l_returnflag']
+597 6113247232 # ['l_shipdate', 'l_extendedprice', 'l_shipinstruct']
+598 4937621504 # ['l_shipdate', 'l_extendedprice', 'l_shipmode']
+599 4388995072 # ['l_shipdate', 'l_extendedprice', 'l_suppkey']
+600 4388995072 # ['l_shipdate', 'l_extendedprice', 'l_tax']
+601 3918749696 # ['l_shipdate', 'l_linestatus', 'l_commitdate']
+602 3918749696 # ['l_shipdate', 'l_linestatus', 'l_discount']
+603 4232249344 # ['l_shipdate', 'l_linestatus', 'l_extendedprice']
+604 3918749696 # ['l_shipdate', 'l_linestatus', 'l_orderkey']
+605 3918749696 # ['l_shipdate', 'l_linestatus', 'l_partkey']
+606 3997122560 # ['l_shipdate', 'l_linestatus', 'l_quantity']
+607 3918749696 # ['l_shipdate', 'l_linestatus', 'l_receiptdate']
+608 3761995776 # ['l_shipdate', 'l_linestatus', 'l_returnflag']
+609 5642993664 # ['l_shipdate', 'l_linestatus', 'l_shipinstruct']
+610 4467367936 # ['l_shipdate', 'l_linestatus', 'l_shipmode']
+611 3918749696 # ['l_shipdate', 'l_linestatus', 'l_suppkey']
+612 3918749696 # ['l_shipdate', 'l_linestatus', 'l_tax']
+613 4075495424 # ['l_shipdate', 'l_orderkey', 'l_commitdate']
+614 4075495424 # ['l_shipdate', 'l_orderkey', 'l_discount']
+615 4388995072 # ['l_shipdate', 'l_orderkey', 'l_extendedprice']
+616 3918749696 # ['l_shipdate', 'l_orderkey', 'l_linestatus']
+617 4075495424 # ['l_shipdate', 'l_orderkey', 'l_partkey']
+618 4153868288 # ['l_shipdate', 'l_orderkey', 'l_quantity']
+619 4075495424 # ['l_shipdate', 'l_orderkey', 'l_receiptdate']
+620 3918749696 # ['l_shipdate', 'l_orderkey', 'l_returnflag']
+621 5799747584 # ['l_shipdate', 'l_orderkey', 'l_shipinstruct']
+622 4624121856 # ['l_shipdate', 'l_orderkey', 'l_shipmode']
+623 4075495424 # ['l_shipdate', 'l_orderkey', 'l_suppkey']
+624 4075495424 # ['l_shipdate', 'l_orderkey', 'l_tax']
+625 4075495424 # ['l_shipdate', 'l_partkey', 'l_commitdate']
+626 4075495424 # ['l_shipdate', 'l_partkey', 'l_discount']
+627 4388995072 # ['l_shipdate', 'l_partkey', 'l_extendedprice']
+628 3918749696 # ['l_shipdate', 'l_partkey', 'l_linestatus']
+629 4075495424 # ['l_shipdate', 'l_partkey', 'l_orderkey']
+630 4153868288 # ['l_shipdate', 'l_partkey', 'l_quantity']
+631 4075495424 # ['l_shipdate', 'l_partkey', 'l_receiptdate']
+632 3918749696 # ['l_shipdate', 'l_partkey', 'l_returnflag']
+633 5799747584 # ['l_shipdate', 'l_partkey', 'l_shipinstruct']
+634 4624121856 # ['l_shipdate', 'l_partkey', 'l_shipmode']
+635 4075495424 # ['l_shipdate', 'l_partkey', 'l_suppkey']
+636 4075495424 # ['l_shipdate', 'l_partkey', 'l_tax']
+637 4153868288 # ['l_shipdate', 'l_quantity', 'l_commitdate']
+638 4153868288 # ['l_shipdate', 'l_quantity', 'l_discount']
+639 4467367936 # ['l_shipdate', 'l_quantity', 'l_extendedprice']
+640 3997122560 # ['l_shipdate', 'l_quantity', 'l_linestatus']
+641 4153868288 # ['l_shipdate', 'l_quantity', 'l_orderkey']
+642 4153868288 # ['l_shipdate', 'l_quantity', 'l_partkey']
+643 4153868288 # ['l_shipdate', 'l_quantity', 'l_receiptdate']
+644 3997122560 # ['l_shipdate', 'l_quantity', 'l_returnflag']
+645 5878120448 # ['l_shipdate', 'l_quantity', 'l_shipinstruct']
+646 4702494720 # ['l_shipdate', 'l_quantity', 'l_shipmode']
+647 4153868288 # ['l_shipdate', 'l_quantity', 'l_suppkey']
+648 4153868288 # ['l_shipdate', 'l_quantity', 'l_tax']
+649 4075495424 # ['l_shipdate', 'l_receiptdate', 'l_commitdate']
+650 4075495424 # ['l_shipdate', 'l_receiptdate', 'l_discount']
+651 4388995072 # ['l_shipdate', 'l_receiptdate', 'l_extendedprice']
+652 3918749696 # ['l_shipdate', 'l_receiptdate', 'l_linestatus']
+653 4075495424 # ['l_shipdate', 'l_receiptdate', 'l_orderkey']
+654 4075495424 # ['l_shipdate', 'l_receiptdate', 'l_partkey']
+655 4153868288 # ['l_shipdate', 'l_receiptdate', 'l_quantity']
+656 3918749696 # ['l_shipdate', 'l_receiptdate', 'l_returnflag']
+657 5799747584 # ['l_shipdate', 'l_receiptdate', 'l_shipinstruct']
+658 4624121856 # ['l_shipdate', 'l_receiptdate', 'l_shipmode']
+659 4075495424 # ['l_shipdate', 'l_receiptdate', 'l_suppkey']
+660 4075495424 # ['l_shipdate', 'l_receiptdate', 'l_tax']
+661 3918749696 # ['l_shipdate', 'l_returnflag', 'l_commitdate']
+662 3918749696 # ['l_shipdate', 'l_returnflag', 'l_discount']
+663 4232249344 # ['l_shipdate', 'l_returnflag', 'l_extendedprice']
+664 3761995776 # ['l_shipdate', 'l_returnflag', 'l_linestatus']
+665 3918749696 # ['l_shipdate', 'l_returnflag', 'l_orderkey']
+666 3918749696 # ['l_shipdate', 'l_returnflag', 'l_partkey']
+667 3997122560 # ['l_shipdate', 'l_returnflag', 'l_quantity']
+668 3918749696 # ['l_shipdate', 'l_returnflag', 'l_receiptdate']
+669 5642993664 # ['l_shipdate', 'l_returnflag', 'l_shipinstruct']
+670 4467367936 # ['l_shipdate', 'l_returnflag', 'l_shipmode']
+671 3918749696 # ['l_shipdate', 'l_returnflag', 'l_suppkey']
+672 3918749696 # ['l_shipdate', 'l_returnflag', 'l_tax']
+673 5799747584 # ['l_shipdate', 'l_shipinstruct', 'l_commitdate']
+674 5799747584 # ['l_shipdate', 'l_shipinstruct', 'l_discount']
+675 6113247232 # ['l_shipdate', 'l_shipinstruct', 'l_extendedprice']
+676 5642993664 # ['l_shipdate', 'l_shipinstruct', 'l_linestatus']
+677 5799747584 # ['l_shipdate', 'l_shipinstruct', 'l_orderkey']
+678 5799747584 # ['l_shipdate', 'l_shipinstruct', 'l_partkey']
+679 5878120448 # ['l_shipdate', 'l_shipinstruct', 'l_quantity']
+680 5799747584 # ['l_shipdate', 'l_shipinstruct', 'l_receiptdate']
+681 5642993664 # ['l_shipdate', 'l_shipinstruct', 'l_returnflag']
+682 6348374016 # ['l_shipdate', 'l_shipinstruct', 'l_shipmode']
+683 5799747584 # ['l_shipdate', 'l_shipinstruct', 'l_suppkey']
+684 5799747584 # ['l_shipdate', 'l_shipinstruct', 'l_tax']
+685 4624121856 # ['l_shipdate', 'l_shipmode', 'l_commitdate']
+686 4624121856 # ['l_shipdate', 'l_shipmode', 'l_discount']
+687 4937621504 # ['l_shipdate', 'l_shipmode', 'l_extendedprice']
+688 4467367936 # ['l_shipdate', 'l_shipmode', 'l_linestatus']
+689 4624121856 # ['l_shipdate', 'l_shipmode', 'l_orderkey']
+690 4624121856 # ['l_shipdate', 'l_shipmode', 'l_partkey']
+691 4702494720 # ['l_shipdate', 'l_shipmode', 'l_quantity']
+692 4624121856 # ['l_shipdate', 'l_shipmode', 'l_receiptdate']
+693 4467367936 # ['l_shipdate', 'l_shipmode', 'l_returnflag']
+694 6348374016 # ['l_shipdate', 'l_shipmode', 'l_shipinstruct']
+695 4624121856 # ['l_shipdate', 'l_shipmode', 'l_suppkey']
+696 4624121856 # ['l_shipdate', 'l_shipmode', 'l_tax']
+697 4075495424 # ['l_shipdate', 'l_suppkey', 'l_commitdate']
+698 4075495424 # ['l_shipdate', 'l_suppkey', 'l_discount']
+699 4388995072 # ['l_shipdate', 'l_suppkey', 'l_extendedprice']
+700 3918749696 # ['l_shipdate', 'l_suppkey', 'l_linestatus']
+701 4075495424 # ['l_shipdate', 'l_suppkey', 'l_orderkey']
+702 4075495424 # ['l_shipdate', 'l_suppkey', 'l_partkey']
+703 4153868288 # ['l_shipdate', 'l_suppkey', 'l_quantity']
+704 4075495424 # ['l_shipdate', 'l_suppkey', 'l_receiptdate']
+705 3918749696 # ['l_shipdate', 'l_suppkey', 'l_returnflag']
+706 5799747584 # ['l_shipdate', 'l_suppkey', 'l_shipinstruct']
+707 4624121856 # ['l_shipdate', 'l_suppkey', 'l_shipmode']
+708 4075495424 # ['l_shipdate', 'l_suppkey', 'l_tax']
+709 4075495424 # ['l_shipdate', 'l_tax', 'l_commitdate']
+710 4075495424 # ['l_shipdate', 'l_tax', 'l_discount']
+711 4388995072 # ['l_shipdate', 'l_tax', 'l_extendedprice']
+712 3918749696 # ['l_shipdate', 'l_tax', 'l_linestatus']
+713 4075495424 # ['l_shipdate', 'l_tax', 'l_orderkey']
+714 4075495424 # ['l_shipdate', 'l_tax', 'l_partkey']
+715 4153868288 # ['l_shipdate', 'l_tax', 'l_quantity']
+716 4075495424 # ['l_shipdate', 'l_tax', 'l_receiptdate']
+717 3918749696 # ['l_shipdate', 'l_tax', 'l_returnflag']
+718 5799747584 # ['l_shipdate', 'l_tax', 'l_shipinstruct']
+719 4624121856 # ['l_shipdate', 'l_tax', 'l_shipmode']
+720 4075495424 # ['l_shipdate', 'l_tax', 'l_suppkey']
+721 5799747584 # ['l_shipinstruct', 'l_partkey', 'l_commitdate']
+722 5799747584 # ['l_shipinstruct', 'l_partkey', 'l_discount']
+723 6113247232 # ['l_shipinstruct', 'l_partkey', 'l_extendedprice']
+724 5642993664 # ['l_shipinstruct', 'l_partkey', 'l_linestatus']
+725 5799747584 # ['l_shipinstruct', 'l_partkey', 'l_orderkey']
+726 5878120448 # ['l_shipinstruct', 'l_partkey', 'l_quantity']
+727 5799747584 # ['l_shipinstruct', 'l_partkey', 'l_receiptdate']
+728 5642993664 # ['l_shipinstruct', 'l_partkey', 'l_returnflag']
+729 5799747584 # ['l_shipinstruct', 'l_partkey', 'l_shipdate']
+730 6348374016 # ['l_shipinstruct', 'l_partkey', 'l_shipmode']
+731 5799747584 # ['l_shipinstruct', 'l_partkey', 'l_suppkey']
+732 5799747584 # ['l_shipinstruct', 'l_partkey', 'l_tax']
+733 5878120448 # ['l_shipinstruct', 'l_quantity', 'l_partkey']
+734 6348374016 # ['l_shipinstruct', 'l_shipmode', 'l_partkey']
+735 4624121856 # ['l_shipmode', 'l_partkey', 'l_commitdate']
+736 4624121856 # ['l_shipmode', 'l_partkey', 'l_discount']
+737 4937621504 # ['l_shipmode', 'l_partkey', 'l_extendedprice']
+738 4467367936 # ['l_shipmode', 'l_partkey', 'l_linestatus']
+739 4624121856 # ['l_shipmode', 'l_partkey', 'l_orderkey']
+740 4702494720 # ['l_shipmode', 'l_partkey', 'l_quantity']
+741 4624121856 # ['l_shipmode', 'l_partkey', 'l_receiptdate']
+742 4467367936 # ['l_shipmode', 'l_partkey', 'l_returnflag']
+743 4624121856 # ['l_shipmode', 'l_partkey', 'l_shipdate']
+744 6348374016 # ['l_shipmode', 'l_partkey', 'l_shipinstruct']
+745 4624121856 # ['l_shipmode', 'l_partkey', 'l_suppkey']
+746 4624121856 # ['l_shipmode', 'l_partkey', 'l_tax']
+747 4702494720 # ['l_shipmode', 'l_quantity', 'l_partkey']
+748 6348374016 # ['l_shipmode', 'l_shipinstruct', 'l_partkey']
+749 4075495424 # ['l_suppkey', 'l_commitdate', 'l_discount']
+750 4388995072 # ['l_suppkey', 'l_commitdate', 'l_extendedprice']
+751 3918749696 # ['l_suppkey', 'l_commitdate', 'l_linestatus']
+752 4075495424 # ['l_suppkey', 'l_commitdate', 'l_orderkey']
+753 4075495424 # ['l_suppkey', 'l_commitdate', 'l_partkey']
+754 4153868288 # ['l_suppkey', 'l_commitdate', 'l_quantity']
+755 4075495424 # ['l_suppkey', 'l_commitdate', 'l_receiptdate']
+756 3918749696 # ['l_suppkey', 'l_commitdate', 'l_returnflag']
+757 4075495424 # ['l_suppkey', 'l_commitdate', 'l_shipdate']
+758 5799747584 # ['l_suppkey', 'l_commitdate', 'l_shipinstruct']
+759 4624121856 # ['l_suppkey', 'l_commitdate', 'l_shipmode']
+760 4075495424 # ['l_suppkey', 'l_commitdate', 'l_tax']
+761 4075495424 # ['l_suppkey', 'l_discount', 'l_commitdate']
+762 4388995072 # ['l_suppkey', 'l_discount', 'l_extendedprice']
+763 3918749696 # ['l_suppkey', 'l_discount', 'l_linestatus']
+764 4075495424 # ['l_suppkey', 'l_discount', 'l_orderkey']
+765 4075495424 # ['l_suppkey', 'l_discount', 'l_partkey']
+766 4153868288 # ['l_suppkey', 'l_discount', 'l_quantity']
+767 4075495424 # ['l_suppkey', 'l_discount', 'l_receiptdate']
+768 3918749696 # ['l_suppkey', 'l_discount', 'l_returnflag']
+769 4075495424 # ['l_suppkey', 'l_discount', 'l_shipdate']
+770 5799747584 # ['l_suppkey', 'l_discount', 'l_shipinstruct']
+771 4624121856 # ['l_suppkey', 'l_discount', 'l_shipmode']
+772 4075495424 # ['l_suppkey', 'l_discount', 'l_tax']
+773 4388995072 # ['l_suppkey', 'l_extendedprice', 'l_commitdate']
+774 4388995072 # ['l_suppkey', 'l_extendedprice', 'l_discount']
+775 4232249344 # ['l_suppkey', 'l_extendedprice', 'l_linestatus']
+776 4388995072 # ['l_suppkey', 'l_extendedprice', 'l_orderkey']
+777 4388995072 # ['l_suppkey', 'l_extendedprice', 'l_partkey']
+778 4467367936 # ['l_suppkey', 'l_extendedprice', 'l_quantity']
+779 4388995072 # ['l_suppkey', 'l_extendedprice', 'l_receiptdate']
+780 4232249344 # ['l_suppkey', 'l_extendedprice', 'l_returnflag']
+781 4388995072 # ['l_suppkey', 'l_extendedprice', 'l_shipdate']
+782 6113247232 # ['l_suppkey', 'l_extendedprice', 'l_shipinstruct']
+783 4937621504 # ['l_suppkey', 'l_extendedprice', 'l_shipmode']
+784 4388995072 # ['l_suppkey', 'l_extendedprice', 'l_tax']
+785 3918749696 # ['l_suppkey', 'l_linestatus', 'l_commitdate']
+786 3918749696 # ['l_suppkey', 'l_linestatus', 'l_discount']
+787 4232249344 # ['l_suppkey', 'l_linestatus', 'l_extendedprice']
+788 3918749696 # ['l_suppkey', 'l_linestatus', 'l_orderkey']
+789 3918749696 # ['l_suppkey', 'l_linestatus', 'l_partkey']
+790 3997122560 # ['l_suppkey', 'l_linestatus', 'l_quantity']
+791 3918749696 # ['l_suppkey', 'l_linestatus', 'l_receiptdate']
+792 3761995776 # ['l_suppkey', 'l_linestatus', 'l_returnflag']
+793 3918749696 # ['l_suppkey', 'l_linestatus', 'l_shipdate']
+794 5642993664 # ['l_suppkey', 'l_linestatus', 'l_shipinstruct']
+795 4467367936 # ['l_suppkey', 'l_linestatus', 'l_shipmode']
+796 3918749696 # ['l_suppkey', 'l_linestatus', 'l_tax']
+797 4075495424 # ['l_suppkey', 'l_orderkey', 'l_commitdate']
+798 4075495424 # ['l_suppkey', 'l_orderkey', 'l_discount']
+799 4388995072 # ['l_suppkey', 'l_orderkey', 'l_extendedprice']
+800 3918749696 # ['l_suppkey', 'l_orderkey', 'l_linestatus']
+801 4075495424 # ['l_suppkey', 'l_orderkey', 'l_partkey']
+802 4153868288 # ['l_suppkey', 'l_orderkey', 'l_quantity']
+803 4075495424 # ['l_suppkey', 'l_orderkey', 'l_receiptdate']
+804 3918749696 # ['l_suppkey', 'l_orderkey', 'l_returnflag']
+805 4075495424 # ['l_suppkey', 'l_orderkey', 'l_shipdate']
+806 5799747584 # ['l_suppkey', 'l_orderkey', 'l_shipinstruct']
+807 4624121856 # ['l_suppkey', 'l_orderkey', 'l_shipmode']
+808 4075495424 # ['l_suppkey', 'l_orderkey', 'l_tax']
+809 4075495424 # ['l_suppkey', 'l_partkey', 'l_commitdate']
+810 4075495424 # ['l_suppkey', 'l_partkey', 'l_discount']
+811 4388995072 # ['l_suppkey', 'l_partkey', 'l_extendedprice']
+812 3918749696 # ['l_suppkey', 'l_partkey', 'l_linestatus']
+813 4075495424 # ['l_suppkey', 'l_partkey', 'l_orderkey']
+814 4153868288 # ['l_suppkey', 'l_partkey', 'l_quantity']
+815 4075495424 # ['l_suppkey', 'l_partkey', 'l_receiptdate']
+816 3918749696 # ['l_suppkey', 'l_partkey', 'l_returnflag']
+817 4075495424 # ['l_suppkey', 'l_partkey', 'l_shipdate']
+818 5799747584 # ['l_suppkey', 'l_partkey', 'l_shipinstruct']
+819 4624121856 # ['l_suppkey', 'l_partkey', 'l_shipmode']
+820 4075495424 # ['l_suppkey', 'l_partkey', 'l_tax']
+821 4153868288 # ['l_suppkey', 'l_quantity', 'l_commitdate']
+822 4153868288 # ['l_suppkey', 'l_quantity', 'l_discount']
+823 4467367936 # ['l_suppkey', 'l_quantity', 'l_extendedprice']
+824 3997122560 # ['l_suppkey', 'l_quantity', 'l_linestatus']
+825 4153868288 # ['l_suppkey', 'l_quantity', 'l_orderkey']
+826 4153868288 # ['l_suppkey', 'l_quantity', 'l_partkey']
+827 4153868288 # ['l_suppkey', 'l_quantity', 'l_receiptdate']
+828 3997122560 # ['l_suppkey', 'l_quantity', 'l_returnflag']
+829 4153868288 # ['l_suppkey', 'l_quantity', 'l_shipdate']
+830 5878120448 # ['l_suppkey', 'l_quantity', 'l_shipinstruct']
+831 4702494720 # ['l_suppkey', 'l_quantity', 'l_shipmode']
+832 4153868288 # ['l_suppkey', 'l_quantity', 'l_tax']
+833 4075495424 # ['l_suppkey', 'l_receiptdate', 'l_commitdate']
+834 4075495424 # ['l_suppkey', 'l_receiptdate', 'l_discount']
+835 4388995072 # ['l_suppkey', 'l_receiptdate', 'l_extendedprice']
+836 3918749696 # ['l_suppkey', 'l_receiptdate', 'l_linestatus']
+837 4075495424 # ['l_suppkey', 'l_receiptdate', 'l_orderkey']
+838 4075495424 # ['l_suppkey', 'l_receiptdate', 'l_partkey']
+839 4153868288 # ['l_suppkey', 'l_receiptdate', 'l_quantity']
+840 3918749696 # ['l_suppkey', 'l_receiptdate', 'l_returnflag']
+841 4075495424 # ['l_suppkey', 'l_receiptdate', 'l_shipdate']
+842 5799747584 # ['l_suppkey', 'l_receiptdate', 'l_shipinstruct']
+843 4624121856 # ['l_suppkey', 'l_receiptdate', 'l_shipmode']
+844 4075495424 # ['l_suppkey', 'l_receiptdate', 'l_tax']
+845 3918749696 # ['l_suppkey', 'l_returnflag', 'l_commitdate']
+846 3918749696 # ['l_suppkey', 'l_returnflag', 'l_discount']
+847 4232249344 # ['l_suppkey', 'l_returnflag', 'l_extendedprice']
+848 3761995776 # ['l_suppkey', 'l_returnflag', 'l_linestatus']
+849 3918749696 # ['l_suppkey', 'l_returnflag', 'l_orderkey']
+850 3918749696 # ['l_suppkey', 'l_returnflag', 'l_partkey']
+851 3997122560 # ['l_suppkey', 'l_returnflag', 'l_quantity']
+852 3918749696 # ['l_suppkey', 'l_returnflag', 'l_receiptdate']
+853 3918749696 # ['l_suppkey', 'l_returnflag', 'l_shipdate']
+854 5642993664 # ['l_suppkey', 'l_returnflag', 'l_shipinstruct']
+855 4467367936 # ['l_suppkey', 'l_returnflag', 'l_shipmode']
+856 3918749696 # ['l_suppkey', 'l_returnflag', 'l_tax']
+857 4075495424 # ['l_suppkey', 'l_shipdate', 'l_commitdate']
+858 4075495424 # ['l_suppkey', 'l_shipdate', 'l_discount']
+859 4388995072 # ['l_suppkey', 'l_shipdate', 'l_extendedprice']
+860 3918749696 # ['l_suppkey', 'l_shipdate', 'l_linestatus']
+861 4075495424 # ['l_suppkey', 'l_shipdate', 'l_orderkey']
+862 4075495424 # ['l_suppkey', 'l_shipdate', 'l_partkey']
+863 4153868288 # ['l_suppkey', 'l_shipdate', 'l_quantity']
+864 4075495424 # ['l_suppkey', 'l_shipdate', 'l_receiptdate']
+865 3918749696 # ['l_suppkey', 'l_shipdate', 'l_returnflag']
+866 5799747584 # ['l_suppkey', 'l_shipdate', 'l_shipinstruct']
+867 4624121856 # ['l_suppkey', 'l_shipdate', 'l_shipmode']
+868 4075495424 # ['l_suppkey', 'l_shipdate', 'l_tax']
+869 5799747584 # ['l_suppkey', 'l_shipinstruct', 'l_commitdate']
+870 5799747584 # ['l_suppkey', 'l_shipinstruct', 'l_discount']
+871 6113247232 # ['l_suppkey', 'l_shipinstruct', 'l_extendedprice']
+872 5642993664 # ['l_suppkey', 'l_shipinstruct', 'l_linestatus']
+873 5799747584 # ['l_suppkey', 'l_shipinstruct', 'l_orderkey']
+874 5799747584 # ['l_suppkey', 'l_shipinstruct', 'l_partkey']
+875 5878120448 # ['l_suppkey', 'l_shipinstruct', 'l_quantity']
+876 5799747584 # ['l_suppkey', 'l_shipinstruct', 'l_receiptdate']
+877 5642993664 # ['l_suppkey', 'l_shipinstruct', 'l_returnflag']
+878 5799747584 # ['l_suppkey', 'l_shipinstruct', 'l_shipdate']
+879 6348374016 # ['l_suppkey', 'l_shipinstruct', 'l_shipmode']
+880 5799747584 # ['l_suppkey', 'l_shipinstruct', 'l_tax']
+881 4624121856 # ['l_suppkey', 'l_shipmode', 'l_commitdate']
+882 4624121856 # ['l_suppkey', 'l_shipmode', 'l_discount']
+883 4937621504 # ['l_suppkey', 'l_shipmode', 'l_extendedprice']
+884 4467367936 # ['l_suppkey', 'l_shipmode', 'l_linestatus']
+885 4624121856 # ['l_suppkey', 'l_shipmode', 'l_orderkey']
+886 4624121856 # ['l_suppkey', 'l_shipmode', 'l_partkey']
+887 4702494720 # ['l_suppkey', 'l_shipmode', 'l_quantity']
+888 4624121856 # ['l_suppkey', 'l_shipmode', 'l_receiptdate']
+889 4467367936 # ['l_suppkey', 'l_shipmode', 'l_returnflag']
+890 4624121856 # ['l_suppkey', 'l_shipmode', 'l_shipdate']
+891 6348374016 # ['l_suppkey', 'l_shipmode', 'l_shipinstruct']
+892 4624121856 # ['l_suppkey', 'l_shipmode', 'l_tax']
+893 4075495424 # ['l_suppkey', 'l_tax', 'l_commitdate']
+894 4075495424 # ['l_suppkey', 'l_tax', 'l_discount']
+895 4388995072 # ['l_suppkey', 'l_tax', 'l_extendedprice']
+896 3918749696 # ['l_suppkey', 'l_tax', 'l_linestatus']
+897 4075495424 # ['l_suppkey', 'l_tax', 'l_orderkey']
+898 4075495424 # ['l_suppkey', 'l_tax', 'l_partkey']
+899 4153868288 # ['l_suppkey', 'l_tax', 'l_quantity']
+900 4075495424 # ['l_suppkey', 'l_tax', 'l_receiptdate']
+901 3918749696 # ['l_suppkey', 'l_tax', 'l_returnflag']
+902 4075495424 # ['l_suppkey', 'l_tax', 'l_shipdate']
+903 5799747584 # ['l_suppkey', 'l_tax', 'l_shipinstruct']
+904 4624121856 # ['l_suppkey', 'l_tax', 'l_shipmode']
+905 4153868288 # ['l_tax', 'l_partkey', 'l_quantity']
+906 4153868288 # ['l_tax', 'l_quantity', 'l_partkey']
+907 8192 # ['n_nationkey', 'n_name', 'n_regionkey']
+908 8192 # ['n_nationkey', 'n_regionkey', 'n_name']
+909 1900822528 # ['o_custkey', 'o_comment', 'o_orderdate']
+910 1900822528 # ['o_custkey', 'o_comment', 'o_orderkey']
+911 2135982080 # ['o_custkey', 'o_comment', 'o_orderpriority']
+912 1861632000 # ['o_custkey', 'o_comment', 'o_orderstatus']
+913 1900822528 # ['o_custkey', 'o_comment', 'o_shippriority']
+914 1979211776 # ['o_custkey', 'o_comment', 'o_totalprice']
+915 1900822528 # ['o_custkey', 'o_orderdate', 'o_comment']
+916 1018994688 # ['o_custkey', 'o_orderdate', 'o_orderkey']
+917 1254154240 # ['o_custkey', 'o_orderdate', 'o_orderpriority']
+918 979804160 # ['o_custkey', 'o_orderdate', 'o_orderstatus']
+919 1018994688 # ['o_custkey', 'o_orderdate', 'o_shippriority']
+920 1097383936 # ['o_custkey', 'o_orderdate', 'o_totalprice']
+921 1900822528 # ['o_custkey', 'o_orderkey', 'o_comment']
+922 1018994688 # ['o_custkey', 'o_orderkey', 'o_orderdate']
+923 1254154240 # ['o_custkey', 'o_orderkey', 'o_orderpriority']
+924 979804160 # ['o_custkey', 'o_orderkey', 'o_orderstatus']
+925 1018994688 # ['o_custkey', 'o_orderkey', 'o_shippriority']
+926 1097383936 # ['o_custkey', 'o_orderkey', 'o_totalprice']
+927 2135982080 # ['o_custkey', 'o_orderpriority', 'o_comment']
+928 1254154240 # ['o_custkey', 'o_orderpriority', 'o_orderdate']
+929 1254154240 # ['o_custkey', 'o_orderpriority', 'o_orderkey']
+930 1214955520 # ['o_custkey', 'o_orderpriority', 'o_orderstatus']
+931 1254154240 # ['o_custkey', 'o_orderpriority', 'o_shippriority']
+932 1332535296 # ['o_custkey', 'o_orderpriority', 'o_totalprice']
+933 1861632000 # ['o_custkey', 'o_orderstatus', 'o_comment']
+934 979804160 # ['o_custkey', 'o_orderstatus', 'o_orderdate']
+935 979804160 # ['o_custkey', 'o_orderstatus', 'o_orderkey']
+936 1214955520 # ['o_custkey', 'o_orderstatus', 'o_orderpriority']
+937 979804160 # ['o_custkey', 'o_orderstatus', 'o_shippriority']
+938 1058193408 # ['o_custkey', 'o_orderstatus', 'o_totalprice']
+939 1900822528 # ['o_custkey', 'o_shippriority', 'o_comment']
+940 1018994688 # ['o_custkey', 'o_shippriority', 'o_orderdate']
+941 1018994688 # ['o_custkey', 'o_shippriority', 'o_orderkey']
+942 1254154240 # ['o_custkey', 'o_shippriority', 'o_orderpriority']
+943 979804160 # ['o_custkey', 'o_shippriority', 'o_orderstatus']
+944 1097383936 # ['o_custkey', 'o_shippriority', 'o_totalprice']
+945 1979211776 # ['o_custkey', 'o_totalprice', 'o_comment']
+946 1097383936 # ['o_custkey', 'o_totalprice', 'o_orderdate']
+947 1097383936 # ['o_custkey', 'o_totalprice', 'o_orderkey']
+948 1332535296 # ['o_custkey', 'o_totalprice', 'o_orderpriority']
+949 1058193408 # ['o_custkey', 'o_totalprice', 'o_orderstatus']
+950 1097383936 # ['o_custkey', 'o_totalprice', 'o_shippriority']
+951 1018994688 # ['o_orderdate', 'o_custkey', 'o_orderkey']
+952 1018994688 # ['o_orderdate', 'o_orderkey', 'o_custkey']
+953 1254154240 # ['o_orderdate', 'o_orderkey', 'o_orderpriority']
+954 1254154240 # ['o_orderdate', 'o_orderpriority', 'o_orderkey']
+955 1900822528 # ['o_orderkey', 'o_comment', 'o_custkey']
+956 1900822528 # ['o_orderkey', 'o_comment', 'o_orderdate']
+957 2135982080 # ['o_orderkey', 'o_comment', 'o_orderpriority']
+958 1861632000 # ['o_orderkey', 'o_comment', 'o_orderstatus']
+959 1900822528 # ['o_orderkey', 'o_comment', 'o_shippriority']
+960 1979211776 # ['o_orderkey', 'o_comment', 'o_totalprice']
+961 1900822528 # ['o_orderkey', 'o_custkey', 'o_comment']
+962 1018994688 # ['o_orderkey', 'o_custkey', 'o_orderdate']
+963 1254154240 # ['o_orderkey', 'o_custkey', 'o_orderpriority']
+964 979804160 # ['o_orderkey', 'o_custkey', 'o_orderstatus']
+965 1018994688 # ['o_orderkey', 'o_custkey', 'o_shippriority']
+966 1097383936 # ['o_orderkey', 'o_custkey', 'o_totalprice']
+967 1900822528 # ['o_orderkey', 'o_orderdate', 'o_comment']
+968 1018994688 # ['o_orderkey', 'o_orderdate', 'o_custkey']
+969 1254154240 # ['o_orderkey', 'o_orderdate', 'o_orderpriority']
+970 979804160 # ['o_orderkey', 'o_orderdate', 'o_orderstatus']
+971 1018994688 # ['o_orderkey', 'o_orderdate', 'o_shippriority']
+972 1097383936 # ['o_orderkey', 'o_orderdate', 'o_totalprice']
+973 2135982080 # ['o_orderkey', 'o_orderpriority', 'o_comment']
+974 1254154240 # ['o_orderkey', 'o_orderpriority', 'o_custkey']
+975 1254154240 # ['o_orderkey', 'o_orderpriority', 'o_orderdate']
+976 1214955520 # ['o_orderkey', 'o_orderpriority', 'o_orderstatus']
+977 1254154240 # ['o_orderkey', 'o_orderpriority', 'o_shippriority']
+978 1332535296 # ['o_orderkey', 'o_orderpriority', 'o_totalprice']
+979 1861632000 # ['o_orderkey', 'o_orderstatus', 'o_comment']
+980 979804160 # ['o_orderkey', 'o_orderstatus', 'o_custkey']
+981 979804160 # ['o_orderkey', 'o_orderstatus', 'o_orderdate']
+982 1214955520 # ['o_orderkey', 'o_orderstatus', 'o_orderpriority']
+983 979804160 # ['o_orderkey', 'o_orderstatus', 'o_shippriority']
+984 1058193408 # ['o_orderkey', 'o_orderstatus', 'o_totalprice']
+985 1900822528 # ['o_orderkey', 'o_shippriority', 'o_comment']
+986 1018994688 # ['o_orderkey', 'o_shippriority', 'o_custkey']
+987 1018994688 # ['o_orderkey', 'o_shippriority', 'o_orderdate']
+988 1254154240 # ['o_orderkey', 'o_shippriority', 'o_orderpriority']
+989 979804160 # ['o_orderkey', 'o_shippriority', 'o_orderstatus']
+990 1097383936 # ['o_orderkey', 'o_shippriority', 'o_totalprice']
+991 1979211776 # ['o_orderkey', 'o_totalprice', 'o_comment']
+992 1097383936 # ['o_orderkey', 'o_totalprice', 'o_custkey']
+993 1097383936 # ['o_orderkey', 'o_totalprice', 'o_orderdate']
+994 1332535296 # ['o_orderkey', 'o_totalprice', 'o_orderpriority']
+995 1058193408 # ['o_orderkey', 'o_totalprice', 'o_orderstatus']
+996 1097383936 # ['o_orderkey', 'o_totalprice', 'o_shippriority']
+997 979804160 # ['o_orderstatus', 'o_custkey', 'o_orderkey']
+998 979804160 # ['o_orderstatus', 'o_orderdate', 'o_orderkey']
+999 1861632000 # ['o_orderstatus', 'o_orderkey', 'o_comment']
+1000 979804160 # ['o_orderstatus', 'o_orderkey', 'o_custkey']
+1001 979804160 # ['o_orderstatus', 'o_orderkey', 'o_orderdate']
+1002 1214955520 # ['o_orderstatus', 'o_orderkey', 'o_orderpriority']
+1003 979804160 # ['o_orderstatus', 'o_orderkey', 'o_shippriority']
+1004 1058193408 # ['o_orderstatus', 'o_orderkey', 'o_totalprice']
+1005 979804160 # ['o_orderstatus', 'o_shippriority', 'o_orderkey']
+1006 1058193408 # ['o_orderstatus', 'o_totalprice', 'o_orderkey']
+1007 229916672 # ['p_brand', 'p_container', 'p_mfgr']
+1008 248209408 # ['p_brand', 'p_container', 'p_name']
+1009 172433408 # ['p_brand', 'p_container', 'p_partkey']
+1010 172433408 # ['p_brand', 'p_container', 'p_size']
+1011 216850432 # ['p_brand', 'p_container', 'p_type']
+1012 229916672 # ['p_brand', 'p_mfgr', 'p_container']
+1013 287399936 # ['p_brand', 'p_mfgr', 'p_name']
+1014 211623936 # ['p_brand', 'p_mfgr', 'p_partkey']
+1015 211623936 # ['p_brand', 'p_mfgr', 'p_size']
+1016 256040960 # ['p_brand', 'p_mfgr', 'p_type']
+1017 248209408 # ['p_brand', 'p_name', 'p_container']
+1018 287399936 # ['p_brand', 'p_name', 'p_mfgr']
+1019 229916672 # ['p_brand', 'p_name', 'p_partkey']
+1020 229916672 # ['p_brand', 'p_name', 'p_size']
+1021 274333696 # ['p_brand', 'p_name', 'p_type']
+1022 172433408 # ['p_brand', 'p_partkey', 'p_container']
+1023 211623936 # ['p_brand', 'p_partkey', 'p_mfgr']
+1024 229916672 # ['p_brand', 'p_partkey', 'p_name']
+1025 154148864 # ['p_brand', 'p_partkey', 'p_size']
+1026 198565888 # ['p_brand', 'p_partkey', 'p_type']
+1027 172433408 # ['p_brand', 'p_size', 'p_container']
+1028 211623936 # ['p_brand', 'p_size', 'p_mfgr']
+1029 229916672 # ['p_brand', 'p_size', 'p_name']
+1030 154148864 # ['p_brand', 'p_size', 'p_partkey']
+1031 198565888 # ['p_brand', 'p_size', 'p_type']
+1032 216850432 # ['p_brand', 'p_type', 'p_container']
+1033 256040960 # ['p_brand', 'p_type', 'p_mfgr']
+1034 274333696 # ['p_brand', 'p_type', 'p_name']
+1035 198565888 # ['p_brand', 'p_type', 'p_partkey']
+1036 198565888 # ['p_brand', 'p_type', 'p_size']
+1037 229916672 # ['p_container', 'p_brand', 'p_mfgr']
+1038 248209408 # ['p_container', 'p_brand', 'p_name']
+1039 172433408 # ['p_container', 'p_brand', 'p_partkey']
+1040 172433408 # ['p_container', 'p_brand', 'p_size']
+1041 216850432 # ['p_container', 'p_brand', 'p_type']
+1042 229916672 # ['p_container', 'p_mfgr', 'p_brand']
+1043 287399936 # ['p_container', 'p_mfgr', 'p_name']
+1044 211623936 # ['p_container', 'p_mfgr', 'p_partkey']
+1045 211623936 # ['p_container', 'p_mfgr', 'p_size']
+1046 256040960 # ['p_container', 'p_mfgr', 'p_type']
+1047 248209408 # ['p_container', 'p_name', 'p_brand']
+1048 287399936 # ['p_container', 'p_name', 'p_mfgr']
+1049 229916672 # ['p_container', 'p_name', 'p_partkey']
+1050 229916672 # ['p_container', 'p_name', 'p_size']
+1051 274333696 # ['p_container', 'p_name', 'p_type']
+1052 172433408 # ['p_container', 'p_partkey', 'p_brand']
+1053 211623936 # ['p_container', 'p_partkey', 'p_mfgr']
+1054 229916672 # ['p_container', 'p_partkey', 'p_name']
+1055 154148864 # ['p_container', 'p_partkey', 'p_size']
+1056 198565888 # ['p_container', 'p_partkey', 'p_type']
+1057 172433408 # ['p_container', 'p_size', 'p_brand']
+1058 211623936 # ['p_container', 'p_size', 'p_mfgr']
+1059 229916672 # ['p_container', 'p_size', 'p_name']
+1060 154148864 # ['p_container', 'p_size', 'p_partkey']
+1061 198565888 # ['p_container', 'p_size', 'p_type']
+1062 216850432 # ['p_container', 'p_type', 'p_brand']
+1063 256040960 # ['p_container', 'p_type', 'p_mfgr']
+1064 274333696 # ['p_container', 'p_type', 'p_name']
+1065 198565888 # ['p_container', 'p_type', 'p_partkey']
+1066 198565888 # ['p_container', 'p_type', 'p_size']
+1067 172433408 # ['p_partkey', 'p_brand', 'p_container']
+1068 211623936 # ['p_partkey', 'p_brand', 'p_mfgr']
+1069 229916672 # ['p_partkey', 'p_brand', 'p_name']
+1070 154148864 # ['p_partkey', 'p_brand', 'p_size']
+1071 198565888 # ['p_partkey', 'p_brand', 'p_type']
+1072 172433408 # ['p_partkey', 'p_container', 'p_brand']
+1073 211623936 # ['p_partkey', 'p_container', 'p_mfgr']
+1074 229916672 # ['p_partkey', 'p_container', 'p_name']
+1075 154148864 # ['p_partkey', 'p_container', 'p_size']
+1076 198565888 # ['p_partkey', 'p_container', 'p_type']
+1077 211623936 # ['p_partkey', 'p_mfgr', 'p_brand']
+1078 211623936 # ['p_partkey', 'p_mfgr', 'p_container']
+1079 269107200 # ['p_partkey', 'p_mfgr', 'p_name']
+1080 193339392 # ['p_partkey', 'p_mfgr', 'p_size']
+1081 237756416 # ['p_partkey', 'p_mfgr', 'p_type']
+1082 229916672 # ['p_partkey', 'p_name', 'p_brand']
+1083 229916672 # ['p_partkey', 'p_name', 'p_container']
+1084 269107200 # ['p_partkey', 'p_name', 'p_mfgr']
+1085 211623936 # ['p_partkey', 'p_name', 'p_size']
+1086 256040960 # ['p_partkey', 'p_name', 'p_type']
+1087 154148864 # ['p_partkey', 'p_size', 'p_brand']
+1088 154148864 # ['p_partkey', 'p_size', 'p_container']
+1089 193339392 # ['p_partkey', 'p_size', 'p_mfgr']
+1090 211623936 # ['p_partkey', 'p_size', 'p_name']
+1091 180273152 # ['p_partkey', 'p_size', 'p_type']
+1092 198565888 # ['p_partkey', 'p_type', 'p_brand']
+1093 198565888 # ['p_partkey', 'p_type', 'p_container']
+1094 237756416 # ['p_partkey', 'p_type', 'p_mfgr']
+1095 256040960 # ['p_partkey', 'p_type', 'p_name']
+1096 180273152 # ['p_partkey', 'p_type', 'p_size']
+1097 154148864 # ['p_size', 'p_partkey', 'p_brand']
+1098 154148864 # ['p_size', 'p_partkey', 'p_container']
+1099 193339392 # ['p_size', 'p_partkey', 'p_mfgr']
+1100 211623936 # ['p_size', 'p_partkey', 'p_name']
+1101 180273152 # ['p_size', 'p_partkey', 'p_type']
+1102 216850432 # ['p_type', 'p_brand', 'p_container']
+1103 256040960 # ['p_type', 'p_brand', 'p_mfgr']
+1104 274333696 # ['p_type', 'p_brand', 'p_name']
+1105 198565888 # ['p_type', 'p_brand', 'p_partkey']
+1106 198565888 # ['p_type', 'p_brand', 'p_size']
+1107 216850432 # ['p_type', 'p_container', 'p_brand']
+1108 256040960 # ['p_type', 'p_container', 'p_mfgr']
+1109 274333696 # ['p_type', 'p_container', 'p_name']
+1110 198565888 # ['p_type', 'p_container', 'p_partkey']
+1111 198565888 # ['p_type', 'p_container', 'p_size']
+1112 256040960 # ['p_type', 'p_mfgr', 'p_brand']
+1113 256040960 # ['p_type', 'p_mfgr', 'p_container']
+1114 313524224 # ['p_type', 'p_mfgr', 'p_name']
+1115 237756416 # ['p_type', 'p_mfgr', 'p_partkey']
+1116 237756416 # ['p_type', 'p_mfgr', 'p_size']
+1117 274333696 # ['p_type', 'p_name', 'p_brand']
+1118 274333696 # ['p_type', 'p_name', 'p_container']
+1119 313524224 # ['p_type', 'p_name', 'p_mfgr']
+1120 256040960 # ['p_type', 'p_name', 'p_partkey']
+1121 256040960 # ['p_type', 'p_name', 'p_size']
+1122 198565888 # ['p_type', 'p_partkey', 'p_brand']
+1123 198565888 # ['p_type', 'p_partkey', 'p_container']
+1124 237756416 # ['p_type', 'p_partkey', 'p_mfgr']
+1125 256040960 # ['p_type', 'p_partkey', 'p_name']
+1126 180273152 # ['p_type', 'p_partkey', 'p_size']
+1127 198565888 # ['p_type', 'p_size', 'p_brand']
+1128 198565888 # ['p_type', 'p_size', 'p_container']
+1129 237756416 # ['p_type', 'p_size', 'p_mfgr']
+1130 256040960 # ['p_type', 'p_size', 'p_name']
+1131 180273152 # ['p_type', 'p_size', 'p_partkey']
+1132 543383552 # ['ps_availqty', 'ps_partkey', 'ps_suppkey']
+1133 564281344 # ['ps_availqty', 'ps_partkey', 'ps_supplycost']
+1134 543383552 # ['ps_availqty', 'ps_suppkey', 'ps_partkey']
+1135 564281344 # ['ps_availqty', 'ps_suppkey', 'ps_supplycost']
+1136 564281344 # ['ps_availqty', 'ps_supplycost', 'ps_partkey']
+1137 564281344 # ['ps_availqty', 'ps_supplycost', 'ps_suppkey']
+1138 543383552 # ['ps_partkey', 'ps_availqty', 'ps_suppkey']
+1139 564281344 # ['ps_partkey', 'ps_availqty', 'ps_supplycost']
+1140 543383552 # ['ps_partkey', 'ps_suppkey', 'ps_availqty']
+1141 564281344 # ['ps_partkey', 'ps_suppkey', 'ps_supplycost']
+1142 564281344 # ['ps_partkey', 'ps_supplycost', 'ps_availqty']
+1143 564281344 # ['ps_partkey', 'ps_supplycost', 'ps_suppkey']
+1144 543383552 # ['ps_suppkey', 'ps_availqty', 'ps_partkey']
+1145 564281344 # ['ps_suppkey', 'ps_availqty', 'ps_supplycost']
+1146 543383552 # ['ps_suppkey', 'ps_partkey', 'ps_availqty']
+1147 564281344 # ['ps_suppkey', 'ps_partkey', 'ps_supplycost']
+1148 564281344 # ['ps_suppkey', 'ps_supplycost', 'ps_availqty']
+1149 564281344 # ['ps_suppkey', 'ps_supplycost', 'ps_partkey']
+1150 564281344 # ['ps_supplycost', 'ps_availqty', 'ps_partkey']
+1151 564281344 # ['ps_supplycost', 'ps_availqty', 'ps_suppkey']
+1152 564281344 # ['ps_supplycost', 'ps_partkey', 'ps_availqty']
+1153 564281344 # ['ps_supplycost', 'ps_partkey', 'ps_suppkey']
+1154 564281344 # ['ps_supplycost', 'ps_suppkey', 'ps_availqty']
+1155 564281344 # ['ps_supplycost', 'ps_suppkey', 'ps_partkey']
+1156 9797632 # ['s_nationkey', 's_acctbal', 's_address']
+1157 14761984 # ['s_nationkey', 's_acctbal', 's_comment']
+1158 9920512 # ['s_nationkey', 's_acctbal', 's_name']
+1159 8617984 # ['s_nationkey', 's_acctbal', 's_phone']
+1160 7053312 # ['s_nationkey', 's_acctbal', 's_suppkey']
+1161 9797632 # ['s_nationkey', 's_address', 's_acctbal']
+1162 17244160 # ['s_nationkey', 's_address', 's_comment']
+1163 12402688 # ['s_nationkey', 's_address', 's_name']
+1164 11100160 # ['s_nationkey', 's_address', 's_phone']
+1165 9535488 # ['s_nationkey', 's_address', 's_suppkey']
+1166 14761984 # ['s_nationkey', 's_comment', 's_acctbal']
+1167 17244160 # ['s_nationkey', 's_comment', 's_address']
+1168 17367040 # ['s_nationkey', 's_comment', 's_name']
+1169 16064512 # ['s_nationkey', 's_comment', 's_phone']
+1170 14499840 # ['s_nationkey', 's_comment', 's_suppkey']
+1171 9920512 # ['s_nationkey', 's_name', 's_acctbal']
+1172 12402688 # ['s_nationkey', 's_name', 's_address']
+1173 17367040 # ['s_nationkey', 's_name', 's_comment']
+1174 11231232 # ['s_nationkey', 's_name', 's_phone']
+1175 9666560 # ['s_nationkey', 's_name', 's_suppkey']
+1176 8617984 # ['s_nationkey', 's_phone', 's_acctbal']
+1177 11100160 # ['s_nationkey', 's_phone', 's_address']
+1178 16064512 # ['s_nationkey', 's_phone', 's_comment']
+1179 11231232 # ['s_nationkey', 's_phone', 's_name']
+1180 8355840 # ['s_nationkey', 's_phone', 's_suppkey']
+1181 7053312 # ['s_nationkey', 's_suppkey', 's_acctbal']
+1182 9535488 # ['s_nationkey', 's_suppkey', 's_address']
+1183 14499840 # ['s_nationkey', 's_suppkey', 's_comment']
+1184 9666560 # ['s_nationkey', 's_suppkey', 's_name']
+1185 8355840 # ['s_nationkey', 's_suppkey', 's_phone']
+1186 9797632 # ['s_suppkey', 's_acctbal', 's_address']
+1187 14761984 # ['s_suppkey', 's_acctbal', 's_comment']
+1188 9920512 # ['s_suppkey', 's_acctbal', 's_name']
+1189 7053312 # ['s_suppkey', 's_acctbal', 's_nationkey']
+1190 8617984 # ['s_suppkey', 's_acctbal', 's_phone']
+1191 9797632 # ['s_suppkey', 's_address', 's_acctbal']
+1192 17244160 # ['s_suppkey', 's_address', 's_comment']
+1193 12402688 # ['s_suppkey', 's_address', 's_name']
+1194 9535488 # ['s_suppkey', 's_address', 's_nationkey']
+1195 11100160 # ['s_suppkey', 's_address', 's_phone']
+1196 14761984 # ['s_suppkey', 's_comment', 's_acctbal']
+1197 17244160 # ['s_suppkey', 's_comment', 's_address']
+1198 17367040 # ['s_suppkey', 's_comment', 's_name']
+1199 14499840 # ['s_suppkey', 's_comment', 's_nationkey']
+1200 16064512 # ['s_suppkey', 's_comment', 's_phone']
+1201 9920512 # ['s_suppkey', 's_name', 's_acctbal']
+1202 12402688 # ['s_suppkey', 's_name', 's_address']
+1203 17367040 # ['s_suppkey', 's_name', 's_comment']
+1204 9666560 # ['s_suppkey', 's_name', 's_nationkey']
+1205 11231232 # ['s_suppkey', 's_name', 's_phone']
+1206 7053312 # ['s_suppkey', 's_nationkey', 's_acctbal']
+1207 9535488 # ['s_suppkey', 's_nationkey', 's_address']
+1208 14499840 # ['s_suppkey', 's_nationkey', 's_comment']
+1209 9666560 # ['s_suppkey', 's_nationkey', 's_name']
+1210 8355840 # ['s_suppkey', 's_nationkey', 's_phone']
+1211 8617984 # ['s_suppkey', 's_phone', 's_acctbal']
+1212 11100160 # ['s_suppkey', 's_phone', 's_address']
+1213 16064512 # ['s_suppkey', 's_phone', 's_comment']
+1214 11231232 # ['s_suppkey', 's_phone', 's_name']
+1215 8355840 # ['s_suppkey', 's_phone', 's_nationkey']
+;
+
+set indexes_per_combination[0]:= ;
+set indexes_per_combination[1]:= 221;
+set indexes_per_combination[2]:= 334;
+set indexes_per_combination[3]:= 407;
+set indexes_per_combination[4]:= 36;
+set indexes_per_combination[5]:= 1207;
+set indexes_per_combination[6]:= 519;
+set indexes_per_combination[7]:= 899;
+set indexes_per_combination[8]:= 613;
+set indexes_per_combination[9]:= 1038;
+set indexes_per_combination[10]:= 292;
+set indexes_per_combination[11]:= 78;
+set indexes_per_combination[12]:= 721;
+set indexes_per_combination[13]:= 421;
+set indexes_per_combination[14]:= 367;
+set indexes_per_combination[15]:= 197;
+set indexes_per_combination[16]:= 1124;
+set indexes_per_combination[17]:= 441;
+set indexes_per_combination[18]:= 541;
+set indexes_per_combination[19]:= 1122;
+set indexes_per_combination[20]:= 1134;
+set indexes_per_combination[21]:= 378;
+set indexes_per_combination[22]:= 253;
+set indexes_per_combination[23]:= 671;
+set indexes_per_combination[24]:= 645;
+set indexes_per_combination[25]:= 14;
+set indexes_per_combination[26]:= 675;
+set indexes_per_combination[27]:= 741;
+set indexes_per_combination[28]:= 513;
+set indexes_per_combination[29]:= 830;
+set indexes_per_combination[30]:= 328;
+set indexes_per_combination[31]:= 528;
+set indexes_per_combination[32]:= 910;
+set indexes_per_combination[33]:= 56;
+set indexes_per_combination[34]:= 593;
+set indexes_per_combination[35]:= 1076;
+set indexes_per_combination[36]:= 1036;
+set indexes_per_combination[37]:= 1209;
+set indexes_per_combination[38]:= 1156;
+set indexes_per_combination[39]:= 1204;
+set indexes_per_combination[40]:= 212;
+set indexes_per_combination[41]:= 198;
+set indexes_per_combination[42]:= 696;
+set indexes_per_combination[43]:= 364;
+set indexes_per_combination[44]:= 861;
+set indexes_per_combination[45]:= 398;
+set indexes_per_combination[46]:= 908;
+set indexes_per_combination[47]:= 1112;
+set indexes_per_combination[48]:= 805;
+set indexes_per_combination[49]:= 532;
+set indexes_per_combination[50]:= 120;
+set indexes_per_combination[51]:= 467;
+set indexes_per_combination[52]:= 1157;
+set indexes_per_combination[53]:= 390;
+set indexes_per_combination[54]:= 955;
+set indexes_per_combination[55]:= 372;
+set indexes_per_combination[56]:= 547;
+set indexes_per_combination[57]:= 459;
+set indexes_per_combination[58]:= 1096;
+set indexes_per_combination[59]:= 607;
+set indexes_per_combination[60]:= 1033;
+set indexes_per_combination[61]:= 839;
+set indexes_per_combination[62]:= 847;
+set indexes_per_combination[63]:= 755;
+set indexes_per_combination[64]:= 976;
+set indexes_per_combination[65]:= 368;
+set indexes_per_combination[66]:= 257;
+set indexes_per_combination[67]:= 937;
+set indexes_per_combination[68]:= 983;
+set indexes_per_combination[69]:= 330;
+set indexes_per_combination[70]:= 1153;
+set indexes_per_combination[71]:= 435;
+set indexes_per_combination[72]:= 886;
+set indexes_per_combination[73]:= 302;
+set indexes_per_combination[74]:= 323;
+set indexes_per_combination[75]:= 404;
+set indexes_per_combination[76]:= 806;
+set indexes_per_combination[77]:= 851;
+set indexes_per_combination[78]:= 857;
+set indexes_per_combination[79]:= 1188;
+set indexes_per_combination[80]:= 476;
+set indexes_per_combination[81]:= 1056;
+set indexes_per_combination[82]:= 417;
+set indexes_per_combination[83]:= 784;
+set indexes_per_combination[84]:= 437;
+set indexes_per_combination[85]:= 238;
+set indexes_per_combination[86]:= 403;
+set indexes_per_combination[87]:= 89;
+set indexes_per_combination[88]:= 876;
+set indexes_per_combination[89]:= 888;
+set indexes_per_combination[90]:= 1116;
+set indexes_per_combination[91]:= 1212;
+set indexes_per_combination[92]:= 211;
+set indexes_per_combination[93]:= 263;
+set indexes_per_combination[94]:= 470;
+set indexes_per_combination[95]:= 332;
+set indexes_per_combination[96]:= 1166;
+set indexes_per_combination[97]:= 766;
+set indexes_per_combination[98]:= 215;
+set indexes_per_combination[99]:= 637;
+set indexes_per_combination[100]:= 1103;
+set indexes_per_combination[101]:= 113;
+set indexes_per_combination[102]:= 1101;
+set indexes_per_combination[103]:= 757;
+set indexes_per_combination[104]:= 391;
+set indexes_per_combination[105]:= 1133;
+set indexes_per_combination[106]:= 1020;
+set indexes_per_combination[107]:= 1184;
+set indexes_per_combination[108]:= 38;
+set indexes_per_combination[109]:= 342;
+set indexes_per_combination[110]:= 739;
+set indexes_per_combination[111]:= 117;
+set indexes_per_combination[112]:= 592;
+set indexes_per_combination[113]:= 1198;
+set indexes_per_combination[114]:= 41;
+set indexes_per_combination[115]:= 130;
+set indexes_per_combination[116]:= 654;
+set indexes_per_combination[117]:= 242;
+set indexes_per_combination[118]:= 879;
+set indexes_per_combination[119]:= 986;
+set indexes_per_combination[120]:= 1066;
+set indexes_per_combination[121]:= 774;
+set indexes_per_combination[122]:= 1162;
+set indexes_per_combination[123]:= 929;
+set indexes_per_combination[124]:= 499;
+set indexes_per_combination[125]:= 392;
+set indexes_per_combination[126]:= 412;
+set indexes_per_combination[127]:= 893;
+set indexes_per_combination[128]:= 244;
+set indexes_per_combination[129]:= 860;
+set indexes_per_combination[130]:= 758;
+set indexes_per_combination[131]:= 1145;
+set indexes_per_combination[132]:= 288;
+set indexes_per_combination[133]:= 944;
+set indexes_per_combination[134]:= 716;
+set indexes_per_combination[135]:= 379;
+set indexes_per_combination[136]:= 207;
+set indexes_per_combination[137]:= 506;
+set indexes_per_combination[138]:= 436;
+set indexes_per_combination[139]:= 720;
+set indexes_per_combination[140]:= 283;
+set indexes_per_combination[141]:= 179;
+set indexes_per_combination[142]:= 1063;
+set indexes_per_combination[143]:= 393;
+set indexes_per_combination[144]:= 902;
+set indexes_per_combination[145]:= 608;
+set indexes_per_combination[146]:= 480;
+set indexes_per_combination[147]:= 1123;
+set indexes_per_combination[148]:= 48;
+set indexes_per_combination[149]:= 1109;
+set indexes_per_combination[150]:= 216;
+set indexes_per_combination[151]:= 890;
+set indexes_per_combination[152]:= 633;
+set indexes_per_combination[153]:= 472;
+set indexes_per_combination[154]:= 1208;
+set indexes_per_combination[155]:= 1018;
+set indexes_per_combination[156]:= 928;
+set indexes_per_combination[157]:= 289;
+set indexes_per_combination[158]:= 837;
+set indexes_per_combination[159]:= 442;
+set indexes_per_combination[160]:= 325;
+set indexes_per_combination[161]:= 997;
+set indexes_per_combination[162]:= 505;
+set indexes_per_combination[163]:= 1140;
+set indexes_per_combination[164]:= 81;
+set indexes_per_combination[165]:= 405;
+set indexes_per_combination[166]:= 1142;
+set indexes_per_combination[167]:= 719;
+set indexes_per_combination[168]:= 991;
+set indexes_per_combination[169]:= 315;
+set indexes_per_combination[170]:= 450;
+set indexes_per_combination[171]:= 425;
+set indexes_per_combination[172]:= 385;
+set indexes_per_combination[173]:= 903;
+set indexes_per_combination[174]:= 905;
+set indexes_per_combination[175]:= 273;
+set indexes_per_combination[176]:= 966;
+set indexes_per_combination[177]:= 833;
+set indexes_per_combination[178]:= 567;
+set indexes_per_combination[179]:= 653;
+set indexes_per_combination[180]:= 92;
+set indexes_per_combination[181]:= 891;
+set indexes_per_combination[182]:= 973;
+set indexes_per_combination[183]:= 247;
+set indexes_per_combination[184]:= 62;
+set indexes_per_combination[185]:= 1039;
+set indexes_per_combination[186]:= 549;
+set indexes_per_combination[187]:= 1051;
+set indexes_per_combination[188]:= 628;
+set indexes_per_combination[189]:= 284;
+set indexes_per_combination[190]:= 352;
+set indexes_per_combination[191]:= 840;
+set indexes_per_combination[192]:= 704;
+set indexes_per_combination[193]:= 123;
+set indexes_per_combination[194]:= 192;
+set indexes_per_combination[195]:= 1050;
+set indexes_per_combination[196]:= 647;
+set indexes_per_combination[197]:= 79;
+set indexes_per_combination[198]:= 629;
+set indexes_per_combination[199]:= 616;
+set indexes_per_combination[200]:= 503;
+set indexes_per_combination[201]:= 846;
+set indexes_per_combination[202]:= 169;
+set indexes_per_combination[203]:= 327;
+set indexes_per_combination[204]:= 718;
+set indexes_per_combination[205]:= 842;
+set indexes_per_combination[206]:= 356;
+set indexes_per_combination[207]:= 863;
+set indexes_per_combination[208]:= 250;
+set indexes_per_combination[209]:= 384;
+set indexes_per_combination[210]:= 34;
+set indexes_per_combination[211]:= 455;
+set indexes_per_combination[212]:= 1108;
+set indexes_per_combination[213]:= 293;
+set indexes_per_combination[214]:= 1152;
+set indexes_per_combination[215]:= 874;
+set indexes_per_combination[216]:= 487;
+set indexes_per_combination[217]:= 440;
+set indexes_per_combination[218]:= 692;
+set indexes_per_combination[219]:= 1081;
+set indexes_per_combination[220]:= 473;
+set indexes_per_combination[221]:= 128;
+set indexes_per_combination[222]:= 136;
+set indexes_per_combination[223]:= 1102;
+set indexes_per_combination[224]:= 967;
+set indexes_per_combination[225]:= 80;
+set indexes_per_combination[226]:= 25;
+set indexes_per_combination[227]:= 1187;
+set indexes_per_combination[228]:= 989;
+set indexes_per_combination[229]:= 243;
+set indexes_per_combination[230]:= 1189;
+set indexes_per_combination[231]:= 29;
+set indexes_per_combination[232]:= 977;
+set indexes_per_combination[233]:= 118;
+set indexes_per_combination[234]:= 8;
+set indexes_per_combination[235]:= 646;
+set indexes_per_combination[236]:= 727;
+set indexes_per_combination[237]:= 526;
+set indexes_per_combination[238]:= 326;
+set indexes_per_combination[239]:= 1080;
+set indexes_per_combination[240]:= 1121;
+set indexes_per_combination[241]:= 841;
+set indexes_per_combination[242]:= 474;
+set indexes_per_combination[243]:= 954;
+set indexes_per_combination[244]:= 602;
+set indexes_per_combination[245]:= 731;
+set indexes_per_combination[246]:= 1201;
+set indexes_per_combination[247]:= 763;
+set indexes_per_combination[248]:= 1001;
+set indexes_per_combination[249]:= 434;
+set indexes_per_combination[250]:= 6;
+set indexes_per_combination[251]:= 1013;
+set indexes_per_combination[252]:= 313;
+set indexes_per_combination[253]:= 451;
+set indexes_per_combination[254]:= 234;
+set indexes_per_combination[255]:= 897;
+set indexes_per_combination[256]:= 150;
+set indexes_per_combination[257]:= 1052;
+set indexes_per_combination[258]:= 695;
+set indexes_per_combination[259]:= 202;
+set indexes_per_combination[260]:= 138;
+set indexes_per_combination[261]:= 520;
+set indexes_per_combination[262]:= 543;
+set indexes_per_combination[263]:= 280;
+set indexes_per_combination[264]:= 1147;
+set indexes_per_combination[265]:= 471;
+set indexes_per_combination[266]:= 1119;
+set indexes_per_combination[267]:= 1064;
+set indexes_per_combination[268]:= 468;
+set indexes_per_combination[269]:= 241;
+set indexes_per_combination[270]:= 1199;
+set indexes_per_combination[271]:= 210;
+set indexes_per_combination[272]:= 1006;
+set indexes_per_combination[273]:= 880;
+set indexes_per_combination[274]:= 780;
+set indexes_per_combination[275]:= 1044;
+set indexes_per_combination[276]:= 122;
+set indexes_per_combination[277]:= 804;
+set indexes_per_combination[278]:= 759;
+set indexes_per_combination[279]:= 702;
+set indexes_per_combination[280]:= 1165;
+set indexes_per_combination[281]:= 603;
+set indexes_per_combination[282]:= 591;
+set indexes_per_combination[283]:= 433;
+set indexes_per_combination[284]:= 296;
+set indexes_per_combination[285]:= 312;
+set indexes_per_combination[286]:= 262;
+set indexes_per_combination[287]:= 223;
+set indexes_per_combination[288]:= 463;
+set indexes_per_combination[289]:= 1170;
+set indexes_per_combination[290]:= 823;
+set indexes_per_combination[291]:= 889;
+set indexes_per_combination[292]:= 348;
+set indexes_per_combination[293]:= 248;
+set indexes_per_combination[294]:= 95;
+set indexes_per_combination[295]:= 1136;
+set indexes_per_combination[296]:= 685;
+set indexes_per_combination[297]:= 568;
+set indexes_per_combination[298]:= 3;
+set indexes_per_combination[299]:= 661;
+set indexes_per_combination[300]:= 1200;
+set indexes_per_combination[301]:= 906;
+set indexes_per_combination[302]:= 664;
+set indexes_per_combination[303]:= 1010;
+set indexes_per_combination[304]:= 1089;
+set indexes_per_combination[305]:= 960;
+set indexes_per_combination[306]:= 294;
+set indexes_per_combination[307]:= 469;
+set indexes_per_combination[308]:= 240;
+set indexes_per_combination[309]:= 1155;
+set indexes_per_combination[310]:= 946;
+set indexes_per_combination[311]:= 245;
+set indexes_per_combination[312]:= 176;
+set indexes_per_combination[313]:= 919;
+set indexes_per_combination[314]:= 218;
+set indexes_per_combination[315]:= 787;
+set indexes_per_combination[316]:= 968;
+set indexes_per_combination[317]:= 351;
+set indexes_per_combination[318]:= 1083;
+set indexes_per_combination[319]:= 163;
+set indexes_per_combination[320]:= 88;
+set indexes_per_combination[321]:= 754;
+set indexes_per_combination[322]:= 579;
+set indexes_per_combination[323]:= 677;
+set indexes_per_combination[324]:= 346;
+set indexes_per_combination[325]:= 287;
+set indexes_per_combination[326]:= 662;
+set indexes_per_combination[327]:= 925;
+set indexes_per_combination[328]:= 432;
+set indexes_per_combination[329]:= 1012;
+set indexes_per_combination[330]:= 91;
+set indexes_per_combination[331]:= 114;
+set indexes_per_combination[332]:= 715;
+set indexes_per_combination[333]:= 178;
+set indexes_per_combination[334]:= 828;
+set indexes_per_combination[335]:= 883;
+set indexes_per_combination[336]:= 217;
+set indexes_per_combination[337]:= 901;
+set indexes_per_combination[338]:= 566;
+set indexes_per_combination[339]:= 948;
+set indexes_per_combination[340]:= 336;
+set indexes_per_combination[341]:= 1118;
+set indexes_per_combination[342]:= 554;
+set indexes_per_combination[343]:= 271;
+set indexes_per_combination[344]:= 748;
+set indexes_per_combination[345]:= 488;
+set indexes_per_combination[346]:= 394;
+set indexes_per_combination[347]:= 546;
+set indexes_per_combination[348]:= 900;
+set indexes_per_combination[349]:= 982;
+set indexes_per_combination[350]:= 824;
+set indexes_per_combination[351]:= 553;
+set indexes_per_combination[352]:= 1097;
+set indexes_per_combination[353]:= 1179;
+set indexes_per_combination[354]:= 1099;
+set indexes_per_combination[355]:= 614;
+set indexes_per_combination[356]:= 711;
+set indexes_per_combination[357]:= 366;
+set indexes_per_combination[358]:= 651;
+set indexes_per_combination[359]:= 913;
+set indexes_per_combination[360]:= 386;
+set indexes_per_combination[361]:= 1095;
+set indexes_per_combination[362]:= 915;
+set indexes_per_combination[363]:= 104;
+set indexes_per_combination[364]:= 524;
+set indexes_per_combination[365]:= 264;
+set indexes_per_combination[366]:= 557;
+set indexes_per_combination[367]:= 173;
+set indexes_per_combination[368]:= 1057;
+set indexes_per_combination[369]:= 737;
+set indexes_per_combination[370]:= 572;
+set indexes_per_combination[371]:= 941;
+set indexes_per_combination[372]:= 507;
+set indexes_per_combination[373]:= 945;
+set indexes_per_combination[374]:= 1160;
+set indexes_per_combination[375]:= 155;
+set indexes_per_combination[376]:= 545;
+set indexes_per_combination[377]:= 733;
+set indexes_per_combination[378]:= 511;
+set indexes_per_combination[379]:= 1074;
+set indexes_per_combination[380]:= 298;
+set indexes_per_combination[381]:= 522;
+set indexes_per_combination[382]:= 707;
+set indexes_per_combination[383]:= 380;
+set indexes_per_combination[384]:= 938;
+set indexes_per_combination[385]:= 321;
+set indexes_per_combination[386]:= 634;
+set indexes_per_combination[387]:= 1043;
+set indexes_per_combination[388]:= 1214;
+set indexes_per_combination[389]:= 551;
+set indexes_per_combination[390]:= 254;
+set indexes_per_combination[391]:= 54;
+set indexes_per_combination[392]:= 533;
+set indexes_per_combination[393]:= 797;
+set indexes_per_combination[394]:= 959;
+set indexes_per_combination[395]:= 1007;
+set indexes_per_combination[396]:= 319;
+set indexes_per_combination[397]:= 445;
+set indexes_per_combination[398]:= 265;
+set indexes_per_combination[399]:= 203;
+set indexes_per_combination[400]:= 316;
+set indexes_per_combination[401]:= 402;
+set indexes_per_combination[402]:= 825;
+set indexes_per_combination[403]:= 816;
+set indexes_per_combination[404]:= 175;
+set indexes_per_combination[405]:= 870;
+set indexes_per_combination[406]:= 227;
+set indexes_per_combination[407]:= 1024;
+set indexes_per_combination[408]:= 1058;
+set indexes_per_combination[409]:= 742;
+set indexes_per_combination[410]:= 518;
+set indexes_per_combination[411]:= 627;
+set indexes_per_combination[412]:= 771;
+set indexes_per_combination[413]:= 322;
+set indexes_per_combination[414]:= 270;
+set indexes_per_combination[415]:= 329;
+set indexes_per_combination[416]:= 699;
+set indexes_per_combination[417]:= 691;
+set indexes_per_combination[418]:= 728;
+set indexes_per_combination[419]:= 71;
+set indexes_per_combination[420]:= 1173;
+set indexes_per_combination[421]:= 418;
+set indexes_per_combination[422]:= 550;
+set indexes_per_combination[423]:= 12;
+set indexes_per_combination[424]:= 585;
+set indexes_per_combination[425]:= 237;
+set indexes_per_combination[426]:= 1022;
+set indexes_per_combination[427]:= 1032;
+set indexes_per_combination[428]:= 40;
+set indexes_per_combination[429]:= 165;
+set indexes_per_combination[430]:= 869;
+set indexes_per_combination[431]:= 355;
+set indexes_per_combination[432]:= 726;
+set indexes_per_combination[433]:= 444;
+set indexes_per_combination[434]:= 693;
+set indexes_per_combination[435]:= 1114;
+set indexes_per_combination[436]:= 956;
+set indexes_per_combination[437]:= 1021;
+set indexes_per_combination[438]:= 82;
+set indexes_per_combination[439]:= 1185;
+set indexes_per_combination[440]:= 753;
+set indexes_per_combination[441]:= 1047;
+set indexes_per_combination[442]:= 558;
+set indexes_per_combination[443]:= 517;
+set indexes_per_combination[444]:= 76;
+set indexes_per_combination[445]:= 1197;
+set indexes_per_combination[446]:= 770;
+set indexes_per_combination[447]:= 779;
+set indexes_per_combination[448]:= 358;
+set indexes_per_combination[449]:= 170;
+set indexes_per_combination[450]:= 181;
+set indexes_per_combination[451]:= 1210;
+set indexes_per_combination[452]:= 466;
+set indexes_per_combination[453]:= 371;
+set indexes_per_combination[454]:= 988;
+set indexes_per_combination[455]:= 975;
+set indexes_per_combination[456]:= 535;
+set indexes_per_combination[457]:= 30;
+set indexes_per_combination[458]:= 134;
+set indexes_per_combination[459]:= 597;
+set indexes_per_combination[460]:= 256;
+set indexes_per_combination[461]:= 424;
+set indexes_per_combination[462]:= 110;
+set indexes_per_combination[463]:= 145;
+set indexes_per_combination[464]:= 838;
+set indexes_per_combination[465]:= 606;
+set indexes_per_combination[466]:= 66;
+set indexes_per_combination[467]:= 703;
+set indexes_per_combination[468]:= 494;
+set indexes_per_combination[469]:= 168;
+set indexes_per_combination[470]:= 93;
+set indexes_per_combination[471]:= 360;
+set indexes_per_combination[472]:= 1087;
+set indexes_per_combination[473]:= 190;
+set indexes_per_combination[474]:= 680;
+set indexes_per_combination[475]:= 867;
+set indexes_per_combination[476]:= 160;
+set indexes_per_combination[477]:= 249;
+set indexes_per_combination[478]:= 484;
+set indexes_per_combination[479]:= 612;
+set indexes_per_combination[480]:= 1196;
+set indexes_per_combination[481]:= 570;
+set indexes_per_combination[482]:= 650;
+set indexes_per_combination[483]:= 419;
+set indexes_per_combination[484]:= 1094;
+set indexes_per_combination[485]:= 769;
+set indexes_per_combination[486]:= 46;
+set indexes_per_combination[487]:= 962;
+set indexes_per_combination[488]:= 97;
+set indexes_per_combination[489]:= 489;
+set indexes_per_combination[490]:= 673;
+set indexes_per_combination[491]:= 694;
+set indexes_per_combination[492]:= 98;
+set indexes_per_combination[493]:= 665;
+set indexes_per_combination[494]:= 845;
+set indexes_per_combination[495]:= 577;
+set indexes_per_combination[496]:= 849;
+set indexes_per_combination[497]:= 580;
+set indexes_per_combination[498]:= 676;
+set indexes_per_combination[499]:= 60;
+set indexes_per_combination[500]:= 1149;
+set indexes_per_combination[501]:= 1202;
+set indexes_per_combination[502]:= 341;
+set indexes_per_combination[503]:= 767;
+set indexes_per_combination[504]:= 1181;
+set indexes_per_combination[505]:= 909;
+set indexes_per_combination[506]:= 786;
+set indexes_per_combination[507]:= 969;
+set indexes_per_combination[508]:= 340;
+set indexes_per_combination[509]:= 681;
+set indexes_per_combination[510]:= 994;
+set indexes_per_combination[511]:= 100;
+set indexes_per_combination[512]:= 525;
+set indexes_per_combination[513]:= 516;
+set indexes_per_combination[514]:= 1084;
+set indexes_per_combination[515]:= 1035;
+set indexes_per_combination[516]:= 2;
+set indexes_per_combination[517]:= 415;
+set indexes_per_combination[518]:= 189;
+set indexes_per_combination[519]:= 752;
+set indexes_per_combination[520]:= 236;
+set indexes_per_combination[521]:= 414;
+set indexes_per_combination[522]:= 656;
+set indexes_per_combination[523]:= 808;
+set indexes_per_combination[524]:= 309;
+set indexes_per_combination[525]:= 698;
+set indexes_per_combination[526]:= 848;
+set indexes_per_combination[527]:= 369;
+set indexes_per_combination[528]:= 16;
+set indexes_per_combination[529]:= 411;
+set indexes_per_combination[530]:= 115;
+set indexes_per_combination[531]:= 126;
+set indexes_per_combination[532]:= 548;
+set indexes_per_combination[533]:= 182;
+set indexes_per_combination[534]:= 354;
+set indexes_per_combination[535]:= 866;
+set indexes_per_combination[536]:= 133;
+set indexes_per_combination[537]:= 61;
+set indexes_per_combination[538]:= 1190;
+set indexes_per_combination[539]:= 28;
+set indexes_per_combination[540]:= 872;
+set indexes_per_combination[541]:= 35;
+set indexes_per_combination[542]:= 791;
+set indexes_per_combination[543]:= 5;
+set indexes_per_combination[544]:= 307;
+set indexes_per_combination[545]:= 898;
+set indexes_per_combination[546]:= 998;
+set indexes_per_combination[547]:= 502;
+set indexes_per_combination[548]:= 1067;
+set indexes_per_combination[549]:= 194;
+set indexes_per_combination[550]:= 15;
+set indexes_per_combination[551]:= 164;
+set indexes_per_combination[552]:= 555;
+set indexes_per_combination[553]:= 605;
+set indexes_per_combination[554]:= 448;
+set indexes_per_combination[555]:= 596;
+set indexes_per_combination[556]:= 278;
+set indexes_per_combination[557]:= 864;
+set indexes_per_combination[558]:= 916;
+set indexes_per_combination[559]:= 584;
+set indexes_per_combination[560]:= 932;
+set indexes_per_combination[561]:= 410;
+set indexes_per_combination[562]:= 85;
+set indexes_per_combination[563]:= 850;
+set indexes_per_combination[564]:= 811;
+set indexes_per_combination[565]:= 1069;
+set indexes_per_combination[566]:= 1070;
+set indexes_per_combination[567]:= 479;
+set indexes_per_combination[568]:= 802;
+set indexes_per_combination[569]:= 107;
+set indexes_per_combination[570]:= 745;
+set indexes_per_combination[571]:= 105;
+set indexes_per_combination[572]:= 140;
+set indexes_per_combination[573]:= 714;
+set indexes_per_combination[574]:= 67;
+set indexes_per_combination[575]:= 856;
+set indexes_per_combination[576]:= 588;
+set indexes_per_combination[577]:= 152;
+set indexes_per_combination[578]:= 1061;
+set indexes_per_combination[579]:= 1182;
+set indexes_per_combination[580]:= 47;
+set indexes_per_combination[581]:= 1150;
+set indexes_per_combination[582]:= 795;
+set indexes_per_combination[583]:= 963;
+set indexes_per_combination[584]:= 109;
+set indexes_per_combination[585]:= 206;
+set indexes_per_combination[586]:= 1144;
+set indexes_per_combination[587]:= 936;
+set indexes_per_combination[588]:= 266;
+set indexes_per_combination[589]:= 736;
+set indexes_per_combination[590]:= 1163;
+set indexes_per_combination[591]:= 1104;
+set indexes_per_combination[592]:= 111;
+set indexes_per_combination[593]:= 33;
+set indexes_per_combination[594]:= 877;
+set indexes_per_combination[595]:= 1049;
+set indexes_per_combination[596]:= 810;
+set indexes_per_combination[597]:= 636;
+set indexes_per_combination[598]:= 19;
+set indexes_per_combination[599]:= 911;
+set indexes_per_combination[600]:= 631;
+set indexes_per_combination[601]:= 1068;
+set indexes_per_combination[602]:= 980;
+set indexes_per_combination[603]:= 1028;
+set indexes_per_combination[604]:= 751;
+set indexes_per_combination[605]:= 172;
+set indexes_per_combination[606]:= 515;
+set indexes_per_combination[607]:= 930;
+set indexes_per_combination[608]:= 615;
+set indexes_per_combination[609]:= 121;
+set indexes_per_combination[610]:= 186;
+set indexes_per_combination[611]:= 979;
+set indexes_per_combination[612]:= 1111;
+set indexes_per_combination[613]:= 337;
+set indexes_per_combination[614]:= 835;
+set indexes_per_combination[615]:= 600;
+set indexes_per_combination[616]:= 388;
+set indexes_per_combination[617]:= 139;
+set indexes_per_combination[618]:= 349;
+set indexes_per_combination[619]:= 267;
+set indexes_per_combination[620]:= 125;
+set indexes_per_combination[621]:= 1015;
+set indexes_per_combination[622]:= 565;
+set indexes_per_combination[623]:= 127;
+set indexes_per_combination[624]:= 389;
+set indexes_per_combination[625]:= 246;
+set indexes_per_combination[626]:= 447;
+set indexes_per_combination[627]:= 1085;
+set indexes_per_combination[628]:= 359;
+set indexes_per_combination[629]:= 144;
+set indexes_per_combination[630]:= 166;
+set indexes_per_combination[631]:= 1205;
+set indexes_per_combination[632]:= 820;
+set indexes_per_combination[633]:= 228;
+set indexes_per_combination[634]:= 626;
+set indexes_per_combination[635]:= 892;
+set indexes_per_combination[636]:= 11;
+set indexes_per_combination[637]:= 193;
+set indexes_per_combination[638]:= 9;
+set indexes_per_combination[639]:= 1027;
+set indexes_per_combination[640]:= 53;
+set indexes_per_combination[641]:= 443;
+set indexes_per_combination[642]:= 83;
+set indexes_per_combination[643]:= 310;
+set indexes_per_combination[644]:= 620;
+set indexes_per_combination[645]:= 102;
+set indexes_per_combination[646]:= 350;
+set indexes_per_combination[647]:= 1191;
+set indexes_per_combination[648]:= 679;
+set indexes_per_combination[649]:= 859;
+set indexes_per_combination[650]:= 659;
+set indexes_per_combination[651]:= 521;
+set indexes_per_combination[652]:= 141;
+set indexes_per_combination[653]:= 610;
+set indexes_per_combination[654]:= 452;
+set indexes_per_combination[655]:= 482;
+set indexes_per_combination[656]:= 1211;
+set indexes_per_combination[657]:= 486;
+set indexes_per_combination[658]:= 1126;
+set indexes_per_combination[659]:= 934;
+set indexes_per_combination[660]:= 924;
+set indexes_per_combination[661]:= 729;
+set indexes_per_combination[662]:= 308;
+set indexes_per_combination[663]:= 1138;
+set indexes_per_combination[664]:= 96;
+set indexes_per_combination[665]:= 51;
+set indexes_per_combination[666]:= 1127;
+set indexes_per_combination[667]:= 453;
+set indexes_per_combination[668]:= 894;
+set indexes_per_combination[669]:= 822;
+set indexes_per_combination[670]:= 23;
+set indexes_per_combination[671]:= 1125;
+set indexes_per_combination[672]:= 684;
+set indexes_per_combination[673]:= 375;
+set indexes_per_combination[674]:= 641;
+set indexes_per_combination[675]:= 229;
+set indexes_per_combination[676]:= 279;
+set indexes_per_combination[677]:= 162;
+set indexes_per_combination[678]:= 939;
+set indexes_per_combination[679]:= 282;
+set indexes_per_combination[680]:= 220;
+set indexes_per_combination[681]:= 50;
+set indexes_per_combination[682]:= 563;
+set indexes_per_combination[683]:= 559;
+set indexes_per_combination[684]:= 439;
+set indexes_per_combination[685]:= 498;
+set indexes_per_combination[686]:= 789;
+set indexes_per_combination[687]:= 589;
+set indexes_per_combination[688]:= 1011;
+set indexes_per_combination[689]:= 496;
+set indexes_per_combination[690]:= 299;
+set indexes_per_combination[691]:= 147;
+set indexes_per_combination[692]:= 106;
+set indexes_per_combination[693]:= 970;
+set indexes_per_combination[694]:= 1167;
+set indexes_per_combination[695]:= 416;
+set indexes_per_combination[696]:= 1105;
+set indexes_per_combination[697]:= 638;
+set indexes_per_combination[698]:= 158;
+set indexes_per_combination[699]:= 187;
+set indexes_per_combination[700]:= 131;
+set indexes_per_combination[701]:= 1107;
+set indexes_per_combination[702]:= 1034;
+set indexes_per_combination[703]:= 119;
+set indexes_per_combination[704]:= 1186;
+set indexes_per_combination[705]:= 544;
+set indexes_per_combination[706]:= 1025;
+set indexes_per_combination[707]:= 800;
+set indexes_per_combination[708]:= 18;
+set indexes_per_combination[709]:= 882;
+set indexes_per_combination[710]:= 583;
+set indexes_per_combination[711]:= 376;
+set indexes_per_combination[712]:= 303;
+set indexes_per_combination[713]:= 497;
+set indexes_per_combination[714]:= 13;
+set indexes_per_combination[715]:= 1128;
+set indexes_per_combination[716]:= 226;
+set indexes_per_combination[717]:= 74;
+set indexes_per_combination[718]:= 171;
+set indexes_per_combination[719]:= 640;
+set indexes_per_combination[720]:= 762;
+set indexes_per_combination[721]:= 357;
+set indexes_per_combination[722]:= 143;
+set indexes_per_combination[723]:= 618;
+set indexes_per_combination[724]:= 64;
+set indexes_per_combination[725]:= 798;
+set indexes_per_combination[726]:= 77;
+set indexes_per_combination[727]:= 1120;
+set indexes_per_combination[728]:= 854;
+set indexes_per_combination[729]:= 599;
+set indexes_per_combination[730]:= 1172;
+set indexes_per_combination[731]:= 776;
+set indexes_per_combination[732]:= 855;
+set indexes_per_combination[733]:= 174;
+set indexes_per_combination[734]:= 430;
+set indexes_per_combination[735]:= 377;
+set indexes_per_combination[736]:= 314;
+set indexes_per_combination[737]:= 1139;
+set indexes_per_combination[738]:= 204;
+set indexes_per_combination[739]:= 1040;
+set indexes_per_combination[740]:= 239;
+set indexes_per_combination[741]:= 27;
+set indexes_per_combination[742]:= 540;
+set indexes_per_combination[743]:= 895;
+set indexes_per_combination[744]:= 399;
+set indexes_per_combination[745]:= 365;
+set indexes_per_combination[746]:= 531;
+set indexes_per_combination[747]:= 1176;
+set indexes_per_combination[748]:= 1092;
+set indexes_per_combination[749]:= 996;
+set indexes_per_combination[750]:= 324;
+set indexes_per_combination[751]:= 783;
+set indexes_per_combination[752]:= 1019;
+set indexes_per_combination[753]:= 923;
+set indexes_per_combination[754]:= 821;
+set indexes_per_combination[755]:= 667;
+set indexes_per_combination[756]:= 814;
+set indexes_per_combination[757]:= 1045;
+set indexes_per_combination[758]:= 853;
+set indexes_per_combination[759]:= 116;
+set indexes_per_combination[760]:= 395;
+set indexes_per_combination[761]:= 1079;
+set indexes_per_combination[762]:= 431;
+set indexes_per_combination[763]:= 788;
+set indexes_per_combination[764]:= 209;
+set indexes_per_combination[765]:= 710;
+set indexes_per_combination[766]:= 1088;
+set indexes_per_combination[767]:= 188;
+set indexes_per_combination[768]:= 803;
+set indexes_per_combination[769]:= 491;
+set indexes_per_combination[770]:= 933;
+set indexes_per_combination[771]:= 648;
+set indexes_per_combination[772]:= 159;
+set indexes_per_combination[773]:= 281;
+set indexes_per_combination[774]:= 1023;
+set indexes_per_combination[775]:= 987;
+set indexes_per_combination[776]:= 1093;
+set indexes_per_combination[777]:= 161;
+set indexes_per_combination[778]:= 747;
+set indexes_per_combination[779]:= 723;
+set indexes_per_combination[780]:= 214;
+set indexes_per_combination[781]:= 992;
+set indexes_per_combination[782]:= 1065;
+set indexes_per_combination[783]:= 49;
+set indexes_per_combination[784]:= 1159;
+set indexes_per_combination[785]:= 749;
+set indexes_per_combination[786]:= 1004;
+set indexes_per_combination[787]:= 709;
+set indexes_per_combination[788]:= 1178;
+set indexes_per_combination[789]:= 595;
+set indexes_per_combination[790]:= 286;
+set indexes_per_combination[791]:= 63;
+set indexes_per_combination[792]:= 103;
+set indexes_per_combination[793]:= 335;
+set indexes_per_combination[794]:= 635;
+set indexes_per_combination[795]:= 581;
+set indexes_per_combination[796]:= 666;
+set indexes_per_combination[797]:= 918;
+set indexes_per_combination[798]:= 623;
+set indexes_per_combination[799]:= 396;
+set indexes_per_combination[800]:= 1048;
+set indexes_per_combination[801]:= 301;
+set indexes_per_combination[802]:= 148;
+set indexes_per_combination[803]:= 881;
+set indexes_per_combination[804]:= 834;
+set indexes_per_combination[805]:= 990;
+set indexes_per_combination[806]:= 260;
+set indexes_per_combination[807]:= 259;
+set indexes_per_combination[808]:= 1115;
+set indexes_per_combination[809]:= 427;
+set indexes_per_combination[810]:= 185;
+set indexes_per_combination[811]:= 781;
+set indexes_per_combination[812]:= 306;
+set indexes_per_combination[813]:= 475;
+set indexes_per_combination[814]:= 90;
+set indexes_per_combination[815]:= 208;
+set indexes_per_combination[816]:= 1158;
+set indexes_per_combination[817]:= 765;
+set indexes_per_combination[818]:= 873;
+set indexes_per_combination[819]:= 222;
+set indexes_per_combination[820]:= 756;
+set indexes_per_combination[821]:= 700;
+set indexes_per_combination[822]:= 397;
+set indexes_per_combination[823]:= 300;
+set indexes_per_combination[824]:= 1029;
+set indexes_per_combination[825]:= 462;
+set indexes_per_combination[826]:= 799;
+set indexes_per_combination[827]:= 219;
+set indexes_per_combination[828]:= 290;
+set indexes_per_combination[829]:= 1060;
+set indexes_per_combination[830]:= 124;
+set indexes_per_combination[831]:= 958;
+set indexes_per_combination[832]:= 1;
+set indexes_per_combination[833]:= 70;
+set indexes_per_combination[834]:= 1148;
+set indexes_per_combination[835]:= 717;
+set indexes_per_combination[836]:= 782;
+set indexes_per_combination[837]:= 449;
+set indexes_per_combination[838]:= 426;
+set indexes_per_combination[839]:= 382;
+set indexes_per_combination[840]:= 831;
+set indexes_per_combination[841]:= 232;
+set indexes_per_combination[842]:= 914;
+set indexes_per_combination[843]:= 55;
+set indexes_per_combination[844]:= 801;
+set indexes_per_combination[845]:= 458;
+set indexes_per_combination[846]:= 483;
+set indexes_per_combination[847]:= 611;
+set indexes_per_combination[848]:= 1017;
+set indexes_per_combination[849]:= 387;
+set indexes_per_combination[850]:= 465;
+set indexes_per_combination[851]:= 318;
+set indexes_per_combination[852]:= 154;
+set indexes_per_combination[853]:= 1195;
+set indexes_per_combination[854]:= 268;
+set indexes_per_combination[855]:= 1129;
+set indexes_per_combination[856]:= 556;
+set indexes_per_combination[857]:= 137;
+set indexes_per_combination[858]:= 630;
+set indexes_per_combination[859]:= 1175;
+set indexes_per_combination[860]:= 1213;
+set indexes_per_combination[861]:= 191;
+set indexes_per_combination[862]:= 500;
+set indexes_per_combination[863]:= 778;
+set indexes_per_combination[864]:= 639;
+set indexes_per_combination[865]:= 536;
+set indexes_per_combination[866]:= 530;
+set indexes_per_combination[867]:= 456;
+set indexes_per_combination[868]:= 333;
+set indexes_per_combination[869]:= 370;
+set indexes_per_combination[870]:= 383;
+set indexes_per_combination[871]:= 907;
+set indexes_per_combination[872]:= 621;
+set indexes_per_combination[873]:= 875;
+set indexes_per_combination[874]:= 320;
+set indexes_per_combination[875]:= 965;
+set indexes_per_combination[876]:= 199;
+set indexes_per_combination[877]:= 1005;
+set indexes_per_combination[878]:= 775;
+set indexes_per_combination[879]:= 760;
+set indexes_per_combination[880]:= 69;
+set indexes_per_combination[881]:= 233;
+set indexes_per_combination[882]:= 575;
+set indexes_per_combination[883]:= 713;
+set indexes_per_combination[884]:= 331;
+set indexes_per_combination[885]:= 697;
+set indexes_per_combination[886]:= 701;
+set indexes_per_combination[887]:= 1098;
+set indexes_per_combination[888]:= 1168;
+set indexes_per_combination[889]:= 39;
+set indexes_per_combination[890]:= 571;
+set indexes_per_combination[891]:= 813;
+set indexes_per_combination[892]:= 978;
+set indexes_per_combination[893]:= 409;
+set indexes_per_combination[894]:= 885;
+set indexes_per_combination[895]:= 724;
+set indexes_per_combination[896]:= 790;
+set indexes_per_combination[897]:= 1100;
+set indexes_per_combination[898]:= 1174;
+set indexes_per_combination[899]:= 539;
+set indexes_per_combination[900]:= 1106;
+set indexes_per_combination[901]:= 529;
+set indexes_per_combination[902]:= 457;
+set indexes_per_combination[903]:= 1183;
+set indexes_per_combination[904]:= 644;
+set indexes_per_combination[905]:= 922;
+set indexes_per_combination[906]:= 1026;
+set indexes_per_combination[907]:= 1000;
+set indexes_per_combination[908]:= 569;
+set indexes_per_combination[909]:= 772;
+set indexes_per_combination[910]:= 24;
+set indexes_per_combination[911]:= 601;
+set indexes_per_combination[912]:= 373;
+set indexes_per_combination[913]:= 311;
+set indexes_per_combination[914]:= 461;
+set indexes_per_combination[915]:= 504;
+set indexes_per_combination[916]:= 1046;
+set indexes_per_combination[917]:= 678;
+set indexes_per_combination[918]:= 957;
+set indexes_per_combination[919]:= 1054;
+set indexes_per_combination[920]:= 1171;
+set indexes_per_combination[921]:= 935;
+set indexes_per_combination[922]:= 655;
+set indexes_per_combination[923]:= 687;
+set indexes_per_combination[924]:= 258;
+set indexes_per_combination[925]:= 746;
+set indexes_per_combination[926]:= 690;
+set indexes_per_combination[927]:= 961;
+set indexes_per_combination[928]:= 1008;
+set indexes_per_combination[929]:= 562;
+set indexes_per_combination[930]:= 408;
+set indexes_per_combination[931]:= 224;
+set indexes_per_combination[932]:= 1154;
+set indexes_per_combination[933]:= 429;
+set indexes_per_combination[934]:= 827;
+set indexes_per_combination[935]:= 843;
+set indexes_per_combination[936]:= 481;
+set indexes_per_combination[937]:= 657;
+set indexes_per_combination[938]:= 135;
+set indexes_per_combination[939]:= 22;
+set indexes_per_combination[940]:= 195;
+set indexes_per_combination[941]:= 609;
+set indexes_per_combination[942]:= 1030;
+set indexes_per_combination[943]:= 146;
+set indexes_per_combination[944]:= 58;
+set indexes_per_combination[945]:= 10;
+set indexes_per_combination[946]:= 1141;
+set indexes_per_combination[947]:= 112;
+set indexes_per_combination[948]:= 374;
+set indexes_per_combination[949]:= 708;
+set indexes_per_combination[950]:= 492;
+set indexes_per_combination[951]:= 304;
+set indexes_per_combination[952]:= 887;
+set indexes_per_combination[953]:= 807;
+set indexes_per_combination[954]:= 1073;
+set indexes_per_combination[955]:= 862;
+set indexes_per_combination[956]:= 1137;
+set indexes_per_combination[957]:= 1132;
+set indexes_per_combination[958]:= 255;
+set indexes_per_combination[959]:= 401;
+set indexes_per_combination[960]:= 438;
+set indexes_per_combination[961]:= 921;
+set indexes_per_combination[962]:= 734;
+set indexes_per_combination[963]:= 149;
+set indexes_per_combination[964]:= 995;
+set indexes_per_combination[965]:= 501;
+set indexes_per_combination[966]:= 151;
+set indexes_per_combination[967]:= 564;
+set indexes_per_combination[968]:= 495;
+set indexes_per_combination[969]:= 1131;
+set indexes_per_combination[970]:= 514;
+set indexes_per_combination[971]:= 904;
+set indexes_per_combination[972]:= 632;
+set indexes_per_combination[973]:= 295;
+set indexes_per_combination[974]:= 1206;
+set indexes_per_combination[975]:= 643;
+set indexes_per_combination[976]:= 269;
+set indexes_per_combination[977]:= 730;
+set indexes_per_combination[978]:= 338;
+set indexes_per_combination[979]:= 777;
+set indexes_per_combination[980]:= 464;
+set indexes_per_combination[981]:= 345;
+set indexes_per_combination[982]:= 1193;
+set indexes_per_combination[983]:= 251;
+set indexes_per_combination[984]:= 740;
+set indexes_per_combination[985]:= 582;
+set indexes_per_combination[986]:= 1003;
+set indexes_per_combination[987]:= 1075;
+set indexes_per_combination[988]:= 926;
+set indexes_per_combination[989]:= 1203;
+set indexes_per_combination[990]:= 400;
+set indexes_per_combination[991]:= 205;
+set indexes_per_combination[992]:= 642;
+set indexes_per_combination[993]:= 951;
+set indexes_per_combination[994]:= 1180;
+set indexes_per_combination[995]:= 619;
+set indexes_per_combination[996]:= 844;
+set indexes_per_combination[997]:= 725;
+set indexes_per_combination[998]:= 142;
+set indexes_per_combination[999]:= 917;
+set indexes_per_combination[1000]:= 478;
+set indexes_per_combination[1001]:= 32;
+set indexes_per_combination[1002]:= 576;
+set indexes_per_combination[1003]:= 1055;
+set indexes_per_combination[1004]:= 617;
+set indexes_per_combination[1005]:= 485;
+set indexes_per_combination[1006]:= 625;
+set indexes_per_combination[1007]:= 235;
+set indexes_per_combination[1008]:= 868;
+set indexes_per_combination[1009]:= 1161;
+set indexes_per_combination[1010]:= 285;
+set indexes_per_combination[1011]:= 339;
+set indexes_per_combination[1012]:= 773;
+set indexes_per_combination[1013]:= 1041;
+set indexes_per_combination[1014]:= 75;
+set indexes_per_combination[1015]:= 884;
+set indexes_per_combination[1016]:= 537;
+set indexes_per_combination[1017]:= 669;
+set indexes_per_combination[1018]:= 972;
+set indexes_per_combination[1019]:= 826;
+set indexes_per_combination[1020]:= 796;
+set indexes_per_combination[1021]:= 1146;
+set indexes_per_combination[1022]:= 542;
+set indexes_per_combination[1023]:= 428;
+set indexes_per_combination[1024]:= 871;
+set indexes_per_combination[1025]:= 454;
+set indexes_per_combination[1026]:= 1090;
+set indexes_per_combination[1027]:= 624;
+set indexes_per_combination[1028]:= 291;
+set indexes_per_combination[1029]:= 865;
+set indexes_per_combination[1030]:= 1078;
+set indexes_per_combination[1031]:= 1164;
+set indexes_per_combination[1032]:= 37;
+set indexes_per_combination[1033]:= 423;
+set indexes_per_combination[1034]:= 45;
+set indexes_per_combination[1035]:= 1059;
+set indexes_per_combination[1036]:= 73;
+set indexes_per_combination[1037]:= 942;
+set indexes_per_combination[1038]:= 993;
+set indexes_per_combination[1039]:= 953;
+set indexes_per_combination[1040]:= 1072;
+set indexes_per_combination[1041]:= 277;
+set indexes_per_combination[1042]:= 660;
+set indexes_per_combination[1043]:= 1071;
+set indexes_per_combination[1044]:= 688;
+set indexes_per_combination[1045]:= 663;
+set indexes_per_combination[1046]:= 1117;
+set indexes_per_combination[1047]:= 57;
+set indexes_per_combination[1048]:= 590;
+set indexes_per_combination[1049]:= 87;
+set indexes_per_combination[1050]:= 274;
+set indexes_per_combination[1051]:= 1016;
+set indexes_per_combination[1052]:= 812;
+set indexes_per_combination[1053]:= 1113;
+set indexes_per_combination[1054]:= 683;
+set indexes_per_combination[1055]:= 43;
+set indexes_per_combination[1056]:= 785;
+set indexes_per_combination[1057]:= 1053;
+set indexes_per_combination[1058]:= 196;
+set indexes_per_combination[1059]:= 167;
+set indexes_per_combination[1060]:= 84;
+set indexes_per_combination[1061]:= 878;
+set indexes_per_combination[1062]:= 361;
+set indexes_per_combination[1063]:= 460;
+set indexes_per_combination[1064]:= 832;
+set indexes_per_combination[1065]:= 574;
+set indexes_per_combination[1066]:= 1130;
+set indexes_per_combination[1067]:= 552;
+set indexes_per_combination[1068]:= 276;
+set indexes_per_combination[1069]:= 230;
+set indexes_per_combination[1070]:= 1031;
+set indexes_per_combination[1071]:= 184;
+set indexes_per_combination[1072]:= 20;
+set indexes_per_combination[1073]:= 999;
+set indexes_per_combination[1074]:= 705;
+set indexes_per_combination[1075]:= 21;
+set indexes_per_combination[1076]:= 732;
+set indexes_per_combination[1077]:= 1143;
+set indexes_per_combination[1078]:= 768;
+set indexes_per_combination[1079]:= 587;
+set indexes_per_combination[1080]:= 950;
+set indexes_per_combination[1081]:= 561;
+set indexes_per_combination[1082]:= 744;
+set indexes_per_combination[1083]:= 984;
+set indexes_per_combination[1084]:= 682;
+set indexes_per_combination[1085]:= 343;
+set indexes_per_combination[1086]:= 652;
+set indexes_per_combination[1087]:= 1062;
+set indexes_per_combination[1088]:= 818;
+set indexes_per_combination[1089]:= 852;
+set indexes_per_combination[1090]:= 706;
+set indexes_per_combination[1091]:= 964;
+set indexes_per_combination[1092]:= 750;
+set indexes_per_combination[1093]:= 31;
+set indexes_per_combination[1094]:= 7;
+set indexes_per_combination[1095]:= 157;
+set indexes_per_combination[1096]:= 1014;
+set indexes_per_combination[1097]:= 712;
+set indexes_per_combination[1098]:= 931;
+set indexes_per_combination[1099]:= 362;
+set indexes_per_combination[1100]:= 649;
+set indexes_per_combination[1101]:= 836;
+set indexes_per_combination[1102]:= 523;
+set indexes_per_combination[1103]:= 1002;
+set indexes_per_combination[1104]:= 510;
+set indexes_per_combination[1105]:= 912;
+set indexes_per_combination[1106]:= 674;
+set indexes_per_combination[1107]:= 971;
+set indexes_per_combination[1108]:= 527;
+set indexes_per_combination[1109]:= 792;
+set indexes_per_combination[1110]:= 231;
+set indexes_per_combination[1111]:= 1086;
+set indexes_per_combination[1112]:= 297;
+set indexes_per_combination[1113]:= 668;
+set indexes_per_combination[1114]:= 1177;
+set indexes_per_combination[1115]:= 974;
+set indexes_per_combination[1116]:= 4;
+set indexes_per_combination[1117]:= 347;
+set indexes_per_combination[1118]:= 101;
+set indexes_per_combination[1119]:= 490;
+set indexes_per_combination[1120]:= 578;
+set indexes_per_combination[1121]:= 512;
+set indexes_per_combination[1122]:= 743;
+set indexes_per_combination[1123]:= 764;
+set indexes_per_combination[1124]:= 509;
+set indexes_per_combination[1125]:= 1009;
+set indexes_per_combination[1126]:= 177;
+set indexes_per_combination[1127]:= 817;
+set indexes_per_combination[1128]:= 943;
+set indexes_per_combination[1129]:= 52;
+set indexes_per_combination[1130]:= 65;
+set indexes_per_combination[1131]:= 213;
+set indexes_per_combination[1132]:= 363;
+set indexes_per_combination[1133]:= 156;
+set indexes_per_combination[1134]:= 560;
+set indexes_per_combination[1135]:= 1215;
+set indexes_per_combination[1136]:= 940;
+set indexes_per_combination[1137]:= 225;
+set indexes_per_combination[1138]:= 1192;
+set indexes_per_combination[1139]:= 819;
+set indexes_per_combination[1140]:= 594;
+set indexes_per_combination[1141]:= 1194;
+set indexes_per_combination[1142]:= 413;
+set indexes_per_combination[1143]:= 86;
+set indexes_per_combination[1144]:= 317;
+set indexes_per_combination[1145]:= 344;
+set indexes_per_combination[1146]:= 272;
+set indexes_per_combination[1147]:= 305;
+set indexes_per_combination[1148]:= 42;
+set indexes_per_combination[1149]:= 598;
+set indexes_per_combination[1150]:= 201;
+set indexes_per_combination[1151]:= 735;
+set indexes_per_combination[1152]:= 422;
+set indexes_per_combination[1153]:= 1151;
+set indexes_per_combination[1154]:= 949;
+set indexes_per_combination[1155]:= 952;
+set indexes_per_combination[1156]:= 689;
+set indexes_per_combination[1157]:= 261;
+set indexes_per_combination[1158]:= 132;
+set indexes_per_combination[1159]:= 672;
+set indexes_per_combination[1160]:= 59;
+set indexes_per_combination[1161]:= 658;
+set indexes_per_combination[1162]:= 761;
+set indexes_per_combination[1163]:= 17;
+set indexes_per_combination[1164]:= 573;
+set indexes_per_combination[1165]:= 1135;
+set indexes_per_combination[1166]:= 896;
+set indexes_per_combination[1167]:= 794;
+set indexes_per_combination[1168]:= 1077;
+set indexes_per_combination[1169]:= 1169;
+set indexes_per_combination[1170]:= 985;
+set indexes_per_combination[1171]:= 153;
+set indexes_per_combination[1172]:= 981;
+set indexes_per_combination[1173]:= 99;
+set indexes_per_combination[1174]:= 180;
+set indexes_per_combination[1175]:= 920;
+set indexes_per_combination[1176]:= 738;
+set indexes_per_combination[1177]:= 477;
+set indexes_per_combination[1178]:= 604;
+set indexes_per_combination[1179]:= 1110;
+set indexes_per_combination[1180]:= 1082;
+set indexes_per_combination[1181]:= 26;
+set indexes_per_combination[1182]:= 815;
+set indexes_per_combination[1183]:= 686;
+set indexes_per_combination[1184]:= 420;
+set indexes_per_combination[1185]:= 72;
+set indexes_per_combination[1186]:= 1037;
+set indexes_per_combination[1187]:= 68;
+set indexes_per_combination[1188]:= 108;
+set indexes_per_combination[1189]:= 200;
+set indexes_per_combination[1190]:= 538;
+set indexes_per_combination[1191]:= 1091;
+set indexes_per_combination[1192]:= 947;
+set indexes_per_combination[1193]:= 94;
+set indexes_per_combination[1194]:= 493;
+set indexes_per_combination[1195]:= 381;
+set indexes_per_combination[1196]:= 129;
+set indexes_per_combination[1197]:= 722;
+set indexes_per_combination[1198]:= 406;
+set indexes_per_combination[1199]:= 793;
+set indexes_per_combination[1200]:= 275;
+set indexes_per_combination[1201]:= 252;
+set indexes_per_combination[1202]:= 809;
+set indexes_per_combination[1203]:= 534;
+set indexes_per_combination[1204]:= 858;
+set indexes_per_combination[1205]:= 829;
+set indexes_per_combination[1206]:= 670;
+set indexes_per_combination[1207]:= 586;
+set indexes_per_combination[1208]:= 183;
+set indexes_per_combination[1209]:= 927;
+set indexes_per_combination[1210]:= 44;
+set indexes_per_combination[1211]:= 353;
+set indexes_per_combination[1212]:= 1042;
+set indexes_per_combination[1213]:= 446;
+set indexes_per_combination[1214]:= 622;
+set indexes_per_combination[1215]:= 508;
+
+param costs :=
+1 0 1437200.19
+2 0 2894687839.5
+2 5 2853466544.96
+2 35 1544293232.28
+2 37 2853466544.96
+2 38 2883945733.36
+2 39 2853466544.96
+2 52 2887371925.36
+2 58 1544234053.94
+2 70 1929516321.61
+2 79 2854173404.96
+2 91 2854173404.96
+2 96 2887371925.36
+2 102 1544194133.36
+2 105 2484126382.81
+2 107 2870924479.69
+2 113 2854173404.96
+2 122 2889043441.36
+2 131 1967757442.8
+2 154 2853466544.96
+2 163 42947370.17
+2 166 28403995.51
+2 214 1929543501.61
+2 219 1544312368.28
+2 221 1544186849.94
+2 227 2854173404.96
+2 230 2853466544.96
+2 239 1544240433.94
+2 246 2854173404.96
+2 256 1930224090.45
+2 264 539740515.89
+2 270 2853466544.96
+2 280 2867493999.75
+2 289 2870837031.75
+2 295 2484126382.81
+2 300 2854173404.96
+2 304 1544240433.94
+2 309 1929521796.31
+2 318 1544308540.28
+2 352 1544193869.36
+2 353 2884910389.36
+2 354 1544194261.36
+2 361 1544321296.28
+2 374 2865830799.75
+2 375 2881267981.36
+2 379 1544308540.28
+2 388 2854173404.96
+2 420 2889068389.36
+2 423 1544168026.97
+2 439 2870924479.69
+2 445 2854173404.96
+2 451 2853466544.96
+2 463 2184460636.92
+2 472 1544221297.94
+2 476 2854173404.96
+2 480 2854173404.96
+2 484 1544312368.28
+2 500 708139515.89
+2 501 2854173404.96
+2 504 2870924479.69
+2 514 1544327676.28
+2 528 2057151609.07
+2 531 1544265164.28
+2 538 2854173404.96
+2 548 1544280472.28
+2 550 42656310.27
+2 565 1544308540.28
+2 566 1544221297.94
+2 577 2881999789.36
+2 579 2870924479.69
+2 581 1929548976.31
+2 586 1346907556.71
+2 590 2885733673.36
+2 598 2854173404.96
+2 601 1544299608.28
+2 617 2364158245.88
+2 620 1544246028.28
+2 623 1544274096.28
+2 627 1544249361.94
+2 629 28403271.51
+2 631 2854173404.96
+2 647 2854173404.96
+2 652 2346118100.43
+2 656 2854173404.96
+2 663 42947370.17
+2 677 2854173404.96
+2 691 1886868226.8
+2 694 2889043441.36
+2 698 2854173404.96
+2 704 2854173404.96
+2 708 2879089189.36
+2 722 42947370.17
+2 730 2885733673.36
+2 737 28405104.31
+2 747 2883213925.36
+2 748 1544293232.28
+2 761 1544327676.28
+2 766 1544221297.94
+2 772 2854173404.96
+2 776 1544293232.28
+2 777 2853466544.96
+2 784 2883213925.36
+2 788 2888220157.36
+2 802 1930224090.45
+2 816 2884062157.36
+2 830 1544246028.28
+2 834 1967757442.8
+2 852 2882124529.36
+2 853 2854173404.96
+2 859 2867618739.75
+2 860 2854173404.96
+2 887 1544193869.36
+2 888 2889068389.36
+2 897 1544194445.36
+2 898 2884910389.36
+2 903 2870924479.69
+2 920 2884062157.36
+2 932 1930224814.45
+2 943 1043768079.91
+2 946 28156164.22
+2 954 1544299608.28
+2 956 2346220148.43
+2 963 1646570104.55
+2 966 2880328273.36
+2 974 2853466544.96
+2 982 2854173404.96
+2 987 1544221297.94
+2 989 2854173404.96
+2 994 2866679031.75
+2 998 42947370.17
+2 1009 2883945733.36
+2 1021 1178508556.71
+2 1026 1544249361.94
+2 1030 1544299608.28
+2 1031 2884885441.36
+2 1040 1544280472.28
+2 1043 1544293232.28
+2 1077 28155055.42
+2 1095 2854173404.96
+2 1111 1544321296.28
+2 1114 2884885441.36
+2 1133 2870924479.69
+2 1135 2853466544.96
+2 1138 2854173404.96
+2 1141 2853466544.96
+2 1153 1930224814.45
+2 1158 1544193165.36
+2 1163 1930223094.02
+2 1165 2346220148.43
+2 1168 1544299608.28
+2 1169 2888220157.36
+2 1171 2885425981.36
+2 1180 1544308540.28
+2 1191 1544234053.94
+2 1196 1544258784.28
+3 0 2167202.63
+3 202 2144962.73
+3 312 2143246.73
+3 367 2143246.73
+3 404 2140954.73
+3 429 2141334.73
+3 449 2153676.73
+3 469 2141334.73
+3 605 2140954.73
+3 630 2144962.73
+3 718 2143818.73
+3 733 2143818.73
+3 1059 2153676.73
+3 1072 2137134.73
+4 0 1541125.29
+4 1 699210.9
+4 2 714717.06
+4 4 677993.82
+4 10 699959.65
+4 14 702162.76
+4 22 716503.26
+4 30 699210.9
+4 43 699210.9
+4 55 697689.3
+4 65 697689.3
+4 66 697689.3
+4 69 714110.32
+4 73 704300.57
+4 74 699210.9
+4 85 699210.9
+4 93 696136.46
+4 95 712880.73
+4 108 675219.9
+4 109 704300.57
+4 114 683269.82
+4 117 704300.57
+4 128 699210.9
+4 132 699959.65
+4 140 702882.14
+4 157 714717.06
+4 160 714110.32
+4 169 697689.3
+4 175 699959.65
+4 183 700701.73
+4 189 698454.12
+4 190 704300.57
+4 203 699210.9
+4 206 697689.3
+4 208 702162.76
+4 210 675219.9
+4 213 323119.1
+4 229 699210.9
+4 238 704300.57
+4 243 1273060.65
+4 252 712880.73
+4 254 702162.76
+4 263 699210.9
+4 269 714110.32
+4 284 697689.3
+4 285 697689.3
+4 286 697689.3
+4 287 697689.3
+4 292 702882.14
+4 293 702162.76
+4 306 699210.9
+4 308 699210.9
+4 311 702162.76
+4 317 704300.57
+4 324 704999.16
+4 325 698454.12
+4 340 712880.73
+4 343 702162.76
+4 357 699210.9
+4 365 697689.3
+4 380 699959.65
+4 385 699210.9
+4 390 707055.08
+4 396 702162.76
+4 398 712880.73
+4 400 697689.3
+4 406 697689.3
+4 413 699959.65
+4 414 699210.9
+4 415 714110.32
+4 425 699959.65
+4 428 700701.73
+4 431 702162.76
+4 448 699959.65
+4 453 699210.9
+4 460 702162.76
+4 471 697689.3
+4 477 702882.14
+4 502 704300.57
+4 508 714110.32
+4 516 333550.86
+4 520 699210.9
+4 524 697689.3
+4 527 699210.9
+4 534 699210.9
+4 541 677079.75
+4 544 700701.73
+4 556 704300.57
+4 588 702882.14
+4 593 680675.43
+4 613 714110.32
+4 618 704300.57
+4 619 697689.3
+4 625 702162.76
+4 628 699210.9
+4 633 699210.9
+4 643 698454.12
+4 646 718242.57
+4 662 696136.46
+4 673 704300.57
+4 675 714110.32
+4 676 699210.9
+4 679 699959.65
+4 690 697689.3
+4 711 699210.9
+4 712 699210.9
+4 716 323119.1
+4 721 699210.9
+4 736 702882.14
+4 740 697689.3
+4 745 699210.9
+4 750 697689.3
+4 773 699959.65
+4 790 699959.65
+4 793 714110.32
+4 801 714110.32
+4 806 697689.3
+4 807 700701.73
+4 812 697689.3
+4 819 702162.76
+4 823 699210.9
+4 828 704999.16
+4 841 699210.9
+4 851 699210.9
+4 854 697689.3
+4 868 714110.32
+4 869 699959.65
+4 874 697689.3
+4 881 699210.9
+4 884 716503.26
+4 889 677079.75
+4 912 699210.9
+4 913 697689.3
+4 924 697689.3
+4 931 699210.9
+4 948 714110.32
+4 951 699210.9
+4 958 702162.76
+4 973 702162.76
+4 976 699210.9
+4 978 718242.57
+4 981 704300.57
+4 983 700701.73
+4 1001 677079.75
+4 1007 697689.3
+4 1010 699959.65
+4 1011 714110.32
+4 1028 699959.65
+4 1032 677079.75
+4 1039 1273060.65
+4 1041 714110.32
+4 1050 699210.9
+4 1055 677079.75
+4 1062 699210.9
+4 1068 699210.9
+4 1069 704300.57
+4 1085 707055.08
+4 1093 677079.75
+4 1099 714110.32
+4 1110 699210.9
+4 1112 699210.9
+4 1117 704300.57
+4 1132 704300.57
+4 1137 699959.65
+4 1144 699210.9
+4 1145 702882.14
+4 1146 697689.3
+4 1147 697689.3
+4 1148 677079.75
+4 1157 698454.12
+4 1200 697689.3
+4 1201 702162.76
+4 1211 699210.9
+5 0 1557629.96
+5 141 1551792.27
+5 333 1545175.47
+5 450 1545175.47
+5 516 1487811.29
+5 533 1551792.27
+5 558 1469210.59
+5 610 1543249.07
+5 699 1544354.67
+5 767 1543937.87
+5 810 1543937.87
+5 905 1484210.19
+5 993 1360417.03
+5 1071 1544354.67
+5 1075 1539545.87
+5 1126 1542559.47
+5 1155 1360417.03
+5 1174 1542559.47
+5 1208 1543249.07
+6 0 1261097.24
+7 0 1581007.06
+7 32 1384885.63
+7 107 1579167.04
+7 123 1382689.48
+7 141 1575730.93
+7 280 1579159.04
+7 289 1579343.04
+7 327 1381823.48
+7 333 1572202.93
+7 371 1381823.48
+7 374 1579067.04
+7 439 1579111.04
+7 450 1572202.93
+7 504 1579067.04
+7 533 1575730.93
+7 558 1381823.48
+7 579 1579159.04
+7 610 1571170.93
+7 660 1381675.73
+7 699 1571762.93
+7 753 1382689.48
+7 767 1571538.93
+7 810 1571538.93
+7 859 1579167.04
+7 903 1579343.04
+7 905 1381823.48
+7 921 1381675.73
+7 961 1384885.63
+7 988 1382116.52
+7 994 1579111.04
+7 1071 1571762.93
+7 1075 1569186.93
+7 1126 1570802.93
+7 1133 1578959.04
+7 1173 1380293.09
+7 1174 1570802.93
+7 1192 1382116.52
+7 1208 1571170.93
+8 0 1603582.99
+8 3 742163.32
+8 6 742315.31
+8 13 742937.26
+8 16 1557393.65
+8 17 742141.32
+8 19 1557382.53
+8 21 742217.32
+8 25 1584512.94
+8 28 742120.33
+8 31 742087.33
+8 33 742277.31
+8 45 742315.31
+8 47 1585028.94
+8 49 742120.33
+8 51 742087.33
+8 53 742217.32
+8 54 1516456.54
+8 57 742120.33
+8 64 1511549.14
+8 68 1509746.87
+8 71 742120.33
+8 75 742217.32
+8 80 742087.33
+8 82 742103.33
+8 84 742141.32
+8 86 742163.32
+8 90 1584972.94
+8 94 742247.32
+8 100 1585028.94
+8 104 742087.33
+8 119 1510052.3
+8 124 742474.3
+8 125 742120.33
+8 126 742217.32
+8 135 742087.33
+8 137 743514.22
+8 138 742120.33
+8 141 1593551.12
+8 143 742141.32
+8 146 742087.33
+8 147 1557382.53
+8 148 742277.31
+8 149 1585088.94
+8 153 742087.33
+8 159 742141.32
+8 162 742315.31
+8 165 742247.32
+8 168 1516986.81
+8 170 742120.33
+8 171 742120.33
+8 172 743058.25
+8 176 1510656.34
+8 182 1518029.19
+8 200 742315.31
+8 209 742120.33
+8 211 742087.33
+8 212 1585028.94
+8 216 743312.23
+8 217 742103.33
+8 220 742120.33
+8 222 1584860.94
+8 223 1584904.94
+8 224 1516456.54
+8 228 1509746.87
+8 232 1511843.69
+8 237 742141.32
+8 240 1585028.94
+8 242 742120.33
+8 249 742315.31
+8 253 742217.32
+8 260 1584612.94
+8 261 742120.33
+8 265 742087.33
+8 266 1585216.94
+8 268 742087.33
+8 283 743058.25
+8 288 742163.32
+8 298 742112.72
+8 305 1516986.81
+8 307 742937.26
+8 316 1407646.15
+8 328 742120.33
+8 333 1586887.12
+8 341 1585088.94
+8 345 742937.26
+8 346 742120.33
+8 349 1511549.14
+8 360 742315.31
+8 363 1513713.92
+8 364 742087.33
+8 372 742315.31
+8 378 742217.32
+8 381 742120.33
+8 383 742120.33
+8 391 742130.33
+8 394 1516456.54
+8 397 743119.25
+8 401 742217.32
+8 410 743058.25
+8 421 742087.33
+8 433 742141.32
+8 435 1585216.94
+8 436 1516456.54
+8 443 742120.33
+8 450 1586887.12
+8 452 742103.33
+8 454 1511843.69
+8 455 1511843.69
+8 458 1584672.94
+8 461 742087.33
+8 462 1507560.57
+8 468 743514.22
+8 478 742120.33
+8 483 742066.33
+8 486 742218.32
+8 487 1407646.15
+8 489 743058.25
+8 507 1511843.69
+8 510 1512426.74
+8 512 742120.33
+8 513 742087.33
+8 517 742163.32
+8 521 742087.33
+8 529 742217.32
+8 533 1593551.12
+8 536 1584672.94
+8 547 742352.31
+8 554 742141.32
+8 558 1526802.19
+8 561 742474.3
+8 567 742120.33
+8 569 1508820.72
+8 571 1506916.45
+8 580 742258.32
+8 583 1511843.69
+8 584 1506916.45
+8 591 1585088.94
+8 602 1509746.87
+8 606 742120.33
+8 610 1584947.12
+8 611 1516189.35
+8 612 1584844.94
+8 616 742120.33
+8 624 742120.33
+8 626 742141.32
+8 638 1504942.02
+8 640 742163.32
+8 641 742103.33
+8 651 742120.33
+8 654 742087.33
+8 655 742315.31
+8 657 743058.25
+8 658 1557322.53
+8 665 742258.32
+8 666 1584844.94
+8 667 742120.33
+8 671 1557449.65
+8 681 742277.31
+8 684 742247.32
+8 685 742315.31
+8 689 743058.25
+8 692 1506916.45
+8 693 1509746.87
+8 695 742087.33
+8 696 1557382.53
+8 699 1586060.72
+8 701 1584904.94
+8 713 742315.31
+8 715 1584844.94
+8 727 1557449.65
+8 734 742120.33
+8 735 742120.33
+8 744 742120.33
+8 746 742315.31
+8 749 1510656.34
+8 760 742087.33
+8 762 742087.33
+8 767 1585641.52
+8 769 743058.25
+8 775 1510052.3
+8 781 1510656.34
+8 783 742285.31
+8 799 742120.33
+8 805 1510656.34
+8 808 1557393.65
+8 809 742217.32
+8 810 1585641.52
+8 813 742217.32
+8 822 743058.25
+8 825 742087.33
+8 831 1516189.35
+8 837 742120.33
+8 838 742120.33
+8 839 742120.33
+8 843 742277.31
+8 845 742315.31
+8 846 742120.33
+8 849 742120.33
+8 850 742087.33
+8 855 1584972.94
+8 857 1557150.53
+8 862 742247.32
+8 866 743058.25
+8 867 742120.33
+8 870 742087.33
+8 875 1510052.3
+8 892 1512426.74
+8 893 743312.23
+8 900 1584844.94
+8 901 742120.33
+8 902 743058.25
+8 905 1538989.36
+8 914 742087.33
+8 915 742247.32
+8 918 1518029.19
+8 927 1516456.54
+8 930 742217.32
+8 933 742141.32
+8 936 743058.25
+8 938 1584800.94
+8 950 742937.26
+8 959 742217.32
+8 960 742141.32
+8 964 1510355.07
+8 965 742315.31
+8 968 743058.25
+8 969 1557322.53
+8 970 742141.32
+8 980 742066.33
+8 990 742120.33
+8 993 1508080.34
+8 1000 742141.32
+8 1005 743058.25
+8 1018 1510656.34
+8 1023 742087.33
+8 1025 742141.32
+8 1033 742087.33
+8 1034 742277.31
+8 1038 1510656.34
+8 1046 1585088.94
+8 1053 1585028.94
+8 1063 742120.33
+8 1066 1585028.94
+8 1071 1586060.72
+8 1075 1581217.52
+8 1083 1510355.07
+8 1091 1509746.87
+8 1102 742217.32
+8 1104 742120.33
+8 1107 1510052.3
+8 1108 742120.33
+8 1115 1511843.69
+8 1119 743119.25
+8 1121 742087.33
+8 1124 742120.33
+8 1126 1584252.72
+8 1129 742277.31
+8 1142 742087.33
+8 1152 742247.32
+8 1155 1508080.34
+8 1170 1516456.54
+8 1172 1509746.87
+8 1174 1584252.72
+8 1177 742120.33
+8 1179 1557382.53
+8 1184 742087.33
+8 1188 1506593.27
+8 1194 743058.25
+8 1195 742141.32
+8 1198 742217.32
+8 1208 1584947.12
+8 1210 742277.31
+8 1213 742352.31
+8 1215 742315.31
+9 0 1773837.69
+9 5 1770839.64
+9 6 943316.89
+9 28 939377.64
+9 37 1770839.64
+9 39 1770839.64
+9 46 1773837.49
+9 49 957476.28
+9 54 1478601.81
+9 57 957476.28
+9 64 1478600.83
+9 68 1478600.47
+9 71 957476.28
+9 79 1770863.87
+9 91 1770863.87
+9 107 1771742.92
+9 113 1770863.89
+9 119 1478600.53
+9 154 1770839.64
+9 168 1478601.92
+9 176 1478600.65
+9 182 1478602.13
+9 224 1478576.09
+9 227 1770863.89
+9 228 1478600.47
+9 230 1770839.63
+9 232 1478600.89
+9 246 1770863.87
+9 261 939377.64
+9 265 956304.74
+9 270 1770839.64
+9 294 1773837.49
+9 300 1770863.89
+9 305 1478601.92
+9 316 1478575.45
+9 349 1478600.83
+9 363 1478601.26
+9 372 961415.53
+9 378 941658.96
+9 388 1770863.85
+9 394 1478601.81
+9 403 938206.1
+9 410 950986.46
+9 436 1478576.09
+9 439 1771742.92
+9 443 939377.64
+9 445 1770863.89
+9 451 1770839.63
+9 454 1478600.89
+9 455 1478575.63
+9 462 1478600.03
+9 476 1770863.85
+9 480 1770863.89
+9 487 1478575.45
+9 501 1770863.87
+9 504 1771742.92
+9 507 1478575.63
+9 510 1478601.01
+9 513 938206.1
+9 529 959757.6
+9 538 1770863.87
+9 550 1709819.46
+9 562 926596.86
+9 564 941658.96
+9 569 1478600.29
+9 571 1478599.91
+9 579 1771742.92
+9 583 1478600.89
+9 584 1478599.91
+9 596 939377.64
+9 598 1770863.87
+9 602 1478600.47
+9 606 939377.64
+9 611 1478601.76
+9 626 958054.47
+9 631 1770863.85
+9 632 939377.64
+9 638 1478599.52
+9 647 1770863.87
+9 656 1770863.87
+9 664 1773837.5
+9 677 1770863.83
+9 692 1478575.14
+9 693 1478575.42
+9 698 1770863.84
+9 704 1770863.87
+9 744 957476.28
+9 749 1478600.65
+9 756 939955.83
+9 772 1770863.86
+9 775 1478575.45
+9 777 1770839.63
+9 781 1478600.65
+9 805 1478600.65
+9 831 1478601.76
+9 843 926596.86
+9 846 957476.28
+9 849 957476.28
+9 853 1770863.87
+9 860 1770863.89
+9 871 1773837.49
+9 875 1478600.53
+9 891 939377.64
+9 892 1478601.01
+9 903 1771742.92
+9 918 1478602.13
+9 927 1478601.81
+9 946 1647373.38
+9 964 1478600.59
+9 968 969085.1
+9 970 939955.83
+9 974 1770839.63
+9 982 1770863.87
+9 989 1770863.89
+9 1018 1478575.51
+9 1033 956304.74
+9 1038 1478575.51
+9 1052 938206.1
+9 1077 1647373.38
+9 1083 1478600.59
+9 1088 950986.46
+9 1091 1478600.47
+9 1094 1773837.5
+9 1095 1770863.82
+9 1104 939377.64
+9 1107 1478575.45
+9 1115 1478600.89
+9 1121 938206.1
+9 1124 939377.64
+9 1127 939377.64
+9 1133 1771742.92
+9 1135 1770839.63
+9 1138 1770863.89
+9 1139 943316.89
+9 1141 1770839.64
+9 1170 1478601.81
+9 1172 1478575.42
+9 1182 939377.64
+9 1188 1478599.84
+9 1202 939377.64
+10 0 1696605.86
+10 993 1424617.1
+10 1155 1424617.1
+11 0 469089.11
+11 38 468718.52
+11 52 468918.52
+11 96 468918.52
+11 107 464164.6
+11 122 469014.52
+11 131 113347.13
+11 264 129760.29
+11 280 464156.6
+11 289 464348.6
+11 353 468774.52
+11 374 464060.6
+11 375 468566.52
+11 420 469014.52
+11 439 464108.6
+11 463 126537.06
+11 500 129760.29
+11 504 464060.6
+11 528 123655.58
+11 577 468606.52
+11 579 464156.6
+11 586 129586.73
+11 590 468822.52
+11 691 127017.26
+11 694 469014.52
+11 708 468438.52
+11 730 468822.52
+11 747 468678.52
+11 784 468678.52
+11 788 468966.52
+11 816 468726.52
+11 834 113347.13
+11 852 468614.52
+11 859 464164.6
+11 888 469014.52
+11 898 468774.52
+11 903 464348.6
+11 920 468726.52
+11 943 126537.06
+11 966 468510.52
+11 994 464108.6
+11 1009 468718.52
+11 1021 129586.73
+11 1031 468774.52
+11 1114 468774.52
+11 1133 463948.6
+11 1169 468966.52
+11 1171 468806.52
+12 0 1604598.21
+12 54 1431621.29
+12 64 1344646.16
+12 68 1424940.37
+12 119 1425253.18
+12 168 1432132.5
+12 176 1425868.79
+12 182 1349409.44
+12 224 1431621.29
+12 228 1424940.37
+12 232 1344872.56
+12 305 1432132.5
+12 316 1425253.18
+12 349 1344646.16
+12 363 1428937.64
+12 394 1431621.29
+12 436 1431621.29
+12 454 1344872.56
+12 455 1344872.56
+12 462 1422675.13
+12 487 1425253.18
+12 507 1344872.56
+12 510 1345317.77
+12 569 1342503.32
+12 571 1422002.32
+12 583 1344872.56
+12 584 1422002.32
+12 602 1424940.37
+12 611 1431362.48
+12 638 1419905.08
+12 692 1422002.32
+12 693 1424940.37
+12 749 1425868.79
+12 775 1425253.18
+12 781 1425868.79
+12 805 1425868.79
+12 831 1431362.48
+12 875 1425253.18
+12 892 1345317.77
+12 918 1349409.44
+12 927 1431621.29
+12 964 1425562.38
+12 1018 1425868.79
+12 1038 1425868.79
+12 1083 1425562.38
+12 1091 1424940.37
+12 1107 1425253.18
+12 1115 1344872.56
+12 1170 1431621.29
+12 1172 1424940.37
+12 1188 1421660.71
+13 0 1732282.63
+13 832 1723087.46
+14 0 1276422.99
+14 8 1233802.68
+14 23 1232850.68
+14 24 1244750.68
+14 26 1246178.68
+14 34 1235706.68
+14 42 1237134.68
+14 59 1232850.68
+14 99 1234278.68
+14 112 1235706.68
+14 116 1233802.68
+14 134 1233802.68
+14 139 1233802.68
+14 145 1231898.68
+14 152 1244274.68
+14 167 1237134.68
+14 178 1232850.68
+14 179 1233802.68
+14 188 1232850.68
+14 192 1233802.68
+14 196 1234278.68
+14 198 1233802.68
+14 199 1232850.68
+14 204 1244274.68
+14 218 1237134.68
+14 235 1237610.68
+14 244 1232850.68
+14 258 1237134.68
+14 279 1233802.68
+14 281 1234754.68
+14 282 1234754.68
+14 296 1237134.68
+14 297 1233802.68
+14 299 1232850.68
+14 302 1231898.68
+14 322 1232850.68
+14 323 1244274.68
+14 326 1232850.68
+14 332 1234278.68
+14 338 1235706.68
+14 355 1233802.68
+14 356 1235706.68
+14 358 1235706.68
+14 370 1232850.68
+14 382 1237134.68
+14 386 1237134.68
+14 411 1235706.68
+14 416 1235706.68
+14 417 1237610.68
+14 419 1224282.68
+14 424 1244274.68
+14 434 1236182.68
+14 444 1224282.68
+14 459 1246178.68
+14 465 1233326.68
+14 466 1226186.68
+14 467 1234278.68
+14 474 1244274.68
+14 479 1232850.68
+14 481 1234278.68
+14 482 1233802.68
+14 490 1244274.68
+14 491 1247606.68
+14 493 1232850.68
+14 495 1233802.68
+14 497 1233802.68
+14 498 1243322.68
+14 509 1243322.68
+14 522 1232850.68
+14 525 1233802.68
+14 543 1218570.68
+14 553 1232850.68
+14 555 1234754.68
+14 559 1232850.68
+14 573 1233802.68
+14 574 1223330.68
+14 576 1233802.68
+14 597 1233802.68
+14 600 1233802.68
+14 608 1235706.68
+14 615 1235706.68
+14 622 1233802.68
+14 634 1233802.68
+14 644 1232850.68
+14 648 1244750.68
+14 650 1233802.68
+14 653 1236182.68
+14 672 1244274.68
+14 674 1234278.68
+14 687 1235706.68
+14 697 1234278.68
+14 710 1233802.68
+14 717 1227614.68
+14 719 1233326.68
+14 723 1234278.68
+14 724 1224282.68
+14 729 1235706.68
+14 755 1233326.68
+14 765 1233802.68
+14 771 1234278.68
+14 787 1233802.68
+14 789 1235706.68
+14 794 1233802.68
+14 795 1233802.68
+14 796 1232850.68
+14 798 1233802.68
+14 821 1232850.68
+14 833 1224758.68
+14 835 1232850.68
+14 847 1232850.68
+14 858 1234278.68
+14 864 1236182.68
+14 872 1244274.68
+14 880 1224282.68
+14 882 1233802.68
+14 883 1233802.68
+14 885 1233802.68
+14 886 1233802.68
+14 890 1233802.68
+14 904 1233326.68
+14 908 1233802.68
+14 911 1232850.68
+14 917 1244274.68
+14 922 1234278.68
+14 923 1239038.68
+14 926 1237134.68
+14 937 1244274.68
+14 941 1243322.68
+14 949 1233802.68
+14 972 1232850.68
+14 975 1234278.68
+14 985 1234278.68
+14 992 1234278.68
+14 995 1233802.68
+14 1002 1233802.68
+14 1004 1233802.68
+14 1006 1233802.68
+14 1014 1224282.68
+14 1017 1243322.68
+14 1027 1233802.68
+14 1036 1234754.68
+14 1042 1233802.68
+14 1044 1236182.68
+14 1045 1234754.68
+14 1048 1235706.68
+14 1054 1244274.68
+14 1065 1237134.68
+14 1074 1232850.68
+14 1079 1233802.68
+14 1084 1247606.68
+14 1086 1232850.68
+14 1090 1244274.68
+14 1097 1232850.68
+14 1100 1233802.68
+14 1106 1244274.68
+14 1113 1232850.68
+14 1120 1235706.68
+14 1130 1224282.68
+14 1140 1236182.68
+14 1149 1239038.68
+14 1156 1237134.68
+14 1159 1232850.68
+14 1161 1237134.68
+14 1164 1244274.68
+14 1178 1232850.68
+14 1183 1237134.68
+14 1185 1223330.68
+14 1187 1224282.68
+14 1206 1236182.68
+14 1207 1237134.68
+14 1214 1237134.68
+15 0 2777782.52
+15 5 2765144.51
+15 37 2765148.51
+15 39 2765148.51
+15 79 2765156.51
+15 91 2765184.51
+15 113 2765288.51
+15 154 2765248.51
+15 227 2765252.51
+15 230 2765048.51
+15 246 2765156.51
+15 270 2765248.51
+15 300 2765272.51
+15 388 2765188.51
+15 445 2765284.51
+15 451 2765104.51
+15 476 2765048.51
+15 480 2765252.51
+15 501 2765212.51
+15 538 2765112.51
+15 598 2764616.51
+15 631 2765188.51
+15 647 2765152.51
+15 656 2765112.51
+15 677 2764972.51
+15 698 2765040.51
+15 704 2765152.51
+15 772 2765204.51
+15 777 2764836.51
+15 853 2765184.51
+15 860 2765272.51
+15 974 2765048.51
+15 982 2765212.51
+15 989 2765288.51
+15 1095 2764864.51
+15 1135 2765104.51
+15 1138 2765284.51
+15 1141 2765144.51
+16 0 422728.68
+16 115 422078.31
+16 700 422078.31
+16 714 418490.31
+16 1158 420746.31
+17 0 110989264286.53
+17 2 62905097306.5
+17 3 7528988.98
+17 4 54735132877.5
+17 6 7528992.98
+17 9 110989221508.77
+17 10 58916532393.75
+17 13 7528992.98
+17 15 106625752949.84
+17 17 150042.86
+17 18 5193876110.84
+17 21 7528992.98
+17 28 7528988.98
+17 31 7528988.98
+17 33 7528980.98
+17 36 110989261492.34
+17 40 105357125813.45
+17 41 105357125813.45
+17 45 7528992.98
+17 49 7528988.98
+17 50 110989261148.6
+17 51 7528988.98
+17 53 7528992.98
+17 56 5380319346.84
+17 57 7528988.98
+17 60 110989262616.34
+17 71 7528988.98
+17 75 7528992.98
+17 80 7528988.98
+17 81 110989261408.6
+17 82 150434.64
+17 84 150042.86
+17 86 7528988.98
+17 92 105357125813.45
+17 94 7528992.98
+17 101 110989260724.34
+17 104 7528988.98
+17 106 110989262104.34
+17 111 110989260468.34
+17 120 110989261408.6
+17 124 7528992.98
+17 125 7528988.98
+17 126 7528992.98
+17 132 58916532393.75
+17 135 7528988.98
+17 136 104706025371.75
+17 137 7528996.98
+17 138 7528988.98
+17 140 59682944490.0
+17 142 110989262132.6
+17 143 150434.64
+17 146 7528988.98
+17 148 7528980.98
+17 150 105357125813.45
+17 153 7528988.98
+17 155 110989263228.34
+17 157 62905097306.5
+17 159 150042.86
+17 162 7528992.98
+17 165 68706.82
+17 170 7528988.98
+17 171 7528988.98
+17 172 7528996.98
+17 174 7973758580.98
+17 175 7973717777.68
+17 184 104243450853.97
+17 185 110989214747.69
+17 186 5234859254.84
+17 187 110989262360.6
+17 189 58525531452.25
+17 193 110989260752.6
+17 194 7973758785.89
+17 195 110989261804.6
+17 200 7528992.98
+17 209 7528988.98
+17 211 7528988.98
+17 216 7528996.98
+17 217 150042.86
+17 220 7528988.98
+17 231 98265348370.51
+17 233 110989221444.77
+17 237 150434.64
+17 242 7528988.98
+17 249 7528992.98
+17 251 110989263228.34
+17 253 7528992.98
+17 257 110989217321.73
+17 259 105357125813.45
+17 261 7528988.98
+17 262 5234859254.84
+17 265 7528988.98
+17 267 110989262360.6
+17 268 7528988.98
+17 271 105357125813.45
+17 275 110989261572.6
+17 276 110989260196.6
+17 283 7528996.98
+17 288 7528988.98
+17 298 7528947.79
+17 301 7973758580.98
+17 303 110989221468.77
+17 307 7528992.98
+17 314 105357125813.45
+17 324 60244727092.25
+17 325 58525531452.25
+17 328 7528988.98
+17 329 110989226661.48
+17 331 110989261080.34
+17 336 107549533431.18
+17 342 5380319346.84
+17 345 7528992.98
+17 346 7528988.98
+17 347 5701275674.84
+17 351 5701275674.84
+17 360 7528992.98
+17 364 7528988.98
+17 366 7973759114.68
+17 368 110989224042.81
+17 372 7528992.98
+17 376 5234859254.84
+17 377 9372983132.43
+17 378 7528992.98
+17 380 58916532393.75
+17 381 7528988.98
+17 383 7528988.98
+17 387 110989262524.6
+17 389 5193876110.84
+17 391 7528984.98
+17 392 5234859254.84
+17 395 110989221496.77
+17 397 150050.86
+17 399 106625752949.84
+17 401 7528992.98
+17 407 110989262104.34
+17 408 110989261572.6
+17 410 7528996.98
+17 413 58916532393.75
+17 421 7528988.98
+17 422 5234859254.84
+17 425 58916532393.75
+17 426 110989218816.4
+17 427 110989226405.48
+17 432 9372983132.43
+17 433 150042.86
+17 437 110989262972.34
+17 441 110989224994.81
+17 442 7973759114.68
+17 443 7528988.98
+17 448 58916532393.75
+17 452 150434.64
+17 456 5317525144.86
+17 461 7528988.98
+17 468 7528996.98
+17 470 99159762428.94
+17 473 7973759114.67
+17 477 59682944490.0
+17 478 7528988.98
+17 483 7528988.98
+17 486 7528980.98
+17 489 7528996.98
+17 512 7528988.98
+17 513 7528988.98
+17 515 110989261492.34
+17 517 7528988.98
+17 518 7973759114.67
+17 521 7528988.98
+17 529 7528992.98
+17 530 110989259600.34
+17 532 5234859254.84
+17 537 94627338606.38
+17 539 94626956730.96
+17 541 99156080359.48
+17 547 150438.64
+17 549 8221920230.68
+17 552 5234859254.84
+17 554 150042.86
+17 561 7528992.98
+17 562 99159810574.42
+17 567 7528988.98
+17 578 110989261408.6
+17 580 7528976.98
+17 585 105357125813.45
+17 595 110989261804.6
+17 603 110989261748.34
+17 606 7528988.98
+17 609 110989260196.6
+17 616 7528988.98
+17 621 110989261748.34
+17 624 7528988.98
+17 626 150042.86
+17 636 110989259800.6
+17 637 8221920230.68
+17 639 110989225537.48
+17 640 7528988.98
+17 641 150042.86
+17 643 58525531452.25
+17 651 7528988.98
+17 654 7528988.98
+17 655 7528992.98
+17 657 7528996.98
+17 665 7528976.98
+17 667 7528988.98
+17 679 58916532393.75
+17 680 105357125813.45
+17 681 7528980.98
+17 682 7850806894.31
+17 684 68315.04
+17 685 7528992.98
+17 688 110989221492.77
+17 689 7528996.98
+17 695 7528988.98
+17 702 110989262972.34
+17 703 110989260916.6
+17 705 5193876110.84
+17 706 110989260620.34
+17 713 7528992.98
+17 734 7528988.98
+17 735 7528988.98
+17 738 105357125813.45
+17 739 110989221468.77
+17 742 5317525144.86
+17 744 7528988.98
+17 746 7528992.98
+17 752 110989262104.34
+17 756 7973759114.51
+17 757 110989261572.6
+17 759 110989259600.34
+17 760 7528988.98
+17 762 7528988.98
+17 764 107549533431.18
+17 769 7528996.98
+17 773 58916532393.75
+17 774 110989261748.34
+17 778 8410123426.16
+17 780 104706025371.75
+17 782 110989261408.6
+17 783 150034.86
+17 790 58916532393.75
+17 799 7528988.98
+17 800 110989262524.6
+17 809 7528992.98
+17 813 7528992.98
+17 815 105357125813.45
+17 822 7528996.98
+17 824 110989262104.34
+17 825 7528988.98
+17 828 60244727092.25
+17 829 110989260852.6
+17 837 7528988.98
+17 838 7528988.98
+17 839 7528988.98
+17 843 7528980.98
+17 845 7528992.98
+17 846 7528988.98
+17 848 110989227017.48
+17 849 7528988.98
+17 850 7528988.98
+17 856 5234859254.84
+17 858 7973759114.68
+17 861 7973758785.89
+17 862 7528992.98
+17 865 5193876110.84
+17 866 7528996.98
+17 867 7528988.98
+17 869 58916532393.75
+17 870 7528988.98
+17 876 7850802662.51
+17 880 99159810589.08
+17 893 7528996.98
+17 899 5234859254.84
+17 901 7528988.98
+17 902 7528996.98
+17 906 110989261492.34
+17 910 99159780919.69
+17 914 7528988.98
+17 915 7528992.98
+17 916 110989262132.6
+17 919 110989261804.6
+17 928 110989221508.77
+17 929 7850806894.31
+17 930 7528992.98
+17 933 150434.64
+17 936 7528996.98
+17 939 99159810588.79
+17 940 105357125813.45
+17 942 110989260620.34
+17 945 110989258988.34
+17 947 110989221444.77
+17 950 7528992.98
+17 959 7528992.98
+17 960 150042.86
+17 965 7528992.98
+17 968 7528996.98
+17 970 150434.64
+17 980 7528988.98
+17 984 8410123426.16
+17 990 7528988.98
+17 991 7850802662.51
+17 992 7973759114.68
+17 1000 150434.64
+17 1003 110989260852.6
+17 1005 7528996.98
+17 1010 7973717777.68
+17 1013 110989221492.77
+17 1016 5234859254.84
+17 1019 7973759114.51
+17 1022 5234859254.84
+17 1023 7528988.98
+17 1025 150434.64
+17 1028 58916532393.75
+17 1033 7528988.98
+17 1034 7528980.98
+17 1035 110989261804.6
+17 1047 4505225158.33
+17 1051 110989262616.34
+17 1057 110989261572.6
+17 1058 105357125813.45
+17 1063 7528988.98
+17 1067 5234859254.84
+17 1070 110989261492.34
+17 1087 110989224602.81
+17 1096 110989261748.34
+17 1102 7528992.98
+17 1104 7528988.98
+17 1108 7528988.98
+17 1116 106652548259.91
+17 1119 150442.64
+17 1121 7528988.98
+17 1124 7528988.98
+17 1125 110989214747.69
+17 1129 7528980.98
+17 1137 58916532393.75
+17 1142 7528988.98
+17 1150 105357125813.45
+17 1152 7528992.98
+17 1157 58525531452.25
+17 1160 99159810589.22
+17 1177 7528988.98
+17 1181 108223440539.29
+17 1184 7528988.98
+17 1186 110989221496.77
+17 1190 5234859254.84
+17 1194 7528996.98
+17 1195 150434.64
+17 1198 7528992.98
+17 1203 5234859254.84
+17 1210 7528980.98
+17 1212 110989224766.81
+17 1213 150046.86
+17 1215 7528992.98
+18 0 5988336.98
+18 2 4814713.89
+18 4 3014983.39
+18 10 3898219.51
+18 132 3898219.51
+18 140 4052247.22
+18 157 4814713.89
+18 175 3898219.51
+18 189 3821193.44
+18 324 4460486.09
+18 325 3821193.44
+18 380 3898219.51
+18 413 3898219.51
+18 425 3898219.51
+18 448 3898219.51
+18 477 4052247.22
+18 516 3871585.74
+18 643 3821193.44
+18 679 3898219.51
+18 773 3898219.51
+18 790 3898219.51
+18 828 4460486.09
+18 869 3898219.51
+18 1010 3898219.51
+18 1028 3898219.51
+18 1137 3898219.51
+18 1157 3821193.44
+19 0 1368182.53
+19 3 198535.63
+19 6 92195.93
+19 9 1344562.5
+19 11 91384.22
+19 12 99924.6
+19 13 101126.35
+19 17 198535.63
+19 21 198536.63
+19 27 91423.21
+19 28 198535.63
+19 31 198534.63
+19 33 198521.63
+19 36 1363887.9
+19 45 92195.93
+19 49 198535.63
+19 51 198534.63
+19 53 198536.63
+19 57 198535.63
+19 60 1366082.02
+19 71 198535.63
+19 75 198536.63
+19 80 198534.63
+19 82 198534.63
+19 84 198535.63
+19 86 198535.63
+19 94 92192.93
+19 101 1360478.02
+19 104 198534.63
+19 106 1365699.9
+19 110 91423.21
+19 111 1359722.02
+19 124 91570.21
+19 125 198535.63
+19 126 198536.63
+19 135 198534.63
+19 137 77439.73
+19 138 198535.63
+19 143 198535.63
+19 146 198534.63
+19 148 198521.63
+19 153 198534.63
+19 155 1367894.02
+19 159 198535.63
+19 162 91565.21
+19 165 198537.63
+19 170 198535.63
+19 171 198535.63
+19 172 101126.35
+19 185 1344130.5
+19 200 91565.21
+19 209 198535.63
+19 211 198534.63
+19 216 100870.39
+19 217 198534.63
+19 220 198535.63
+19 233 1343826.5
+19 236 99924.6
+19 237 198535.63
+19 242 198535.63
+19 245 99924.6
+19 249 92195.93
+19 251 1367894.02
+19 253 198536.63
+19 261 198535.63
+19 265 198534.63
+19 268 198534.63
+19 276 1352632.77
+19 283 101126.35
+19 288 198535.63
+19 298 198500.4
+19 303 1319698.12
+19 307 101126.35
+19 328 198535.63
+19 331 1361538.02
+19 344 77439.73
+19 345 100869.39
+19 346 198535.63
+19 360 92195.93
+19 364 198534.63
+19 368 1326174.46
+19 369 91428.21
+19 372 91565.21
+19 378 198536.63
+19 381 198535.63
+19 383 198535.63
+19 391 91526.22
+19 395 1344466.5
+19 397 101126.35
+19 401 198536.63
+19 407 1364566.02
+19 408 1355776.77
+19 409 91420.21
+19 410 101126.35
+19 418 99924.6
+19 421 198534.63
+19 432 99924.6
+19 433 198535.63
+19 437 1367138.02
+19 443 198535.63
+19 452 198534.63
+19 461 198534.63
+19 468 77439.73
+19 478 198535.63
+19 483 198533.63
+19 486 198525.63
+19 489 100869.39
+19 512 198535.63
+19 513 198534.63
+19 515 1362754.02
+19 517 198535.63
+19 521 198534.63
+19 529 198536.63
+19 530 1357150.02
+19 547 91566.21
+19 554 198535.63
+19 561 92200.93
+19 567 198535.63
+19 570 91423.21
+19 578 1355400.77
+19 580 198519.63
+19 589 91423.21
+19 603 1352404.42
+19 606 198535.63
+19 616 198535.63
+19 621 1364639.9
+19 624 198535.63
+19 626 198535.63
+19 636 1367616.34
+19 639 1329943.22
+19 640 100863.4
+19 641 198534.63
+19 651 198535.63
+19 654 198534.63
+19 655 92195.93
+19 657 100869.39
+19 661 99924.6
+19 665 198519.63
+19 667 198535.63
+19 681 198521.63
+19 684 198537.63
+19 685 91565.21
+19 688 1344386.5
+19 689 100869.39
+19 695 198534.63
+19 702 1367138.02
+19 706 1361307.9
+19 713 91565.21
+19 726 99918.6
+19 734 198535.63
+19 735 198535.63
+19 739 1319698.12
+19 744 198535.63
+19 746 92195.93
+19 752 1364566.02
+19 759 1351152.42
+19 760 198534.63
+19 762 198534.63
+19 769 100869.39
+19 774 1363506.02
+19 779 99925.6
+19 783 198522.63
+19 799 198535.63
+19 809 198536.63
+19 813 198536.63
+19 822 101126.35
+19 824 1352616.42
+19 825 198534.63
+19 829 1354136.77
+19 837 198535.63
+19 838 198535.63
+19 839 198535.63
+19 843 198521.63
+19 845 92195.93
+19 846 198535.63
+19 849 198535.63
+19 850 198534.63
+19 862 91562.21
+19 866 101126.35
+19 867 198535.63
+19 870 198534.63
+19 893 101127.35
+19 895 99924.6
+19 901 198535.63
+19 902 101126.35
+19 906 1362754.02
+19 914 198534.63
+19 915 91562.21
+19 925 91423.21
+19 928 1344562.5
+19 930 198536.63
+19 933 198535.63
+19 936 101126.35
+19 942 1351748.42
+19 945 1355334.02
+19 947 1343826.5
+19 950 100869.39
+19 959 198536.63
+19 960 198535.63
+19 962 77439.73
+19 965 91565.21
+19 968 100869.39
+19 970 198535.63
+19 977 77439.73
+19 980 198533.63
+19 984 91424.21
+19 990 198535.63
+19 997 99924.6
+19 1000 198535.63
+19 1005 100869.39
+19 1013 1344386.5
+19 1023 198534.63
+19 1025 198535.63
+19 1033 198534.63
+19 1034 198521.63
+19 1035 1356300.77
+19 1051 1366082.02
+19 1063 198535.63
+19 1070 1352256.42
+19 1076 99924.6
+19 1082 77439.73
+19 1096 1363506.02
+19 1102 198536.63
+19 1104 198535.63
+19 1108 198535.63
+19 1119 100869.39
+19 1121 198534.63
+19 1122 91423.21
+19 1124 198535.63
+19 1125 1344130.5
+19 1129 198521.63
+19 1142 198534.63
+19 1151 91423.21
+19 1152 92192.93
+19 1176 91420.21
+19 1177 198535.63
+19 1184 198534.63
+19 1186 1344466.5
+19 1194 100869.39
+19 1195 198535.63
+19 1197 99924.6
+19 1198 198536.63
+19 1210 198521.63
+19 1213 92196.93
+19 1215 91565.21
+20 0 18593980983041.43
+20 3 968314325.7
+20 6 65208460.87
+20 7 19160336327.13
+20 11 15539459865001.5
+20 13 968314325.7
+20 17 968314325.7
+20 20 762884873924.72
+20 21 968314325.7
+20 23 3206735854560.92
+20 28 65208460.87
+20 29 19224328687.13
+20 31 968314325.7
+20 33 968314325.7
+20 34 3480102617670.01
+20 35 18593212187216.89
+20 44 2932275598.82
+20 45 968314325.7
+20 48 3111154242.63
+20 49 67448193.47
+20 51 968314325.7
+20 53 968314325.7
+20 57 67448193.47
+20 58 18593212178284.89
+20 61 19160336327.13
+20 62 19160336327.13
+20 63 19128340147.13
+20 70 762884902234.63
+20 71 67448193.47
+20 72 274639338.16
+20 75 968314325.7
+20 76 19224328687.13
+20 77 19128340147.13
+20 78 2932275598.82
+20 80 163412382.27
+20 82 968314325.7
+20 83 19160336327.13
+20 84 968314325.7
+20 86 968314325.7
+20 87 2932275598.82
+20 88 19224328687.13
+20 89 19160336327.13
+20 94 968314325.7
+20 97 19160336327.13
+20 98 18310174173969.55
+20 103 3111154242.63
+20 104 968314325.7
+20 105 799500803818.07
+20 116 3296028594130.01
+20 118 19224328687.13
+20 121 19160336327.13
+20 124 968314325.7
+20 125 968314325.7
+20 126 968314325.7
+20 127 19128340147.13
+20 129 2932275598.82
+20 130 19224328687.13
+20 131 762644931594.15
+20 135 968314325.7
+20 137 968314325.7
+20 138 968314325.7
+20 139 3298788864420.92
+20 143 968314325.7
+20 144 3111154242.63
+20 146 163412382.27
+20 148 968314325.7
+20 151 3143150422.63
+20 152 4308515714050.01
+20 153 968314325.7
+20 158 19128340147.13
+20 159 968314325.7
+20 162 165912083.84
+20 163 762884873924.72
+20 164 19096343967.13
+20 165 968314325.7
+20 166 798288279664.54
+20 170 968314325.7
+20 171 968314325.7
+20 172 968314325.7
+20 173 19224328687.13
+20 177 19128340147.13
+20 180 19096343967.13
+20 181 19224328687.13
+20 188 3203975584270.01
+20 191 19128340147.13
+20 192 3298788864420.92
+20 196 3344799371260.92
+20 197 15557591623952.18
+20 198 3296028594130.01
+20 200 968314325.7
+20 201 19128340147.13
+20 205 19224328687.13
+20 207 2932275598.82
+20 209 165912083.84
+20 211 968314325.7
+20 214 799500803821.8
+20 215 338631698.16
+20 216 968314325.7
+20 217 968314325.7
+20 219 18593212206352.88
+20 220 163412382.27
+20 221 18593212131080.89
+20 225 19096343967.13
+20 226 13414885269610.52
+20 237 968314325.7
+20 239 18593212184664.89
+20 241 3111154242.63
+20 242 163412382.27
+20 247 19128340147.13
+20 249 968314325.7
+20 250 19032351607.13
+20 253 968314325.7
+20 255 19128340147.13
+20 256 762884898152.71
+20 258 3620926404660.92
+20 261 65208460.87
+20 264 762644931594.15
+20 265 67448193.47
+20 268 165912083.84
+20 273 19224328687.13
+20 274 19160336327.13
+20 277 19128340147.13
+20 278 19160336327.13
+20 279 3476306550885.27
+20 283 968314325.7
+20 288 968314325.7
+20 290 19160336327.13
+20 291 19160336327.13
+20 295 799500803818.07
+20 298 968312618.58
+20 304 18593212184664.89
+20 307 968314325.7
+20 309 762884902234.63
+20 315 19160336327.13
+20 318 18593212038676.89
+20 320 19064347787.13
+20 321 19160336327.13
+20 328 165912083.84
+20 330 19096343967.13
+20 334 19128340147.13
+20 335 19192332507.13
+20 337 19128340147.13
+20 345 968314325.7
+20 346 968314325.7
+20 348 19128340147.13
+20 350 19128340147.13
+20 360 968314325.7
+20 361 18593212051432.88
+20 364 968314325.7
+20 372 67448193.47
+20 378 65208460.87
+20 379 18593212038676.89
+20 381 968314325.7
+20 382 3620926404660.92
+20 383 968314325.7
+20 386 3618166134370.01
+20 391 968314325.7
+20 393 19128340147.13
+20 397 968314325.7
+20 401 968314325.7
+20 402 19160336327.13
+20 403 65208460.87
+20 405 19224328687.13
+20 410 65208460.87
+20 411 3480102617670.01
+20 412 19160336327.13
+20 416 3482862887960.92
+20 421 968314325.7
+20 423 18593212115772.88
+20 430 19224328687.13
+20 433 165912083.84
+20 438 19096343967.13
+20 440 242643158.16
+20 443 65208460.87
+20 446 19224328687.13
+20 447 19160336327.13
+20 452 968314325.7
+20 457 12800080019989.55
+20 461 968314325.7
+20 463 762644928854.47
+20 464 242643158.16
+20 467 3344799371260.92
+20 468 968314325.7
+20 470 13396646361852.68
+20 472 18593212165528.88
+20 475 2932275598.82
+20 478 163412382.27
+20 483 968314325.7
+20 484 18593212206352.88
+20 485 3111154242.63
+20 486 968314325.7
+20 489 968314325.7
+20 494 19128340147.13
+20 496 19128340147.13
+20 499 13414970480509.43
+20 500 762644931594.15
+20 503 19128340147.13
+20 506 19128340147.13
+20 512 968314325.7
+20 513 65208460.87
+20 514 18593212057812.89
+20 517 968314325.7
+20 519 19128340147.13
+20 521 968314325.7
+20 523 19128340147.13
+20 525 3298788864420.92
+20 526 19128340147.13
+20 528 762644926405.27
+20 529 67448193.47
+20 531 18593212159148.88
+20 535 2964271778.82
+20 537 12784333203336.73
+20 539 12784281613426.39
+20 540 19192332507.13
+20 541 13396148928322.95
+20 542 19128340147.13
+20 545 242643158.16
+20 547 968314325.7
+20 548 18593212174456.89
+20 550 798287997675.13
+20 553 3203975584270.01
+20 554 968314325.7
+20 557 2932275598.82
+20 561 968314325.7
+20 562 65208460.87
+20 563 242643158.16
+20 564 65208460.87
+20 565 18593212038676.89
+20 566 18593212165528.88
+20 567 163412382.27
+20 568 19160336327.13
+20 572 762884897744.51
+20 573 3296028594130.01
+20 575 19128340147.13
+20 580 968314325.7
+20 581 799500803821.8
+20 582 19160336327.13
+20 586 762644903544.96
+20 594 19192332507.13
+20 596 65208460.87
+20 597 3296028594130.01
+20 600 3296028594130.01
+20 601 18593212193592.89
+20 604 19128340147.13
+20 606 65208460.87
+20 614 19160336327.13
+20 616 968314325.7
+20 617 799500691566.07
+20 620 18593212140012.89
+20 623 18593212004232.89
+20 624 968314325.7
+20 626 67448193.47
+20 627 18593212029744.89
+20 629 798288274732.54
+20 632 65208460.87
+20 634 3296028594130.01
+20 635 19160336327.13
+20 640 968314325.7
+20 641 968314325.7
+20 642 19064347787.13
+20 649 2932275598.82
+20 650 3298788864420.92
+20 651 968314325.7
+20 654 968314325.7
+20 655 163412382.27
+20 657 968314325.7
+20 663 762884873924.72
+20 665 968314325.7
+20 667 968314325.7
+20 668 19128340147.13
+20 669 19160336327.13
+20 670 13414970479256.92
+20 681 968314325.7
+20 683 18294427357316.73
+20 684 968314325.7
+20 685 968314325.7
+20 686 242643158.16
+20 689 968314325.7
+20 691 762644929262.63
+20 695 968314325.7
+20 707 19128340147.13
+20 709 19160336327.13
+20 713 968314325.7
+20 720 19160336327.13
+20 722 762884893489.72
+20 725 19128340147.13
+20 728 19192332507.13
+20 729 3482862887960.92
+20 731 19160336327.13
+20 732 19160336327.13
+20 734 968314325.7
+20 735 968314325.7
+20 737 798288279664.54
+20 741 14639432264389.38
+20 743 19160336327.13
+20 744 67448193.47
+20 746 968314325.7
+20 748 18593212187216.89
+20 751 19192332507.13
+20 754 19160336327.13
+20 756 65208460.87
+20 758 3111154242.63
+20 760 968314325.7
+20 761 18593212057812.89
+20 762 968314325.7
+20 763 19128340147.13
+20 766 18593212165528.88
+20 768 19128340147.13
+20 769 968314325.7
+20 776 18593212187216.89
+20 783 968314325.7
+20 785 19128340147.13
+20 791 12801176766208.55
+20 794 3476306550885.27
+20 795 3296028594130.01
+20 796 3203975584270.01
+20 798 3298788864420.92
+20 799 165912083.84
+20 803 19160336327.13
+20 804 19128340147.13
+20 809 968314325.7
+20 811 3143150422.63
+20 813 163412382.27
+20 814 19160336327.13
+20 817 242643158.16
+20 818 19224328687.13
+20 820 19128340147.13
+20 821 3206735854560.92
+20 822 968314325.7
+20 825 968314325.7
+20 826 19160336327.13
+20 827 18310174173969.55
+20 830 18593212140012.89
+20 834 762644931594.15
+20 836 19224328687.13
+20 837 968314325.7
+20 838 968314325.7
+20 839 968314325.7
+20 840 19160336327.13
+20 843 65208460.87
+20 844 242643158.16
+20 845 968314325.7
+20 846 65568417.9
+20 847 3206735854560.92
+20 849 67448193.47
+20 850 968314325.7
+20 858 3342039100970.01
+20 862 968314325.7
+20 863 19160336327.13
+20 866 968314325.7
+20 867 165912083.84
+20 870 968314325.7
+20 873 19224328687.13
+20 878 19160336327.13
+20 879 19128340147.13
+20 880 2375562487890.01
+20 882 3298788864420.92
+20 885 3298788864420.92
+20 886 3298788864420.92
+20 891 65208460.87
+20 893 968314325.7
+20 894 19160336327.13
+20 896 19128340147.13
+20 901 165912083.84
+20 902 968314325.7
+20 908 3296028594130.01
+20 909 19128340147.13
+20 910 13396648859883.45
+20 914 968314325.7
+20 915 968314325.7
+20 917 4308515714050.01
+20 926 3618166134370.01
+20 930 165912083.84
+20 932 762884902234.63
+20 933 968314325.7
+20 934 19160336327.13
+20 935 19160336327.13
+20 936 163412382.27
+20 939 13396652868065.05
+20 943 762644928854.47
+20 944 13721074302493.45
+20 946 762884897979.8
+20 949 3298788864420.92
+20 950 968314325.7
+20 952 19160336327.13
+20 953 19160336327.13
+20 954 18593212193592.89
+20 955 75887185.95
+20 956 762884902234.59
+20 957 762884873924.72
+20 959 968314325.7
+20 960 968314325.7
+20 963 799500701773.8
+20 965 968314325.7
+20 967 18311270920188.55
+20 968 67448193.47
+20 970 65208460.87
+20 971 19160336327.13
+20 972 3203975584270.01
+20 979 274639338.16
+20 980 968314325.7
+20 987 18593212165528.88
+20 990 968314325.7
+20 992 3342039100970.01
+20 996 19128340147.13
+20 998 798288273968.54
+20 1000 163412382.27
+20 1004 3296028594130.01
+20 1005 968314325.7
+20 1006 3296028594130.01
+20 1008 2932275598.82
+20 1012 19160336327.13
+20 1014 2378322758180.92
+20 1015 19160336327.13
+20 1019 274639338.16
+20 1020 19128340147.13
+20 1021 762644903544.96
+20 1023 968314325.7
+20 1024 19224328687.13
+20 1025 968314325.7
+20 1026 18593212029744.89
+20 1029 2932275598.82
+20 1030 18593212193592.89
+20 1033 67448193.47
+20 1034 968314325.7
+20 1040 18593212174456.89
+20 1043 18593212187216.89
+20 1047 13702760151334.53
+20 1049 19096343967.13
+20 1052 65208460.87
+20 1054 4311275984340.92
+20 1056 19128340147.13
+20 1060 19096343967.13
+20 1061 3207142782.63
+20 1063 968314325.7
+20 1064 19160336327.13
+20 1074 3206735854560.92
+20 1077 762884897979.8
+20 1078 19128340147.13
+20 1079 3298788864420.92
+20 1081 18294427357316.73
+20 1088 65208460.87
+20 1089 19128340147.13
+20 1090 4311275984340.92
+20 1092 19160336327.13
+20 1101 19128340147.13
+20 1102 968314325.7
+20 1104 65208460.87
+20 1108 968314325.7
+20 1109 19128340147.13
+20 1111 18593212051432.88
+20 1119 968314325.7
+20 1121 65208460.87
+20 1123 19128340147.13
+20 1124 65208460.87
+20 1127 65208460.87
+20 1129 163412382.27
+20 1131 18294375767406.39
+20 1134 18311270920188.55
+20 1139 65208460.87
+20 1142 968314325.7
+20 1143 19096343967.13
+20 1148 13404257260275.26
+20 1152 968314325.7
+20 1153 762884902234.63
+20 1160 13396652868123.97
+20 1162 19128340147.13
+20 1165 762884902234.59
+20 1166 19128340147.13
+20 1167 19192332507.13
+20 1168 18593212193592.89
+20 1177 163412382.27
+20 1180 18593212038676.89
+20 1181 14621114679201.47
+20 1182 65208460.87
+20 1184 165912083.84
+20 1189 18294375767406.39
+20 1191 18593212178284.89
+20 1193 13414832164152.88
+20 1194 165912083.84
+20 1195 968314325.7
+20 1196 18593212152768.89
+20 1198 968314325.7
+20 1199 3111154242.63
+20 1202 65208460.87
+20 1204 2932275598.82
+20 1205 3143150422.63
+20 1210 968314325.7
+20 1213 968314325.7
+20 1215 968314325.7
+21 0 4056415.6
+21 1 1803890.28
+21 2 1805897.16
+21 4 1798120.53
+21 10 1803981.9
+21 14 1804254.51
+21 22 1806143.89
+21 30 1803890.28
+21 38 4056295.74
+21 43 1554685.88
+21 52 4056395.74
+21 54 3759699.83
+21 55 1803705.67
+21 64 3759696.36
+21 65 1803705.67
+21 66 1803705.67
+21 68 3759696.36
+21 69 1805814.17
+21 73 1804523.23
+21 74 1803890.28
+21 85 1803890.28
+21 93 1803519.37
+21 95 1805646.83
+21 96 4056395.74
+21 107 4054018.78
+21 108 1797821.13
+21 109 1804523.23
+21 114 1798706.69
+21 117 1804523.23
+21 119 3759699.8
+21 128 1803890.28
+21 132 1803981.9
+21 140 1804344.47
+21 157 1805897.16
+21 160 1805814.17
+21 161 4032953.91
+21 168 3759699.84
+21 169 1554669.51
+21 175 1803981.9
+21 176 3759699.8
+21 182 3759699.84
+21 183 1804073.23
+21 189 1803798.12
+21 190 1804523.23
+21 203 1554685.88
+21 206 1554669.51
+21 208 1804254.51
+21 210 1797821.13
+21 213 1803890.28
+21 224 3759699.83
+21 228 3759696.36
+21 229 1554685.88
+21 232 3759699.81
+21 238 1804523.23
+21 248 3759696.36
+21 252 1805646.83
+21 254 1804254.51
+21 263 1803890.28
+21 269 1805814.17
+21 272 4049067.19
+21 280 4056291.74
+21 284 1803705.67
+21 285 1803705.67
+21 286 1803705.67
+21 287 1803705.67
+21 289 4056387.74
+21 292 1804344.47
+21 293 1804254.51
+21 305 3759699.84
+21 306 1803890.28
+21 308 1803890.28
+21 311 1804254.51
+21 316 3759699.8
+21 317 1554742.04
+21 324 1804612.06
+21 325 1803798.12
+21 340 1805646.83
+21 343 1804254.51
+21 349 3759696.36
+21 353 4056323.74
+21 357 1803890.28
+21 363 3759699.82
+21 365 1803705.67
+21 374 4056243.74
+21 375 4056219.74
+21 380 1803981.9
+21 385 1803890.28
+21 390 1804876.04
+21 394 3759699.83
+21 396 1804254.51
+21 398 1805646.83
+21 400 1803705.67
+21 406 1803705.67
+21 413 1803981.9
+21 414 1803890.28
+21 415 1805814.17
+21 425 1803981.9
+21 428 1804073.23
+21 431 1554718.2
+21 436 3759699.83
+21 439 4056267.74
+21 448 1554694.01
+21 453 1803890.28
+21 454 3759699.81
+21 455 3759699.81
+21 460 1804254.51
+21 462 3759699.79
+21 471 1554669.51
+21 477 1804344.47
+21 487 3759699.8
+21 502 1804523.23
+21 504 4056243.74
+21 507 3759699.81
+21 508 1805814.17
+21 510 3759699.81
+21 516 1546163.27
+21 520 1803890.28
+21 524 1803705.67
+21 527 1803890.28
+21 534 1554685.88
+21 541 1798021.18
+21 544 1804073.23
+21 546 4032953.91
+21 556 1804523.23
+21 569 3759699.8
+21 571 3759699.79
+21 577 4056239.74
+21 579 4056291.74
+21 583 3759699.81
+21 584 3759699.79
+21 588 1804344.47
+21 590 4056347.74
+21 592 3759696.35
+21 593 1798415.8
+21 602 3759696.36
+21 611 3759696.37
+21 613 1805814.17
+21 618 1804523.23
+21 619 1554669.51
+21 625 1804254.51
+21 628 1554685.88
+21 633 1803890.28
+21 638 3759699.78
+21 643 1803798.12
+21 646 1806387.8
+21 662 1803519.37
+21 673 1804523.23
+21 675 1805814.17
+21 676 1554685.88
+21 679 1803981.9
+21 690 1803705.67
+21 692 3759699.79
+21 693 3759696.36
+21 708 4056155.74
+21 711 1554685.88
+21 712 1554685.88
+21 716 1803890.28
+21 721 1554685.88
+21 730 4056347.74
+21 736 1804344.47
+21 740 1803705.67
+21 745 1803890.28
+21 747 4056275.74
+21 749 3759699.8
+21 750 1803705.67
+21 773 1803981.9
+21 775 3759699.8
+21 781 3759699.8
+21 784 4056275.74
+21 786 3759696.36
+21 790 1803981.9
+21 793 1805814.17
+21 801 1805814.17
+21 805 3759699.8
+21 806 1803705.67
+21 807 1804073.23
+21 812 1803705.67
+21 816 4056299.74
+21 819 1804254.51
+21 823 1803890.28
+21 828 1804612.06
+21 831 3759696.37
+21 841 1803890.28
+21 851 1803890.28
+21 852 4056243.74
+21 854 1803705.67
+21 859 4054018.78
+21 868 1805814.17
+21 869 1803981.9
+21 874 1803705.67
+21 875 3759699.8
+21 877 4032953.91
+21 881 1803890.28
+21 884 1806143.89
+21 889 1798021.18
+21 892 3759699.81
+21 898 4056323.74
+21 903 4056387.74
+21 907 3759696.36
+21 912 1803890.28
+21 913 1803705.67
+21 918 3759699.84
+21 920 4056299.74
+21 924 1803705.67
+21 927 3759699.83
+21 931 1803890.28
+21 948 1805814.17
+21 951 1803890.28
+21 958 1554718.2
+21 964 3759696.36
+21 966 4056191.74
+21 973 1804254.51
+21 976 1803890.28
+21 978 1806387.8
+21 981 1804523.23
+21 983 1804073.23
+21 986 3759696.36
+21 994 4056267.74
+21 1001 1798021.18
+21 1007 1803705.67
+21 1009 4056295.74
+21 1010 1803981.9
+21 1011 1554856.55
+21 1018 3759699.8
+21 1028 1554694.01
+21 1031 4056323.74
+21 1032 1798021.18
+21 1038 3759699.8
+21 1041 1805814.17
+21 1050 1803890.28
+21 1055 1798021.18
+21 1062 1554685.88
+21 1068 1803890.28
+21 1069 1804523.23
+21 1073 3759696.37
+21 1083 3759696.36
+21 1085 1804876.04
+21 1091 3759696.36
+21 1093 1798021.18
+21 1099 1554856.55
+21 1103 3759696.36
+21 1107 3759699.8
+21 1110 1554685.88
+21 1112 1803890.28
+21 1114 4056323.74
+21 1115 3759699.81
+21 1117 1804523.23
+21 1132 1554742.04
+21 1133 4056187.74
+21 1137 1803981.9
+21 1144 1803890.28
+21 1145 1804344.47
+21 1146 1803705.67
+21 1147 1803705.67
+21 1148 1550573.03
+21 1157 1803798.12
+21 1170 3759699.83
+21 1171 4056339.74
+21 1172 3759696.36
+21 1188 3759696.35
+21 1200 1803705.67
+21 1201 1804254.51
+21 1211 1554685.88
+22 0 431559.36
+22 32 96494.72
+22 67 96451.56
+22 123 96470.63
+22 133 96460.86
+22 156 96470.63
+22 234 96334.33
+22 310 96460.86
+22 313 96454.9
+22 319 413019.32
+22 327 96454.9
+22 339 96474.73
+22 359 96494.72
+22 362 96494.72
+22 371 96454.9
+22 373 96496.58
+22 384 96457.92
+22 488 96482.48
+22 492 96404.84
+22 505 96494.72
+22 511 96439.86
+22 551 413019.32
+22 558 96454.9
+22 560 96474.73
+22 587 96468.46
+22 599 96499.92
+22 607 96468.46
+22 645 96404.84
+22 659 96451.56
+22 660 96451.56
+22 678 96494.72
+22 753 96470.63
+22 770 96493.72
+22 792 96418.94
+22 797 96451.56
+22 842 96496.58
+22 905 96454.9
+22 921 96451.56
+22 961 96494.72
+22 988 96460.86
+22 999 96470.63
+22 1037 96470.63
+22 1080 96460.86
+22 1098 96470.63
+22 1105 96493.72
+22 1118 96396.63
+22 1128 96451.56
+22 1136 96454.9
+22 1154 96457.92
+22 1173 96404.84
+22 1175 96460.86
+22 1192 96460.86
+22 1209 96499.92
+;

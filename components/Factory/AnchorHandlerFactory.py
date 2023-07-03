@@ -22,6 +22,8 @@ class AnchorHandlerFactory:
             return HintAnchorHandler(config)
         elif anchor == AnchorEnum.COST_REPLACE_ANCHOR:
             return CostAnchorHandler(config)
+        elif anchor == AnchorEnum.INDEX_REPLACE_ANCHOR:
+            return IndexAnchorHandler(config)
         # fetch
         elif anchor == AnchorEnum.RECORD_FETCH_ANCHOR:
             return PostgreSQLRecordFetchAnchorHandler(config)
@@ -35,5 +37,7 @@ class AnchorHandlerFactory:
             return PostgreSQLSubQueryCardFetchAnchorHandler(config)
         elif anchor == AnchorEnum.LOGICAL_PLAN_FETCH_ANCHOR:
             return PostgreSQLLogicalPlanFetchAnchorHandler(config)
+        elif anchor == AnchorEnum.ESTIMATED_COST_FETCH_ANCHOR:
+            return PostgreSQLEstimatedCostFetchAnchorHandler(config)
         else:
             raise RuntimeError()

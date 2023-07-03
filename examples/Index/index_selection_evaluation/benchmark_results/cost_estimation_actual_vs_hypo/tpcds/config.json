@@ -1,0 +1,19 @@
+{
+    "database_system": "postgres",
+    "benchmark_name": "tpcds",
+    "scale_factor": 10,
+    "algorithms": [
+        {
+            "name": "no_index",
+            "parameters": {
+            },
+            "timeout": 300
+        },
+        {
+            "name": "all_indexes",
+            "parameters": {
+            },
+            "timeout": 300
+        }
+    ]
+}

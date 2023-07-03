@@ -51,7 +51,7 @@ class LeroTest(unittest.TestCase):
 
             # start
             scheduler.start()
-            # exit()
+
             print("start to test sql")
             sqls = self.load_test_sqls()
             for i, sql in enumerate(sqls):
@@ -97,7 +97,8 @@ class LeroTest(unittest.TestCase):
             scheduler.register_event(EventEnum.PERIODIC_COLLECTION_EVENT, period_collect_event)
 
             # dynamically update model
-            period_train_event = LeroPeriodTrainingEvent(dynamic_training_data_save_table, config, 100, lero_pilot_model)
+            period_train_event = LeroPeriodTrainingEvent(dynamic_training_data_save_table, config, 100,
+                                                         lero_pilot_model)
             scheduler.register_event(EventEnum.PERIOD_TRAIN_EVENT, period_train_event)
 
             # start
@@ -111,7 +112,6 @@ class LeroTest(unittest.TestCase):
                 scheduler.simulate_db_console(sql)
         finally:
             pilotscope_exit()
-
 
     def test_pg_plan(self):
         try:
