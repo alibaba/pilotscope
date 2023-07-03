@@ -1,6 +1,12 @@
 import logging
 
+from DataFetcher.PilotStateManager import PilotStateManager
+from PilotConfig import PilotConfig
+from common.Index import Index as pilotIndex
+from common.Util import _accumulate_cost
+from selection.index import Index
 from selection.what_if_index_creation import WhatIfIndexCreation
+from selection.workload import Query
 
 
 class CostEvaluation:
@@ -55,7 +61,7 @@ class CostEvaluation:
         # all items in current_indexes must also have an equivalent in `indexes`.
         for index in self.current_indexes:
             assert (
-                index in indexes
+                    index in indexes
             ), "Something went wrong with _prepare_cost_calculation."
 
             if index.hypopg_name not in plan_str:
@@ -66,7 +72,7 @@ class CostEvaluation:
 
     def calculate_cost(self, workload, indexes, store_size=False):
         assert (
-            self.completed is False
+                self.completed is False
         ), "Cost Evaluation is completed and cannot be reused."
         self._prepare_cost_calculation(indexes, store_size=store_size)
         total_cost = 0
@@ -75,12 +81,30 @@ class CostEvaluation:
         for query in workload.queries:
             self.cost_requests += 1
             total_cost += self._request_cache(query, indexes)
+
+        pilot_cost = self.pilot_calculate_cost(workload, indexes)
+        if pilot_cost is not None:
+            print("origin total cost is {}, pilot_total_cost is {}".format(total_cost, pilot_cost))
+            assert total_cost == pilot_cost
         return total_cost
 
-    def pilot_calculate_cost(self,workload, indexes):
-        pass
+    def pilot_calculate_cost(self, workload, indexes):
+        state_manager = PilotStateManager(PilotConfig())
+        sqls = []
+        pilot_indexes = []
+        for query in workload.queries:
+            query: Query = query
+            sqls.append(query.text)
+        for index in indexes:
+            index: Index = index
+            columns = [c.name for c in index.columns]
+            table = index.columns[0].table
+            pilot_indexes.append(pilotIndex(columns=columns, table=table))
 
-
+        state_manager.set_index(pilot_indexes)
+        state_manager.fetch_estimated_cost()
+        datas = state_manager.execute_batch(sqls)
+        return _accumulate_cost(datas) if datas is not None else None
 
     # Creates the current index combination by simulating/creating
     # missing indexes and unsimulating/dropping indexes
@@ -118,8 +142,9 @@ class CostEvaluation:
         if self.cost_estimation == "whatif":
             return self.db_connector.get_cost(query)
         elif self.cost_estimation == "actual_runtimes":
-            runtime = self.db_connector.exec_query(query)[0]
-            return runtime
+            return self.db_connector.get_cost(query)
+            # runtime = self.db_connector.exec_query(query)[0]
+            # return runtime
 
     def complete_cost_estimation(self):
         self.completed = True

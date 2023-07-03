@@ -1,5 +1,5 @@
 class Index:
-    def __init__(self, columns, table, index_name=None, index_method=None):
+    def __init__(self, columns: list, table, index_name=None, index_method=None):
         if len(columns) == 0:
             raise ValueError("Index needs at least 1 column")
         self.columns = tuple(columns)

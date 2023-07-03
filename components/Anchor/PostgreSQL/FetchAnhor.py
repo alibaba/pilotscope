@@ -52,14 +52,15 @@ class PostgreSQLPhysicalPlanFetchAnchorHandler(PhysicalPlanFetchAnchorHandler, P
 
 class PostgreSQLEstimatedCostFetchAnchorHandler(EstimatedCostFetchAnchorHandler, PostgreSQLAnchorMixin):
 
-    def fetch_from_outer(self, sql, pilot_comment, anchor_data: AnchorTransData, fill_data: PilotTransData):
+    def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
+                         fill_data: PilotTransData):
         if fill_data.estimated_cost is not None:
             return
 
         if anchor_data.physical_plan is None:
-            anchor_data.physical_plan = self.db_controller.explain_physical_plan(sql, comment=pilot_comment)
+            anchor_data.physical_plan = db_controller.explain_physical_plan(sql, comment=pilot_comment)
 
-        fill_data.estimated_cost = anchor_data.physical_plan[0]["Plan"]["Total Cost"]
+        fill_data.estimated_cost = anchor_data.physical_plan["Plan"]["Total Cost"]
 
 
 class PostgreSQLExecutionTimeFetchAnchorHandler(ExecutionTimeFetchAnchorHandler, PostgreSQLAnchorMixin):

@@ -11,7 +11,18 @@ def is_number(value):
         return False
 
 
-def extract_anchor_handlers(handlers, is_fetch_anchor):
+def extract_anchor_handlers(anchor_2_handlers: dict, is_fetch_anchor=True):
+    res = {}
+    from Anchor.BaseAnchor.FetchAnchorHandler import FetchAnchorHandler
+
+    target = FetchAnchorHandler if is_fetch_anchor else ReplaceAnchorHandler
+    for anchor, handler in anchor_2_handlers.items():
+        if isinstance(handler, target):
+            res[anchor] = handler
+    return res
+
+
+def extract_handlers(handlers, is_fetch_anchor):
     from Anchor.BaseAnchor.FetchAnchorHandler import FetchAnchorHandler
     target = FetchAnchorHandler if is_fetch_anchor else ReplaceAnchorHandler
     return list(filter(lambda anchor: isinstance(anchor, target), handlers))
@@ -45,4 +56,8 @@ def singleton(class_):
     return getinstance
 
 
-
+def _accumulate_cost(datas):
+    sum_cost = 0
+    for data in datas:
+        sum_cost += data.estimated_cost
+    return sum_cost

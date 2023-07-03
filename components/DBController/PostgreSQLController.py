@@ -1,12 +1,10 @@
-from typing import List
-
 from sqlalchemy import Table, Column, select, func, text, inspect
 from sqlalchemy.exc import OperationalError
+from typing_extensions import deprecated
 
-from common.Index import Index
 from DBController.BaseDBController import BaseDBController
 from Exception.Exception import DBStatementTimeoutException
-from PilotEnum import DatabaseEnum
+from common.Index import Index
 
 
 class PostgreSQLController(BaseDBController):
@@ -23,7 +21,7 @@ class PostgreSQLController(BaseDBController):
         # postgresql://postgres@localhost/stats
         return "{}://{}@{}/{}".format("postgresql", self.config.user, self.config.host, self.config.db)
 
-    def execute(self, sql, fetch=False, conn=None):
+    def execute(self, sql, fetch=False):
         row = None
         try:
             result = self.connection.execute(text(sql) if isinstance(sql, str) else sql)
@@ -39,6 +37,7 @@ class PostgreSQLController(BaseDBController):
                 raise e
         return row
 
+    @deprecated('use execute instead')
     def execute_batch(self, sqls, fetch=False):
         try:
             for sql in sqls[:-1]:
@@ -56,8 +55,7 @@ class PostgreSQLController(BaseDBController):
             if "PilotScopeFetchEnd" not in str(e):
                 raise e
 
-    @staticmethod
-    def get_hint_sql(key, value):
+    def get_hint_sql(self, key, value):
         return "SET {} TO {}".format(key, value)
 
     def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
@@ -80,21 +78,10 @@ class PostgreSQLController(BaseDBController):
         table = self.name_2_table[table_name]
         self.execute(table.insert().values(column_2_value))
 
-    def get_create_index_sql(self, index: Index):
-        table_name = index.table
-        return f"create index {index.get_index_name()} on {table_name} ({index.joined_column_names()})"
-
-    def get_existed_index(self, table):
-        inspector = inspect(self.engine)
-        db_indexes = inspector.get_indexes(table)
-
-        indexes = []
-        for db_index in db_indexes:
-            indexes.append(Index(columns=db_index["column_names"], table=table, index_name=db_index["name"]))
-        return indexes
-
     def create_index(self, index: Index):
-        self.execute(self.get_create_index_sql(index), fetch=False)
+        table_name = index.table
+        sql = f"create index {index.get_index_name()} on {table_name} ({index.joined_column_names()})"
+        self.execute(sql, fetch=False)
 
     def drop_index(self, index_name):
         statement = (
@@ -102,16 +89,13 @@ class PostgreSQLController(BaseDBController):
         )
         self.execute(statement, fetch=False)
 
-    def drop_all_index(self, db_name):
+    def drop_all_index(self):
         stmt = "select indexname from pg_indexes where schemaname='public'"
-        indexes = self.execute(stmt, fetch=False)
+        indexes = self.execute(stmt, fetch=True)
         for index in indexes:
-            index_name = index[0]
-            self.drop_index(index_name)
-
-    def get_index_number(self, table):
-        inspector = inspect(self.engine)
-        return len(inspector.get_indexes(table))
+            index_name: str = index[0]
+            if not index_name.startswith("pgsysml_"):
+                self.drop_index(index_name)
 
     def get_all_indexes_byte(self):
         # Returns size in bytes

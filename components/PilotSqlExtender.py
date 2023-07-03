@@ -1,14 +1,10 @@
-import json
-
-from Anchor.AnchorEnum import AnchorEnum
 from Anchor.BaseAnchor.FetchAnchorHandler import FetchAnchorHandler
 from Anchor.BaseAnchor.replaceAnchorHandler import ReplaceAnchorHandler
 from DBController.BaseDBController import BaseDBController
 from DataFetcher.PilotCommentCreator import PilotCommentCreator
 from PilotConfig import PilotConfig
 from PilotEnum import FetchMethod
-from PilotSysConfig import PilotSysConfig
-from utlis import connect_comment_and_sql, create_comment, add_terminate_flag_to_comment
+from utlis import connect_comment_and_sql
 
 
 class PilotSqlExtender:
@@ -34,7 +30,7 @@ class PilotSqlExtender:
     def _add_sqls(self, sqls):
         for anchor, handle in self.anchor_to_handlers.items():
             if isinstance(handle, ReplaceAnchorHandler):
-                sqls.extend(handle.get_additional_sqls())
+                sqls.extend(handle.execute_before_comment_sql(None))
 
     def _get_anchor_params_as_comment(self):
         anchor_params = {}
