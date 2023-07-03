@@ -93,11 +93,11 @@ class LeroTest(unittest.TestCase):
 
             # dynamically collect data
             dynamic_training_data_save_table = "{}_period_training_data_table".format(model_name)
-            period_collect_event = LeroDynamicCollectEventPeriod(dynamic_training_data_save_table, config, 1)
+            period_collect_event = LeroDynamicCollectEventPeriod(dynamic_training_data_save_table, config, 100)
             scheduler.register_event(EventEnum.PERIODIC_COLLECTION_EVENT, period_collect_event)
 
             # dynamically update model
-            period_train_event = LeroPeriodTrainingEvent(dynamic_training_data_save_table, config, 1, lero_pilot_model)
+            period_train_event = LeroPeriodTrainingEvent(dynamic_training_data_save_table, config, 100, lero_pilot_model)
             scheduler.register_event(EventEnum.PERIOD_TRAIN_EVENT, period_train_event)
 
             # start
