@@ -5,7 +5,7 @@ from Dao.PilotTrainDataManager import PilotTrainDataManager
 from DataFetcher.PilotStateManager import PilotStateManager
 from PilotConfig import PilotConfig
 from PilotEnum import *
-from PilotEvent import PeriodTrainingEvent, Event, PretrainingModelEvent
+from PilotEvent import PeriodTrainingEvent, Event, PretrainingModelEvent,PeriodCollectionDataEvent
 from PilotTransData import PilotTransData
 from common.Util import extract_anchor_handlers, extract_table_data_from_anchor
 
@@ -52,6 +52,9 @@ class PilotScheduler:
         self._collect_training_data(data)
         self._deal_execution_end_events()
 
+    #
+
+
     def _collect_training_data(self, data: PilotTransData):
         fetch_anchors = extract_anchor_handlers(self.collect_data_state_manager.anchor_to_handlers.values(), True)
         column_2_value = extract_table_data_from_anchor(fetch_anchors, data)
@@ -76,6 +79,10 @@ class PilotScheduler:
             if event_type == EventEnum.PERIOD_TRAIN_EVENT:
                 event: PeriodTrainingEvent = event
                 event.update(self.pilot_data_manager)
+            elif event_type == EventEnum.PERIODIC_COLLECTION_EVENT:
+                event: PeriodCollectionDataEvent = event
+                event.update()
+
 
     def register_anchor_handler(self, anchor: BaseAnchorHandler):
         self.user_tasks.append(anchor)

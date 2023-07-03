@@ -61,6 +61,30 @@ class PeriodCollectionDataEvent(Event):
         pass
 
 
+class PeriodPerCountCollectionDataEvent(Event):
+
+    def __init__(self, save_table_name, config, per_query_count):
+        super().__init__(config)
+        self._training_data_manager = PilotTrainDataManager(config)
+        self.per_query_count = per_query_count
+        self.query_count = 0
+        self._table_name = save_table_name
+
+    def update(self):
+        self.query_count += 1
+        if self.query_count >= self.per_query_count:
+            self.query_count = 0
+            self._trigger()
+
+    def _trigger(self):
+        column_2_value = self.custom_collect()
+        self._training_data_manager.save_data_batch(self._table_name, column_2_value)
+
+    @abstractmethod
+    def custom_collect(self) -> dict:
+        pass
+
+
 class ContinuousCollectionDataEvent(Event):
     def __init__(self, config):
         super().__init__(config)
