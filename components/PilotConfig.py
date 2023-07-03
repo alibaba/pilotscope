@@ -19,8 +19,8 @@ class PilotConfig:
         self.SEP = "###"
         self.data_fetch_method = DataFetchMethodEnum.HTTP
 
-        # ms
-        self.sql_execution_timeout = 30
+        # second
+        self.sql_execution_timeout = 50
         self.once_request_timeout = self.sql_execution_timeout
 
         # pretraining

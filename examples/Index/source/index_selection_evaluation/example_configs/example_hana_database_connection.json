@@ -1,0 +1,8 @@
+{
+  "host": "example.com",
+  "port": 30015,
+  "db_user": "user",
+  "db_user_password": "secret",
+  "import_directory": "/usr/sap/AB1/HDB00/work/indexselection_import",
+  "ssh_user": "ab1adm"
+}

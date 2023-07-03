@@ -1,14 +1,22 @@
+from typing import List
+
 from Anchor.AnchorEnum import AnchorEnum
 from Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
+from DBController.BaseDBController import BaseDBController
+from PilotEnum import ReplaceAnchorTriggerEnum
+from common.Index import Index
 from PilotEnum import DatabaseEnum
 from DBController.PostgreSQLController import PostgreSQLController
+
 
 class ReplaceAnchorHandler(BaseAnchorHandler):
 
     def __init__(self, config) -> None:
         super().__init__(config)
+        self.trigger_type = ReplaceAnchorTriggerEnum.QUERY
+        self.have_been_triggered = False
 
-    def get_additional_sqls(self):
+    def execute_before_comment_sql(self, db_controller: BaseDBController):
         return []
 
     def add_params_to_db_core(self, params: dict):
@@ -18,6 +26,12 @@ class ReplaceAnchorHandler(BaseAnchorHandler):
         pass
 
     def apply_replace_data(self, sql):
+        pass
+
+    def is_can_trigger(self):
+        return self.trigger_type == ReplaceAnchorTriggerEnum.QUERY or not self.have_been_triggered
+
+    def roll_back(self, db_controller):
         pass
 
 
@@ -61,15 +75,38 @@ class HintAnchorHandler(ReplaceAnchorHandler):
     def apply_replace_data(self, sql):
         self.key_2_value_for_hint = self.user_custom_task(sql)
 
-    def get_additional_sqls(self):
-        sqls = []
-        if self.config.db_type == DatabaseEnum.POSTGRESQL:
-            now_get_hint_sql = PostgreSQLController.get_hint_sql
-        else:
-            raise NotImplementedError
+    def execute_before_comment_sql(self, db_controller: BaseDBController):
         for hint, value in self.key_2_value_for_hint.items():
-            sqls.append(now_get_hint_sql(hint, value))
-        return sqls
+            db_controller.execute(db_controller.get_hint_sql(hint, value))
 
     def add_params_to_db_core(self, params: dict):
         pass
+
+
+class IndexAnchorHandler(ReplaceAnchorHandler):
+
+    def __init__(self, config, indexes: List[Index] = None, drop_other=True) -> None:
+        super().__init__(config)
+        self.anchor_name = AnchorEnum.HINT_REPLACE_ANCHOR.name
+        self.indexes = indexes
+        self.drop_other = drop_other
+        self.trigger_type = ReplaceAnchorTriggerEnum.WORKLOAD
+
+    def apply_replace_data(self, sql):
+        raise RuntimeError("IndexAnchorHandler should be extended as user task,"
+                           " the modification of workload level should be dealt with event")
+
+    def execute_before_comment_sql(self, db_controller: BaseDBController):
+        if self.is_can_trigger():
+            if self.drop_other:
+                db_controller.drop_all_index()
+            for index in self.indexes:
+                db_controller.create_index(index)
+            self.have_been_triggered = True
+
+    def add_params_to_db_core(self, params: dict):
+        pass
+
+    def roll_back(self, db_controller):
+        for index in self.indexes:
+            db_controller.drop_index(index.get_index_name())

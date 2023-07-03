@@ -1,19 +1,17 @@
-import threading
-from typing import Optional
+from typing import Optional, List
 
 from Anchor.BaseAnchor.FetchAnchorHandler import *
 from Anchor.BaseAnchor.replaceAnchorHandler import *
 from DataFetcher.BaseDataFetcher import DataFetcher
 from DataFetcher.PilotCommentCreator import PilotCommentCreator
-from Exception.Exception import DBStatementTimeoutException
+from Exception.Exception import DBStatementTimeoutException, HttpReceiveTimeoutException
 from Factory.AnchorHandlerFactory import AnchorHandlerFactory
 from Factory.DBControllerFectory import DBControllerFactory
 from Factory.DataFetchFactory import DataFetchFactory
 from PilotConfig import PilotConfig
 from PilotEnum import FetchMethod
-from PilotSqlExtender import PilotSqlExtender
 from PilotTransData import PilotTransData
-from common.Util import pilotscope_exit
+from common.Util import pilotscope_exit, extract_anchor_handlers, extract_handlers
 
 
 class PilotStateManager:
@@ -25,57 +23,93 @@ class PilotStateManager:
         self.port = None
         self.data_fetcher: DataFetcher = DataFetchFactory.get_data_fetcher(config)
 
+    def execute_batch(self, sqls, enable_clear=True) -> List[Optional[PilotTransData]]:
+        datas = []
+        flag = False
+        for i, sql in enumerate(sqls):
+            if i == len(sqls) - 1:
+                flag = enable_clear
+            datas.append(self.execute(sql, enable_clear=flag))
+        return datas
+
     def execute(self, sql, enable_clear=True) -> Optional[PilotTransData]:
         try:
             origin_sql = sql
+            enable_receive_pilot_data = self.is_need_to_receive_data(self.anchor_to_handlers)
+            # create pilot comment
+            comment_creator = PilotCommentCreator(enable_receive_pilot_data=enable_receive_pilot_data)
+            comment_creator.add_params(self.data_fetcher.get_additional_info())
+            comment_creator.enable_terminate(
+                False if AnchorEnum.RECORD_FETCH_ANCHOR in self.anchor_to_handlers else True)
+            comment_creator.add_anchor_params(self._get_anchor_params_as_comment())
+            comment_sql = comment_creator.create_comment_sql(sql)
 
-            # set comments
-            all_inner_fetch_anchor = self._remove_outer_fetch_anchor(self.anchor_to_handlers)
-            if len(all_inner_fetch_anchor) > 0 :
-                comment_creator = PilotCommentCreator()
-                enable_terminate = False if AnchorEnum.RECORD_FETCH_ANCHOR in self.anchor_to_handlers else True
-                comment_creator.add_params(self.data_fetcher.get_additional_info())
-                comment_creator.enable_terminate(enable_terminate)
+            # execution sqls. Sometimes, data do not need to be got from inner
+            is_execute_comment_sql = self.is_execute_comment_sql(self.anchor_to_handlers)
+            records = self._execute_sqls(comment_sql, is_execute_comment_sql)
 
-                sql_extender = PilotSqlExtender(self.db_controller, self.config)
-                sql_extender.register_anchors(all_inner_fetch_anchor)
-
-                # sqls contain multiple "set" sql and one query sql (at last).
-                _, sqls = sql_extender.get_extend_sqls(sql, comment_creator)
-                # print(sqls[-1])
-                # execution sqls
-                records = self._execute_sqls(sqls)
-                # wait to fetch data
+            # wait to fetch data
+            if self.is_need_to_receive_data(self.anchor_to_handlers):
                 receive_data = self.data_fetcher.wait_until_get_data()
-
-                if receive_data is not None:
-                    data: PilotTransData = PilotTransData.parse_2_instance(receive_data, origin_sql)
-                    # fetch data from outer
-                    self._fetch_data_from_outer(origin_sql, data)
-                else:
-                    data = PilotTransData()
-                data.records = records
+                data: PilotTransData = PilotTransData.parse_2_instance(receive_data, origin_sql)
+                # fetch data from outer
+                self._fetch_data_from_outer(origin_sql, data)
             else:
                 data = PilotTransData()
-                data.sql = origin_sql
-                self._fetch_data_from_outer(origin_sql, data)
+
+            data.records = records
+            data.sql = origin_sql
+            self._fetch_data_from_outer(origin_sql, data)
 
             # clear state
             if enable_clear:
                 self.clear()
             return data
-        except DBStatementTimeoutException as e:
+
+        except (DBStatementTimeoutException, HttpReceiveTimeoutException) as e:
             print(e)
             return None
         except Exception as e:
             pilotscope_exit()
             raise e
 
+    def is_need_to_receive_data(self, anchor_2_handlers):
+        filter_anchor_2_handlers = self._remove_outer_fetch_anchor(
+            extract_anchor_handlers(anchor_2_handlers, is_fetch_anchor=True))
+        if AnchorEnum.RECORD_FETCH_ANCHOR in filter_anchor_2_handlers:
+            filter_anchor_2_handlers.pop(AnchorEnum.RECORD_FETCH_ANCHOR)
+        return len(filter_anchor_2_handlers) > 0
+
+    def is_execute_comment_sql(self, anchor_2_handlers):
+        filter_anchor_2_handlers = self._remove_outer_fetch_anchor(
+            extract_anchor_handlers(anchor_2_handlers, is_fetch_anchor=True))
+        return len(filter_anchor_2_handlers) > 0
+
+    def _roll_back_db(self):
+        handlers = extract_handlers(self.anchor_to_handlers.values(), is_fetch_anchor=False)
+        [handler.roll_back(self.db_controller) for handler in handlers]
+
     def clear(self):
+        self._roll_back_db()
         self.anchor_to_handlers.clear()
 
-    def _execute_sqls(self, sqls):
-        return self.db_controller.execute_batch(sqls,fetch=True)
+    def _execute_sqls(self, comment_sql, is_execute_comment_sql):
+        handlers = extract_handlers(self.anchor_to_handlers.values(), is_fetch_anchor=False)
+        for handler in handlers:
+            handler.execute_before_comment_sql(self.db_controller)
+        return self.db_controller.execute(comment_sql, fetch=True) if is_execute_comment_sql else None
+
+    def _get_anchor_params_as_comment(self):
+        anchor_params = {}
+        for anchor, handle in self.anchor_to_handlers.items():
+            params = {}
+            if isinstance(handle, ReplaceAnchorHandler):
+                handle.add_params_to_db_core(params)
+            elif isinstance(handle, FetchAnchorHandler) and handle.fetch_method == FetchMethod.INNER:
+                handle.add_params_to_db_core(params)
+            if len(params) > 0:
+                anchor_params[anchor.name] = params
+        return anchor_params
 
     def _remove_outer_fetch_anchor(self, anchor_to_handlers):
         result = {}
@@ -131,6 +165,14 @@ class PilotStateManager:
     def set_rule(self):
         pass
 
+    def set_index(self, indexes: List[Index], drop_other=True):
+        anchor: IndexAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
+                                                                             AnchorEnum.INDEX_REPLACE_ANCHOR)
+        anchor.indexes = indexes
+        anchor.drop_other = drop_other
+        self.anchor_to_handlers[AnchorEnum.INDEX_REPLACE_ANCHOR] = anchor
+        pass
+
     def fetch_hint(self):
         pass
 
@@ -146,18 +188,16 @@ class PilotStateManager:
         pass
 
     def fetch_physical_plan(self):
-        anchor: PhysicalPlanFetchAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
-                                                                                         AnchorEnum.PHYSICAL_PLAN_FETCH_ANCHOR)
+        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.PHYSICAL_PLAN_FETCH_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.PHYSICAL_PLAN_FETCH_ANCHOR] = anchor
 
     def fetch_execution_time(self):
-        anchor: ExecutionTimeFetchAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
-                                                                                          AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR)
+        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR] = anchor
 
     def fetch_record(self):
         anchor: RecordFetchAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
-                                                                                         AnchorEnum.RECORD_FETCH_ANCHOR)
+                                                                                   AnchorEnum.RECORD_FETCH_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.RECORD_FETCH_ANCHOR] = anchor
 
     def fetch_real_node_cost(self):
@@ -165,3 +205,7 @@ class PilotStateManager:
 
     def fetch_real_node_card(self):
         pass
+
+    def fetch_estimated_cost(self):
+        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.ESTIMATED_COST_FETCH_ANCHOR)
+        self.anchor_to_handlers[AnchorEnum.ESTIMATED_COST_FETCH_ANCHOR] = anchor
