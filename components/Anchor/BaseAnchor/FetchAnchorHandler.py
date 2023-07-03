@@ -74,6 +74,19 @@ class PhysicalPlanFetchAnchorHandler(FetchAnchorHandler):
         if data.physical_plan is not None:
             column_2_value["physical_plan"] = json.dumps(data.physical_plan)
 
+class BuffercacheFetchAnchorHandler(FetchAnchorHandler):
+    
+    def __init__(self, config) -> None:
+        super().__init__(config)
+        self.fetch_method = FetchMethod.OUTER
+        self.anchor_name = AnchorEnum.BUFFERCACHE_FETCH_ANCHOR.name
+    
+    def add_params_to_db_core(self, params: dict):
+        super().add_params_to_db_core(params)
+
+    def add_data_to_table(self, column_2_value, data: PilotTransData):
+        if data.buffercache is not None:
+            column_2_value["buffercache"] = json.dumps(data.buffercache)
 
 class EstimatedCostFetchAnchorHandler(FetchAnchorHandler):
 

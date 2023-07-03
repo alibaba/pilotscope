@@ -41,7 +41,6 @@ class PostgreSQLController(BaseDBController):
     def execute_batch(self, sqls, fetch=False):
         try:
             for sql in sqls[:-1]:
-                print(sql)
                 self.connection.execute(text(sql) if isinstance(sql, str) else sql)
             result = self.connection.execute(text(sqls[-1]) if isinstance(sqls[-1], str) else sqls[-1])
             if fetch:
@@ -117,7 +116,7 @@ class PostgreSQLController(BaseDBController):
         return float(result[0][0])
 
     def exist_table(self, table_name) -> bool:
-        has_table = self.engine.dialect.has_table(self.engine.connect(), table_name)
+        has_table = self.engine.dialect.has_table(self.connection, table_name)
         if has_table:
             return True
         return False
@@ -140,7 +139,19 @@ class PostgreSQLController(BaseDBController):
         return "{} explain (ANALYZE {}, VERBOSE, SETTINGS, SUMMARY, FORMAT JSON) {}".format(comment,
                                                                                             "" if execute else "False",
                                                                                             sql)
-
+    def get_buffercache(self):
+        sql = """
+            SELECT c.relname, count(*) AS buffers
+            FROM pg_buffercache b JOIN pg_class c
+            ON b.relfilenode = pg_relation_filenode(c.oid) AND
+            b.reldatabase IN (0, (SELECT oid FROM pg_database
+                                    WHERE datname = current_database()))
+            JOIN pg_namespace n ON n.oid = c.relnamespace
+            GROUP BY c.relname;
+            """
+        res = self.connection.execute(text(sql)).all()
+        return {k:v for k,v in res if not k.startswith("pg_")}
+    
     def _explain(self, sql, comment, execute: bool):
         try:
             return self.connection.execute(text(self.get_explain_sql(sql, execute, comment))).all()[0][0][0]

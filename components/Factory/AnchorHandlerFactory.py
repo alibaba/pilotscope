@@ -37,7 +37,12 @@ class AnchorHandlerFactory:
             return PostgreSQLSubQueryCardFetchAnchorHandler(config)
         elif anchor == AnchorEnum.LOGICAL_PLAN_FETCH_ANCHOR:
             return PostgreSQLLogicalPlanFetchAnchorHandler(config)
+<<<<<<< HEAD
         elif anchor == AnchorEnum.ESTIMATED_COST_FETCH_ANCHOR:
             return PostgreSQLEstimatedCostFetchAnchorHandler(config)
+=======
+        elif anchor == AnchorEnum.BUFFERCACHE_FETCH_ANCHOR:
+            return PostgreSQLBuffercacheFetchAnchorHandler(config)
+>>>>>>> feat: Example BAO. Anchor BuffercacheFetch
         else:
             raise RuntimeError()
