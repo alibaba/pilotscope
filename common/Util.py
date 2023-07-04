@@ -59,5 +59,13 @@ def singleton(class_):
 def _accumulate_cost(datas):
     sum_cost = 0
     for data in datas:
-        sum_cost += data.estimated_cost
+        if data is not None:
+            sum_cost += data.estimated_cost
     return sum_cost
+
+
+def sum_list(values):
+    res = 0
+    for val in values:
+        res += val
+    return res

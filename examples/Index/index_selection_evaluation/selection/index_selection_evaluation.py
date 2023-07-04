@@ -97,25 +97,9 @@ class IndexSelection:
             from sqlglot import exp, parse_one
             with open(config["queries_file"], "r") as f:
                 sqls = f.readlines()
-            query_list = []
-            table_dict = dict()
-            for i, sql in enumerate(sqls):
-                sql_ast = parse_one(sql)
-                unalias = dict()
-                for table in sql_ast.find_all(exp.Table):
-                    if len(table.alias) > 0:
-                        unalias[table.alias] = table.name
-                    unalias[table.name] = table.name
-                    if table.name not in table_dict:
-                        table_dict[table.name] = Table(table.name)
-                cols = []
-                for col in sql_ast.find_all(exp.Column):
-                    c = Column(col.alias_or_name)
-                    table_dict[unalias[col.table]].add_column(c)
-                    cols.append(c)
-                query_list.append(Query(i, sql, cols))
-            query_list = [query_list[i] for i in config["queries"]]
-            self.workload = Workload(query_list)
+            sqls = [sqls[i] for i in config["queries"]]
+            self.workload = to_workload(sqls)
+
         else:
             dbms_class = DBMSYSTEMS[config["database_system"]]
             generating_connector = dbms_class(None, autocommit=True)
@@ -256,3 +240,25 @@ class IndexSelection:
             logging.info("Create new database connector (closing old)")
             self.db_connector.close()
         self.db_connector = DBMSYSTEMS[database_system](database_name)
+
+
+def to_workload(sqls):
+    from sqlglot import exp, parse_one
+    query_list = []
+    table_dict = dict()
+    for i, sql in enumerate(sqls):
+        sql_ast = parse_one(sql)
+        unalias = dict()
+        for table in sql_ast.find_all(exp.Table):
+            if len(table.alias) > 0:
+                unalias[table.alias] = table.name
+            unalias[table.name] = table.name
+            if table.name not in table_dict:
+                table_dict[table.name] = Table(table.name)
+        cols = []
+        for col in sql_ast.find_all(exp.Column):
+            c = Column(col.alias_or_name)
+            table_dict[unalias[col.table]].add_column(c)
+            cols.append(c)
+        query_list.append(Query(i, sql, cols))
+    return Workload(query_list)

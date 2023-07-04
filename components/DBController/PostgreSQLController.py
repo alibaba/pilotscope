@@ -78,19 +78,19 @@ class PostgreSQLController(BaseDBController):
         table = self.name_2_table[table_name]
         self.execute(table.insert().values(column_2_value))
 
-    def create_index(self, index: Index):
-        table_name = index.table
-        sql = f"create index {index.get_index_name()} on {table_name} ({index.joined_column_names()})"
+    def create_index(self, index_name, table, columns):
+        column_names = ",".join(columns)
+        sql = f"create index {index_name} on {table} ({column_names});"
         self.execute(sql, fetch=False)
 
     def drop_index(self, index_name):
         statement = (
-            f"DROP INDEX IF EXISTS {index_name}"
+            f"DROP INDEX IF EXISTS {index_name};"
         )
         self.execute(statement, fetch=False)
 
-    def drop_all_index(self):
-        stmt = "select indexname from pg_indexes where schemaname='public'"
+    def drop_all_indexes(self):
+        stmt = "select indexname from pg_indexes where schemaname='public';"
         indexes = self.execute(stmt, fetch=True)
         for index in indexes:
             index_name: str = index[0]
@@ -101,7 +101,7 @@ class PostgreSQLController(BaseDBController):
         # Returns size in bytes
         sql = ("select sum(pg_indexes_size(table_name::text)) from "
                "(select table_name from information_schema.tables "
-               "where table_schema='public') as all_tables")
+               "where table_schema='public') as all_tables;")
         result = self.execute(sql, fetch=True)
         return float(result[0][0])
 
@@ -112,9 +112,9 @@ class PostgreSQLController(BaseDBController):
         return float(result[0][0])
 
     def get_index_byte(self, index_name):
-        sql = f"select pg_table_size('{index_name}')"
+        sql = f"select pg_table_size('{index_name}');"
         result = self.execute(sql, fetch=True)
-        return float(result[0][0])
+        return int(result[0][0])
 
     def exist_table(self, table_name) -> bool:
         has_table = self.engine.dialect.has_table(self.engine.connect(), table_name)
@@ -136,10 +136,14 @@ class PostgreSQLController(BaseDBController):
     def explain_execution_plan(self, sql, comment=""):
         return self._explain(sql, comment, True)
 
+    def get_estimated_cost(self, sql):
+        plan = self.explain_physical_plan(sql)
+        return plan["Plan"]["Total Cost"]
+
     def get_explain_sql(self, sql, execute: bool, comment=""):
-        return "{} explain (ANALYZE {}, VERBOSE, SETTINGS, SUMMARY, FORMAT JSON) {}".format(comment,
-                                                                                            "" if execute else "False",
-                                                                                            sql)
+        return "{} explain (ANALYZE {}, VERBOSE, SETTINGS, SUMMARY, FORMAT JSON) {};".format(comment,
+                                                                                             "" if execute else "False",
+                                                                                             sql)
 
     def _explain(self, sql, comment, execute: bool):
         try:
@@ -155,7 +159,7 @@ class SimulateIndexController:
         statement = (
             "select * from hypopg_create_index( "
             f"'create index on {table_name} "
-            f"({index.joined_column_names()})')"
+            f"({index.joined_column_names()})';)"
         )
         result = self.exec_fetch(statement)
         return result

@@ -2,8 +2,8 @@ import logging
 
 from DataFetcher.PilotStateManager import PilotStateManager
 from PilotConfig import PilotConfig
+from PilotTransData import PilotTransData
 from common.Index import Index as pilotIndex
-from common.Util import _accumulate_cost
 from selection.index import Index
 from selection.what_if_index_creation import WhatIfIndexCreation
 from selection.workload import Query
@@ -71,6 +71,17 @@ class CostEvaluation:
         return recommended_indexes, cost
 
     def calculate_cost(self, workload, indexes, store_size=False):
+        # total_cost = self._origin_calculate_cost(workload, indexes, store_size)
+        # print("origin total cost is {}".format(total_cost))
+
+        pilot_total_cost = self.pilot_calculate_cost(workload, indexes)
+        print("pilot total cost is {}".format(pilot_total_cost))
+        # assert total_cost == pilot_total_cost
+
+        total_cost = pilot_total_cost
+        return total_cost
+
+    def _origin_calculate_cost(self, workload, indexes, store_size=False):
         assert (
                 self.completed is False
         ), "Cost Evaluation is completed and cannot be reused."
@@ -81,14 +92,10 @@ class CostEvaluation:
         for query in workload.queries:
             self.cost_requests += 1
             total_cost += self._request_cache(query, indexes)
-
-        pilot_cost = self.pilot_calculate_cost(workload, indexes)
-        if pilot_cost is not None:
-            print("origin total cost is {}, pilot_total_cost is {}".format(total_cost, pilot_cost))
-            assert total_cost == pilot_cost
         return total_cost
 
     def pilot_calculate_cost(self, workload, indexes):
+        self.current_indexes = set(indexes)
         state_manager = PilotStateManager(PilotConfig())
         sqls = []
         pilot_indexes = []
@@ -103,8 +110,22 @@ class CostEvaluation:
 
         state_manager.set_index(pilot_indexes)
         state_manager.fetch_estimated_cost()
-        datas = state_manager.execute_batch(sqls)
-        return _accumulate_cost(datas) if datas is not None else None
+        total_cost = 0
+        for query in workload.queries:
+            self.cost_requests += 1
+            total_cost += self._request_cache_pilot(query, indexes, state_manager)
+
+        for index in indexes:
+            if index.estimated_size is None:
+                index.estimated_size = self.db_connector.get_index_byte(index.index_idx())
+
+        state_manager.clear()
+        return total_cost
+
+    def write_cost(self, file_name, cost):
+        file = "../index_cost_{}.txt".format(file_name)
+        with open(file, "a") as f:
+            f.write(str(cost) + "\n")
 
     # Creates the current index combination by simulating/creating
     # missing indexes and unsimulating/dropping indexes
@@ -122,7 +143,7 @@ class CostEvaluation:
         self.db_connector.drop_indexes()
         for index in set(indexes):
             self._simulate_or_create_index(index, store_size=store_size)
-        assert self.current_indexes == set(indexes)
+        self.current_indexes = set(indexes)
 
     def _simulate_or_create_index(self, index, store_size=False):
         if self.cost_estimation == "whatif":
@@ -169,6 +190,26 @@ class CostEvaluation:
         # If no cache hit request cost from database system
         else:
             cost = self._get_cost(query)
+            self.cache[(query, relevant_indexes)] = cost
+            return cost
+
+    def _request_cache_pilot(self, query, indexes, state_manager):
+        q_i_hash = (query, frozenset(indexes))
+        if q_i_hash in self.relevant_indexes_cache:
+            relevant_indexes = self.relevant_indexes_cache[q_i_hash]
+        else:
+            relevant_indexes = self._relevant_indexes(query, indexes)
+            self.relevant_indexes_cache[q_i_hash] = relevant_indexes
+
+        # Check if query and corresponding relevant indexes in cache
+        if (query, relevant_indexes) in self.cache and False:
+            self.cache_hits += 1
+            return self.cache[(query, relevant_indexes)]
+        # If no cache hit request cost from database system
+        else:
+            # cost = self._get_cost(query)
+            data: PilotTransData = state_manager.execute(query.text, enable_clear=False)
+            cost = data.estimated_cost
             self.cache[(query, relevant_indexes)] = cost
             return cost
 

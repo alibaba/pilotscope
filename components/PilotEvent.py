@@ -134,14 +134,14 @@ class PeriodicDbControllerEvent(Event):
     def __init__(self, config, per_query_count, exec_in_init=True):
         super().__init__(config)
         self.per_query_count = per_query_count
-        self.query_count = 0 if not exec_in_init else per_query_count
+        self._cur_query_count = per_query_count if exec_in_init else 0
         self._db_controller = DBControllerFactory.get_db_controller(config)
         self._training_data_manager = PilotTrainDataManager(config)
 
     def update(self):
-        self.query_count += 1
-        if self.query_count >= self.per_query_count:
-            self.query_count = 0
+        self._cur_query_count += 1
+        if self._cur_query_count >= self.per_query_count:
+            self._cur_query_count = 0
             self._custom_update(self._db_controller, self._training_data_manager)
 
     @abstractmethod
