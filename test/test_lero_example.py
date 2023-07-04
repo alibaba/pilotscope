@@ -49,7 +49,7 @@ class LeroTest(unittest.TestCase):
             scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
 
             # start
-            scheduler.start()
+            scheduler.init()
             print("start to test sql")
             sqls = self.load_test_sqls()
             for i, sql in enumerate(sqls):

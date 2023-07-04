@@ -7,7 +7,7 @@ from selection.database_connector import DatabaseConnector
 
 
 class PostgresDatabaseConnector(DatabaseConnector):
-    def __init__(self, db_name, autocommit=False):
+    def __init__(self, db_name, autocommit=True):
         DatabaseConnector.__init__(self, db_name, autocommit=autocommit)
         self.db_system = "postgres"
         self._connection = None
@@ -24,7 +24,7 @@ class PostgresDatabaseConnector(DatabaseConnector):
         if self._connection:
             self.close()
         # self._connection = psycopg2.connect("dbname={}".format(self.db_name))
-        self._connection = psycopg2.connect(dbname=self.db_name, user="postgres" )
+        self._connection = psycopg2.connect(dbname=self.db_name, user="postgres")
         self._connection.autocommit = self.autocommit
         self._cursor = self._connection.cursor()
 
@@ -127,6 +127,7 @@ class PostgresDatabaseConnector(DatabaseConnector):
 
     def create_index(self, index):
         table_name = index.table()
+        # table_name = index.table
         statement = (
             f"create index {index.index_idx()} "
             f"on {table_name} ({index.joined_column_names()})"
@@ -137,6 +138,13 @@ class PostgresDatabaseConnector(DatabaseConnector):
         )
         size = size[0]
         index.estimated_size = size * 8 * 1024
+        # second_size=self.secondary_calculate_index(index)
+        self.commit()
+
+    def secondary_calculate_index(self, index):
+        statement = f"select pg_table_size('{index.index_idx()}');"
+        result = self.exec_fetch(statement)
+        return result[0]
 
     def drop_indexes(self):
         logging.info("Dropping indexes")
@@ -149,6 +157,7 @@ class PostgresDatabaseConnector(DatabaseConnector):
             drop_stmt = "drop index {}".format(index_name)
             logging.debug("Dropping index {}".format(index_name))
             self.exec_only(drop_stmt)
+        self.commit()
 
     # PostgreSQL expects the timeout in milliseconds
     def exec_query(self, query, timeout=None, cost_evaluation=False):

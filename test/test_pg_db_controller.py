@@ -34,7 +34,7 @@ class MyTestCase(unittest.TestCase):
     def test_create_index(self):
         index_name = "test_create_index"
         n = self.db_controller.get_index_number(self.table)
-        self.db_controller.create_index(Index(columns=["date"], table="badges", index_name=index_name))
+        self.db_controller.create_index(None, None, None)
         cur_n = self.db_controller.get_index_number(self.table)
         self.assertEqual(cur_n, n + 1)
 
@@ -42,7 +42,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_drop_index(self):
         index_name = "test_drop_index"
-        self.db_controller.create_index(Index(columns=["date"], table="badges", index_name=index_name))
+        self.db_controller.create_index(None, None, None)
         n = self.db_controller.get_index_number(self.table)
 
         self.db_controller.drop_index(Index(columns=["date"], table="badges", index_name=index_name))
@@ -55,8 +55,7 @@ class MyTestCase(unittest.TestCase):
 
         # add index
         index_name = "test_get_index_number_index"
-        self.db_controller.create_index(
-            Index(columns=[self.column], table=self.table, index_name=index_name))
+        self.db_controller.create_index(None, None, None)
 
         cur_n = self.db_controller.get_index_number(self.table)
 
@@ -71,7 +70,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_get_index_byte(self):
         index_name = "test_get_index_byte"
-        self.db_controller.create_index(Index(columns=["date"], table="badges", index_name=index_name))
+        self.db_controller.create_index(None, None, None)
         size = self.db_controller.get_index_byte(index_name)
         print("indexes size is {}".format(size))
         self.db_controller.drop_index(index_name)
