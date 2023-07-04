@@ -12,11 +12,8 @@ class PilotTransData:
         self.physical_plan = None
         self.logical_plan = None
         self.execution_time = None
-<<<<<<< HEAD
         self.estimated_cost = None
-=======
         self.buffercache = None
->>>>>>> feat: Example BAO. Anchor BuffercacheFetch
         self.subquery_2_card: dict = {}
 
     def __str__(self) -> str:

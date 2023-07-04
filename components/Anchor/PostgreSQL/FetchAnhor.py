@@ -50,7 +50,6 @@ class PostgreSQLPhysicalPlanFetchAnchorHandler(PhysicalPlanFetchAnchorHandler, P
         fill_data.physical_plan = anchor_data.physical_plan
 
 
-<<<<<<< HEAD
 class PostgreSQLEstimatedCostFetchAnchorHandler(EstimatedCostFetchAnchorHandler, PostgreSQLAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
@@ -63,7 +62,6 @@ class PostgreSQLEstimatedCostFetchAnchorHandler(EstimatedCostFetchAnchorHandler,
 
         fill_data.estimated_cost = anchor_data.physical_plan["Plan"]["Total Cost"]
 
-=======
 class PostgreSQLBuffercacheFetchAnchorHandler(BuffercacheFetchAnchorHandler, PostgreSQLAnchorMixin):
 
     def __init__(self, config) -> None:
@@ -82,7 +80,6 @@ class PostgreSQLBuffercacheFetchAnchorHandler(BuffercacheFetchAnchorHandler, Pos
         else:
             anchor_data.buffercache = anchor_data.buffercache
         fill_data.buffercache = anchor_data.buffercache
->>>>>>> feat: Example BAO. Anchor BuffercacheFetch
 
 class PostgreSQLExecutionTimeFetchAnchorHandler(ExecutionTimeFetchAnchorHandler, PostgreSQLAnchorMixin):
 
