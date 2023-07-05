@@ -108,7 +108,7 @@ def training_pairwise(tuning_model_path, model_name, training_data_file, pretrai
 
 
 def training_pairwise_pilot_score(lero_model, X1, X2):
-    tuning_model = lero_model is not None
+    tuning_model = lero_model is not None and lero_model._feature_generator is not None
     if tuning_model:
         feature_generator = lero_model._feature_generator
     else:

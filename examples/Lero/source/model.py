@@ -211,7 +211,7 @@ class LeroModel():
 
         tree = None
         if CUDA:
-            tree = self._net.module.build_trees(x)
+            tree = self._net.build_trees(x)
         else:
             tree = self._net.build_trees(x)
 
