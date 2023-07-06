@@ -1,6 +1,6 @@
 class DBStatementTimeoutException(Exception):
     def __init__(self, message):
-        super().__init__(message)
+        super().__init__("PilotScope:"+message)
 
 
 class HttpReceiveTimeoutException(Exception):

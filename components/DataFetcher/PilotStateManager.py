@@ -13,7 +13,6 @@ from PilotEnum import FetchMethod
 from PilotTransData import PilotTransData
 from common.Util import pilotscope_exit, extract_anchor_handlers, extract_handlers
 
-
 class PilotStateManager:
 
     def __init__(self, config: PilotConfig) -> None:
@@ -70,7 +69,6 @@ class PilotStateManager:
             print(e)
             return None
         except Exception as e:
-            pilotscope_exit()
             raise e
 
     def is_need_to_receive_data(self, anchor_2_handlers):

@@ -39,8 +39,9 @@ def extract_table_data_from_anchor(fetch_anchors, data):
     return column_2_value
 
 
-def pilotscope_exit():
+def pilotscope_exit(e=None):
     print("pilotscope occur exception, clearing http service")
+    print(e)
     for http in all_https:
         http.shutdown()
 

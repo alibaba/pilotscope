@@ -110,8 +110,8 @@ class LeroTest(unittest.TestCase):
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, and it is {}".format(i, sql))
                 scheduler.simulate_db_console(sql)
-        finally:
-            pilotscope_exit()
+        except Exception as e:
+            pilotscope_exit(e)
 
     def test_pg_plan(self):
         try:
