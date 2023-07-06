@@ -32,11 +32,8 @@ class Index:
     def is_single_column(self):
         return True if len(self.columns) == 1 else False
 
-    def table(self):
-        assert (
-                self.columns[0].table is not None
-        ), "Table should not be None to avoid false positive comparisons."
-        return self.columns[0].table
+    def index_idx(self):
+        return self.get_index_name()
 
     def get_index_name(self):
         if self._index_name is not None:

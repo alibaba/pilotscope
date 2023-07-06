@@ -13,6 +13,7 @@ class PilotTransData:
         self.logical_plan = None
         self.execution_time = None
         self.estimated_cost = None
+        self.buffercache = None
         self.subquery_2_card: dict = {}
 
     def __str__(self) -> str:

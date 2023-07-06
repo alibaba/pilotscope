@@ -38,8 +38,9 @@ class DatabaseConnector:
         self._connection.rollback()
 
     def drop_index(self, index):
-        statement = f"drop index {index.index_idx()}"
+        statement = f"drop index if exists {index.index_idx()}"
         self.exec_only(statement)
+        self.commit()
 
     def _prepare_query(self, query):
         for query_statement in query.text.split(";"):

@@ -51,7 +51,7 @@ class Benchmark:
         self._set_filenames()
 
     def benchmark(self):
-        self.db_connector.drop_indexes()
+        self.db_connector.drop_all_indexes()
 
         logging.info("Benchmark with config: {}".format(self.config))
         # Number of runs can be set to 0 to get estimated workload

@@ -39,5 +39,7 @@ class AnchorHandlerFactory:
             return PostgreSQLLogicalPlanFetchAnchorHandler(config)
         elif anchor == AnchorEnum.ESTIMATED_COST_FETCH_ANCHOR:
             return PostgreSQLEstimatedCostFetchAnchorHandler(config)
+        elif anchor == AnchorEnum.BUFFERCACHE_FETCH_ANCHOR:
+            return PostgreSQLBuffercacheFetchAnchorHandler(config)
         else:
             raise RuntimeError()

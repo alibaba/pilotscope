@@ -1,13 +1,10 @@
 from Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
-from Anchor.BaseAnchor.FetchAnchorHandler import RecordFetchAnchorHandler, FetchAnchorHandler
-from Anchor.BaseAnchor.replaceAnchorHandler import ReplaceAnchorHandler
-from Dao.PilotTrainDataManager import PilotTrainDataManager
+from Anchor.BaseAnchor.FetchAnchorHandler import RecordFetchAnchorHandler
 from DataFetcher.PilotStateManager import PilotStateManager
-from PilotConfig import PilotConfig
 from PilotEnum import *
-from PilotEvent import PeriodTrainingEvent, Event, PretrainingModelEvent,PeriodCollectionDataEvent
+from PilotEvent import *
 from PilotTransData import PilotTransData
-from common.Util import extract_anchor_handlers, extract_table_data_from_anchor, extract_handlers
+from common.Util import extract_table_data_from_anchor, extract_handlers
 
 
 class PilotScheduler:
@@ -20,7 +17,7 @@ class PilotScheduler:
         self.type_2_event = {}
         self.user_tasks = []
 
-    def start(self):
+    def init(self):
         self._deal_initial_events()
         pass
 
@@ -68,6 +65,9 @@ class PilotScheduler:
                 pretraining_thread = event.async_start()
             elif event_type == EventEnum.PERIODIC_COLLECTION_EVENT:
                 pass
+            elif event_type == EventEnum.PERIODIC_DB_CONTROLLER_EVENT:
+                event: PeriodicDbControllerEvent = event
+                event.update()
 
         # wait until finishing pretraining
         if pretraining_thread is not None and self.config.pretraining_model == TrainSwitchMode.WAIT:
@@ -82,7 +82,9 @@ class PilotScheduler:
             elif event_type == EventEnum.PERIODIC_COLLECTION_EVENT:
                 event: PeriodCollectionDataEvent = event
                 event.update()
-
+            elif event_type == EventEnum.PERIODIC_DB_CONTROLLER_EVENT:
+                event: PeriodicDbControllerEvent = event
+                event.update()
 
     def register_anchor_handler(self, anchor: BaseAnchorHandler):
         self.user_tasks.append(anchor)

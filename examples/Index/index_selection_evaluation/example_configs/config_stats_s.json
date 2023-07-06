@@ -6,66 +6,10 @@
     "queries_file":"../../stats_light.sql" ,
     "algorithms": [
         {
-            "name": "no_index",
-            "parameters": {
-            },
-            "timeout": 300
-        },
-        {
             "name": "extend",
             "parameters": {
                 "budget_MB": [250],
                 "max_index_width": 2
-            },
-            "timeout": 300
-        },
-        {
-            "name": "relaxation",
-            "parameters": {
-                "budget_MB": [250],
-                "max_index_width": 2
-            },
-            "timeout": 300
-        },
-        {
-            "name": "anytime",
-            "parameters": {
-                "max_index_width": 2,
-                "budget_MB": [250],
-                "max_runtime_minutes": 30
-            },
-            "timeout": 300
-        },
-        {
-            "name": "cophy_input",
-            "parameters": {
-                "max_index_width": 2,
-                "max_indexes_per_query": 1
-            },
-            "timeout": 300
-        },            
-        {
-            "name": "db2advis",
-            "parameters": {
-                "max_index_width": 2,
-                "budget_MB": [250],
-                "try_variations_seconds": 0
-            },
-            "timeout": 300
-        },
-        {
-            "name": "auto_admin",
-            "parameters": {
-                "max_indexes": [2],
-                "max_indexes_naive": 1,
-                "max_index_width": 2
-            },
-            "timeout": 300
-        },
-        {
-            "name": "drop",
-            "parameters": {
-                "max_indexes": [2]
             },
             "timeout": 300
         }

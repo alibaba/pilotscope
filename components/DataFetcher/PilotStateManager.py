@@ -197,6 +197,11 @@ class PilotStateManager:
         anchor: RecordFetchAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
                                                                                    AnchorEnum.RECORD_FETCH_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.RECORD_FETCH_ANCHOR] = anchor
+    
+    def fetch_buffercache(self):
+        anchor: BuffercacheFetchAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
+                                                                                         AnchorEnum.BUFFERCACHE_FETCH_ANCHOR)
+        self.anchor_to_handlers[AnchorEnum.BUFFERCACHE_FETCH_ANCHOR] = anchor
 
     def fetch_real_node_cost(self):
         pass

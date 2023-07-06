@@ -97,14 +97,16 @@ class IndexAnchorHandler(ReplaceAnchorHandler):
     def execute_before_comment_sql(self, db_controller: BaseDBController):
         if self.is_can_trigger():
             if self.drop_other:
-                db_controller.drop_all_index()
+                db_controller.drop_all_indexes()
             for index in self.indexes:
-                db_controller.create_index(index)
+                db_controller.create_index(index.get_index_name(), index.table, index.columns)
             self.have_been_triggered = True
 
     def add_params_to_db_core(self, params: dict):
         pass
 
     def roll_back(self, db_controller):
-        for index in self.indexes:
-            db_controller.drop_index(index.get_index_name())
+        # self.is_can_trigger() is False if indexes has been built
+        if not self.is_can_trigger():
+            for index in self.indexes:
+                db_controller.drop_index(index.get_index_name())

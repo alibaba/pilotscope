@@ -4,9 +4,8 @@ from pandas import DataFrame
 from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table, NullPool, inspect
 from sqlalchemy_utils import database_exists, create_database
 
-from Common.Index import Index
 from PilotConfig import PilotConfig
-from PilotEnum import DatabaseEnum
+from common.Index import Index
 
 
 class BaseDBController(ABC):
@@ -86,7 +85,7 @@ class BaseDBController(ABC):
         pass
 
     @abstractmethod
-    def create_index(self, index):
+    def create_index(self, index_name, table, columns):
         pass
 
     @abstractmethod
@@ -98,7 +97,7 @@ class BaseDBController(ABC):
         pass
 
     @abstractmethod
-    def drop_all_index(self):
+    def drop_all_indexes(self):
         pass
 
     @abstractmethod
@@ -111,6 +110,10 @@ class BaseDBController(ABC):
 
     @abstractmethod
     def get_index_byte(self, index_name):
+        pass
+
+    @abstractmethod
+    def get_estimated_cost(self, sql):
         pass
 
     def get_index_number(self, table):
