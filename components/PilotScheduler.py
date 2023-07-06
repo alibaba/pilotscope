@@ -49,6 +49,9 @@ class PilotScheduler:
         self._collect_training_data(data)
         self._deal_execution_end_events()
 
+    #
+
+
     def _collect_training_data(self, data: PilotTransData):
         fetch_anchors = extract_handlers(self.collect_data_state_manager.anchor_to_handlers.values(), True)
         column_2_value = extract_table_data_from_anchor(fetch_anchors, data)
@@ -76,6 +79,9 @@ class PilotScheduler:
             if event_type == EventEnum.PERIOD_TRAIN_EVENT:
                 event: PeriodTrainingEvent = event
                 event.update(self.pilot_data_manager)
+            elif event_type == EventEnum.PERIODIC_COLLECTION_EVENT:
+                event: PeriodCollectionDataEvent = event
+                event.update()
             elif event_type == EventEnum.PERIODIC_DB_CONTROLLER_EVENT:
                 event: PeriodicDbControllerEvent = event
                 event.update()

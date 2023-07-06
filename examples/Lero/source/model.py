@@ -260,7 +260,7 @@ class LeroModelPairWise(LeroModel):
 
         optimizer = None
         if CUDA:
-            optimizer = torch.optim.Adam(self._net.module.parameters())
+            optimizer = torch.optim.Adam(self._net.parameters())
             optimizer = nn.DataParallel(optimizer, device_ids=GPU_LIST)
         else:
             optimizer = torch.optim.Adam(self._net.parameters())
@@ -276,8 +276,8 @@ class LeroModelPairWise(LeroModel):
 
                 tree_x1, tree_x2 = None, None
                 if CUDA:
-                    tree_x1 = self._net.module.build_trees(x1)
-                    tree_x2 = self._net.module.build_trees(x2)
+                    tree_x1 = self._net.build_trees(x1)
+                    tree_x2 = self._net.build_trees(x2)
                 else:
                     tree_x1 = self._net.build_trees(x1)
                     tree_x2 = self._net.build_trees(x2)

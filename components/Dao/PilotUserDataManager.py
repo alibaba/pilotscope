@@ -41,4 +41,6 @@ class PilotUserDataManager:
             return None
         res: DataFrame = self.db_controller.get_data(
             select(table.c.last_read_id).where(table.c.table == table_name))
+        if len(res) == 0:
+            return None
         return int(res.at[res.index[0], res.columns[0]])

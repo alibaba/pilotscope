@@ -43,7 +43,8 @@ class LeroParadigmCardAnchorHandler(CardAnchorHandler):
             self.pilot_state_manager.set_card(scale_subquery_2_card)
             self.pilot_state_manager.fetch_physical_plan()
             data: PilotTransData = self.pilot_state_manager.execute(sql)
-            assert data is not None
+            if data is None:
+                continue
             plans.append(data.physical_plan)
 
         selected_factor = factors[self.predict(plans)]

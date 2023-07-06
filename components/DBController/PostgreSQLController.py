@@ -1,11 +1,10 @@
 from sqlalchemy import Table, Column, select, func, text, inspect
 from sqlalchemy.exc import OperationalError
 from typing_extensions import deprecated
-
+from common.Util import pilotscope_exit
 from DBController.BaseDBController import BaseDBController
 from Exception.Exception import DBStatementTimeoutException
 from common.Index import Index
-
 
 class PostgreSQLController(BaseDBController):
 
@@ -46,6 +45,7 @@ class PostgreSQLController(BaseDBController):
             if fetch:
                 return result.all()
         except OperationalError as e:
+            pilotscope_exit(e)
             if "canceling statement due to statement timeout" in str(e):
                 raise DBStatementTimeoutException(str(e))
             else:
@@ -158,11 +158,7 @@ class PostgreSQLController(BaseDBController):
         return {k: v for k, v in res if not k.startswith("pg_")}
 
     def _explain(self, sql, comment, execute: bool):
-        try:
-            return self.connection.execute(text(self.get_explain_sql(sql, execute, comment))).all()[0][0][0]
-        except Exception as e:
-            print(e)
-            raise e
+        return self.execute(text(self.get_explain_sql(sql, execute, comment)), True)[0][0][0]
 
 
 class SimulateIndexController:

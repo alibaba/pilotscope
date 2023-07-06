@@ -1,7 +1,6 @@
 from abc import ABC
 
 from Anchor.AnchorEnum import AnchorEnum
-from Factory.DBControllerFectory import DBControllerFactory
 
 
 class BaseAnchorHandler(ABC):

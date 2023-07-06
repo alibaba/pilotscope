@@ -1,11 +1,12 @@
 import json
+from abc import ABC
 
 from pandas import DataFrame
 
 from Dao.PilotTrainDataManager import PilotTrainDataManager
 from DataFetcher.PilotStateManager import PilotStateManager
 from PilotConfig import PilotConfig
-from PilotEvent import PeriodTrainingEvent, PretrainingModelEvent
+from PilotEvent import PeriodTrainingEvent, PretrainingModelEvent, PeriodPerCountCollectionDataEvent
 from PilotModel import PilotModel
 from PilotTransData import PilotTransData
 from examples.Lero.LeroParadigmCardAnchorHandler import scale_card
@@ -89,13 +90,56 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
 
 
 class LeroPeriodTrainingEvent(PeriodTrainingEvent):
-
     def __init__(self, train_data_table, config, per_query_count, model: PilotModel):
         super().__init__(config, per_query_count, model)
         self.train_data_table = train_data_table
 
     def custom_update(self, existed_user_model, pilot_data_manager: PilotTrainDataManager):
+        print("LeroPeriodTrainingEvent!!!")
         data = pilot_data_manager.read_update(self.train_data_table)
         plans1, plans2 = extract_plan_pairs(data)
         lero_model = training_pairwise_pilot_score(existed_user_model, plans1, plans2)
         return lero_model
+
+
+class LeroDynamicCollectEventPeriod(PeriodPerCountCollectionDataEvent):
+    def __init__(self, save_table_name, config, per_query_count):
+        super().__init__(save_table_name,config, per_query_count)
+        self.pilot_state_manager = PilotStateManager(self.config)
+        self.offset = 0
+        self._table_name = save_table_name
+
+    def load_per_sqls(self):
+        sql_all = load_sql("../examples/stats_train.txt")
+        sqls = sql_all[self.offset * self.per_query_count:(self.offset + 1) * self.per_query_count]
+        self.offset += 1
+        return sqls
+
+    def custom_collect(self):
+        print("start to collect data for dynamic training")
+        factors = [0.1, 1, 10]
+        column_2_value_list = []
+        sqls = self.load_per_sqls()
+        for i, sql in enumerate(sqls):
+            print("Collecting {}-th sql".format(i + (self.offset-1)*self.per_query_count))
+            self.pilot_state_manager.fetch_subquery_card()
+            data: PilotTransData = self.pilot_state_manager.execute(sql)
+            if data is None:
+                continue
+            subquery_2_card = data.subquery_2_card
+            for f in factors:
+                column_2_value = {}
+                scale_subquery_2_card = scale_card(subquery_2_card, f)
+                self.pilot_state_manager.set_card(scale_subquery_2_card)
+                self.pilot_state_manager.fetch_physical_plan()
+                self.pilot_state_manager.fetch_execution_time()
+                data: PilotTransData = self.pilot_state_manager.execute(sql)
+                if data is None:
+                    continue
+                column_2_value["sql"] = sql
+                column_2_value["plan"] = data.physical_plan
+                column_2_value["time"] = data.execution_time
+                column_2_value["scale"] = f
+                column_2_value_list.append(column_2_value)
+        return column_2_value_list
+

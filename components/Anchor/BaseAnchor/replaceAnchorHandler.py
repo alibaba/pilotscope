@@ -6,8 +6,6 @@ from DBController.BaseDBController import BaseDBController
 from PilotEnum import ReplaceAnchorTriggerEnum
 from common.Index import Index
 from PilotEnum import DatabaseEnum
-from DBController.PostgreSQLController import PostgreSQLController
-
 
 class ReplaceAnchorHandler(BaseAnchorHandler):
 

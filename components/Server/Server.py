@@ -49,6 +49,7 @@ class ServerManager:
         self.port = port
         self.httpd = None
         self._start_server(url, port)
+        print("server url is {}, port is {}".format(url,port))
 
     def _start_server(self, url, port):
         server_address = (url, port)
@@ -74,10 +75,12 @@ class ServerManager:
             if tid not in tid_2_data:
                 timeout_stop = not cond.wait(timeout)
 
+
         if timeout_stop:
             raise HttpReceiveTimeoutException()
 
         return tid_2_data[tid]
+
 
 
 class RequestHandler(BaseHTTPRequestHandler):

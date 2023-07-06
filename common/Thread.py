@@ -15,7 +15,6 @@ class ValueThread(Thread):
             try:
                 self.result = self._target(*self._args, **self._kwargs)
             except Exception as e:
-                pilotscope_exit()
                 raise e
 
     def join(self, timeout=None):
