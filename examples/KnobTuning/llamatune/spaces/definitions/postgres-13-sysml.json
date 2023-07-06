@@ -1,0 +1,1088 @@
+[
+    {
+        "id": 8,
+        "name": "autovacuum",
+        "type": "enum",
+        "default": "on",
+        "description": "Starts the autovacuum subprocess",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 9,
+        "name": "autovacuum_analyze_scale_factor",
+        "type": "real",
+        "default": 0.1,
+        "description": "Number of tuple inserts, updates, or deletes prior to analyze as a fraction of reltuples",
+        "min": 0.0,
+        "max": 100.0
+    },
+    {
+        "id": 10,
+        "name": "autovacuum_analyze_threshold",
+        "type": "integer",
+        "default": 50,
+        "description": "Minimum number of tuple inserts, updates, or deletes prior to analyze",
+        "min": 0,
+        "max": 1000
+    },
+    {
+        "id": 11,
+        "name": "autovacuum_freeze_max_age",
+        "type": "integer",
+        "default": 200000000,
+        "description": "Age at which to autovacuum a table to prevent transaction ID wraparound",
+        "min": 100000,
+        "max": 2000000000
+    },
+    {
+        "id": 12,
+        "name": "autovacuum_max_workers",
+        "type": "integer",
+        "default": 3,
+        "description": "Sets the maximum number of simultaneously running autovacuum worker processes",
+        "min": 1,
+        "max": 10000
+    },
+    {
+        "id": 13,
+        "name": "autovacuum_multixact_freeze_max_age",
+        "type": "integer",
+        "default": 400000000,
+        "description": "Multixact age at which to autovacuum a table to prevent multixact wraparound",
+        "min": 10000,
+        "max": 2000000000
+    },
+    {
+        "id": 14,
+        "name": "autovacuum_naptime",
+        "type": "integer",
+        "default": 60,
+        "description": "Time to sleep between autovacuum runs",
+        "min": 1,
+        "max": 2147483
+    },
+    {
+        "id": 15,
+        "name": "autovacuum_vacuum_cost_delay",
+        "type": "integer",
+        "default": 2,
+        "description": "Vacuum cost delay in milliseconds, for autovacuum",
+        "min": -1,
+        "max": 100
+    },
+    {
+        "id": 16,
+        "name": "autovacuum_vacuum_cost_limit",
+        "type": "integer",
+        "default": -1,
+        "description": "Vacuum cost amount available before napping, for autovacuum",
+        "min": -1,
+        "max": 10000
+    },
+    {
+        "id": 17,
+        "name": "autovacuum_vacuum_insert_scale_factor",
+        "type": "real",
+        "default": 0.2,
+        "description": "Number of tuple inserts prior to vacuum as a fraction of reltuples",
+        "min": 0.0,
+        "max": 100.0
+    },
+    {
+        "id": 18,
+        "name": "autovacuum_vacuum_insert_threshold",
+        "type": "integer",
+        "default": 1000,
+        "description": "Minimum number of tuple inserts prior to vacuum, or -1 to disable insert vacuums",
+        "min": -1,
+        "max": 100000
+    },
+    {
+        "id": 19,
+        "name": "autovacuum_vacuum_scale_factor",
+        "type": "real",
+        "default": 0.2,
+        "description": "Number of tuple updates or deletes prior to vacuum as a fraction of reltuples",
+        "min": 0.0,
+        "max": 100.0
+    },
+    {
+        "id": 20,
+        "name": "autovacuum_vacuum_threshold",
+        "type": "integer",
+        "default": 50,
+        "description": "Minimum number of tuple updates or deletes prior to vacuum",
+        "min": 0,
+        "max": 2147483647
+    },
+    {
+        "id": 21,
+        "name": "autovacuum_work_mem",
+        "type": "integer",
+        "default": -1,
+        "description": "Sets the maximum memory to be used by each autovacuum worker process",
+        "min": -1,
+        "max": 1048576
+    },
+    {
+        "id": 22,
+        "name": "backend_flush_after",
+        "type": "integer",
+        "default": 0,
+        "description": "Number of pages after which previously performed writes are flushed to disk",
+        "min": 0,
+        "max": 256
+    },
+    {
+        "id": 25,
+        "name": "bgwriter_delay",
+        "type": "integer",
+        "default": 200,
+        "description": "Background writer sleep time between rounds",
+        "min": 10,
+        "max": 4000
+    },
+    {
+        "id": 26,
+        "name": "bgwriter_flush_after",
+        "type": "integer",
+        "default": 64,
+        "description": "Number of pages after which previously performed writes are flushed to disk",
+        "min": 0,
+        "max": 256
+    },
+    {
+        "id": 27,
+        "name": "bgwriter_lru_maxpages",
+        "type": "integer",
+        "default": 100,
+        "description": "Background writer maximum number of LRU pages to flush per round",
+        "min": 0,
+        "max": 1000
+    },
+    {
+        "id": 28,
+        "name": "bgwriter_lru_multiplier",
+        "type": "real",
+        "default": 2.0,
+        "description": "Multiple of the average buffer usage to free per round",
+        "min": 0.0,
+        "max": 8.0
+    },
+    {
+        "id": 33,
+        "name": "checkpoint_completion_target",
+        "type": "real",
+        "default": 0.5,
+        "description": "Time spent flushing dirty buffers during checkpoint, as fraction of checkpoint interval",
+        "min": 0.0,
+        "max": 1.0
+    },
+    {
+        "id": 34,
+        "name": "checkpoint_flush_after",
+        "type": "integer",
+        "default": 32,
+        "description": "Number of pages after which previously performed writes are flushed to disk",
+        "min": 0,
+        "max": 256
+    },
+    {
+        "id": 35,
+        "name": "checkpoint_timeout",
+        "type": "integer",
+        "default": 300,
+        "description": "Sets the maximum time between automatic WAL checkpoints",
+        "min": 30,
+        "max": 86400
+    },
+    {
+        "id": 40,
+        "name": "commit_delay",
+        "type": "integer",
+        "default": 0,
+        "description": "Sets the delay in microseconds between transaction commit and flushing WAL to disk",
+        "min": 0,
+        "max": 4096
+    },
+    {
+        "id": 41,
+        "name": "commit_siblings",
+        "type": "integer",
+        "default": 5,
+        "description": "Sets the minimum concurrent open transactions before performing commit_delay",
+        "min": 0,
+        "max": 16
+    },
+    {
+        "id": 44,
+        "name": "cpu_index_tuple_cost",
+        "type": "real",
+        "default": 0.005,
+        "description": "Sets the planner's estimate of the cost of processing each index entry during an index scan",
+        "min": 0.0,
+        "max": 4.0
+    },
+    {
+        "id": 45,
+        "name": "cpu_operator_cost",
+        "type": "real",
+        "default": 0.0025,
+        "description": "Sets the planner's estimate of the cost of processing each operator or function call",
+        "min": 0.0,
+        "max": 4.0
+    },
+    {
+        "id": 46,
+        "name": "cpu_tuple_cost",
+        "type": "real",
+        "default": 0.01,
+        "description": "Sets the planner's estimate of the cost of processing each tuple (row)",
+        "min": 0.0,
+        "max": 4.0
+    },
+    {
+        "id": 47,
+        "name": "cursor_tuple_fraction",
+        "type": "real",
+        "default": 0.1,
+        "description": "Sets the planner's estimate of the fraction of a cursor's rows that will be retrieved",
+        "min": 0.0,
+        "max": 1.0
+    },
+    {
+        "id": 49,
+        "name": "data_sync_retry",
+        "type": "enum",
+        "default": "off",
+        "description": "Whether to continue running after a failure to sync data files",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 52,
+        "name": "deadlock_timeout",
+        "type": "integer",
+        "default": 1000,
+        "description": "Sets the time to wait on a lock before checking for deadlock",
+        "min": 1,
+        "max": 5000
+    },
+    {
+        "id": 57,
+        "name": "default_statistics_target",
+        "type": "integer",
+        "default": 100,
+        "description": "Sets the default statistics target",
+        "min": 1,
+        "max": 5120
+    },
+    {
+        "id": 66,
+        "name": "effective_cache_size",
+        "type": "integer",
+        "default": 524288,
+        "description": "Sets the planner's assumption about the total size of the data caches",
+        "min": 1,
+        "max": 2097152
+    },
+    {
+        "id": 67,
+        "name": "effective_io_concurrency",
+        "type": "integer",
+        "default": 1,
+        "description": "Number of simultaneous requests that can be handled efficiently by the disk subsystem",
+        "min": 0,
+        "max": 512
+    },
+    {
+        "id": 68,
+        "name": "enable_bitmapscan",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables the planner's use of bitmap-scan plans",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 69,
+        "name": "enable_gathermerge",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables the planner's use of gather merge plans",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 70,
+        "name": "enable_hashagg",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables the planner's use of hashed aggregation plans",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 71,
+        "name": "enable_hashjoin",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables the planner's use of hash join plans",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 72,
+        "name": "enable_incremental_sort",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables the planner's use of incremental sort steps",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 73,
+        "name": "enable_indexonlyscan",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables the planner's use of index-only-scan plans",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 74,
+        "name": "enable_indexscan",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables the planner's use of index-scan plans",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 75,
+        "name": "enable_material",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables the planner's use of materialization",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 76,
+        "name": "enable_mergejoin",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables the planner's use of merge join plans",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 77,
+        "name": "enable_nestloop",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables the planner's use of nested-loop join plans",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 78,
+        "name": "enable_parallel_append",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables the planner's use of parallel append plans",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 79,
+        "name": "enable_parallel_hash",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables the planner's use of parallel hash plans",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 80,
+        "name": "enable_partition_pruning",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables plan-time and run-time partition pruning",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 81,
+        "name": "enable_partitionwise_aggregate",
+        "type": "enum",
+        "default": "off",
+        "description": "Enables partitionwise aggregation and grouping",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 82,
+        "name": "enable_partitionwise_join",
+        "type": "enum",
+        "default": "off",
+        "description": "Enables partitionwise join",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 83,
+        "name": "enable_seqscan",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables the planner's use of sequential-scan plans",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 84,
+        "name": "enable_sort",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables the planner's use of explicit sort steps",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 85,
+        "name": "enable_tidscan",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables the planner's use of TID scan plans",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 92,
+        "name": "from_collapse_limit",
+        "type": "integer",
+        "default": 8,
+        "description": "Sets the FROM-list size beyond which subqueries are not collapsed",
+        "min": 1,
+        "max": 50
+    },
+    {
+        "id": 94,
+        "name": "full_page_writes",
+        "type": "enum",
+        "default": "on",
+        "description": "Writes full pages to WAL when first modified after a checkpoint",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 95,
+        "name": "geqo",
+        "type": "enum",
+        "default": "on",
+        "description": "Enables genetic query optimization",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 96,
+        "name": "geqo_effort",
+        "type": "integer",
+        "default": 5,
+        "description": "GEQO: effort is used to set the default for other GEQO parameters",
+        "min": 1,
+        "max": 10
+    },
+    {
+        "id": 97,
+        "name": "geqo_generations",
+        "type": "integer",
+        "default": 0,
+        "description": "GEQO: number of iterations of the algorithm",
+        "min": 0,
+        "max": 1000
+    },
+    {
+        "id": 98,
+        "name": "geqo_pool_size",
+        "type": "integer",
+        "default": 0,
+        "description": "GEQO: number of individuals in the population",
+        "min": 0,
+        "max": 1000
+    },
+    {
+        "id": 99,
+        "name": "geqo_seed",
+        "type": "real",
+        "default": 0.0,
+        "description": "GEQO: seed for random path selection",
+        "min": 0.0,
+        "max": 1.0
+    },
+    {
+        "id": 100,
+        "name": "geqo_selection_bias",
+        "type": "real",
+        "default": 2.0,
+        "description": "GEQO: selective pressure within the population",
+        "min": 1.5,
+        "max": 2.0
+    },
+    {
+        "id": 101,
+        "name": "geqo_threshold",
+        "type": "integer",
+        "default": 12,
+        "description": "Sets the threshold of FROM items beyond which GEQO is used",
+        "min": 2,
+        "max": 50
+    },
+    {
+        "id": 104,
+        "name": "hash_mem_multiplier",
+        "type": "real",
+        "default": 1.0,
+        "description": "Multiple of work_mem to use for hash tables",
+        "min": 1.0,
+        "max": 50.0
+    },
+    {
+        "id": 116,
+        "name": "jit_above_cost",
+        "type": "integer",
+        "default": 100000,
+        "description": "Perform JIT compilation if query is more expensive",
+        "min": -1,
+        "max": 1000000
+    },
+    {
+        "id": 120,
+        "name": "jit_inline_above_cost",
+        "type": "integer",
+        "default": 500000,
+        "description": "Perform JIT inlining if query is more expensive",
+        "min": -1,
+        "max": 5000000
+    },
+    {
+        "id": 121,
+        "name": "jit_optimize_above_cost",
+        "type": "integer",
+        "default": 500000,
+        "description": "Optimize JITed functions if query is more expensive",
+        "min": -1,
+        "max": 5000000
+    },
+    {
+        "id": 125,
+        "name": "join_collapse_limit",
+        "type": "integer",
+        "default": 8,
+        "description": "Sets the FROM-list size beyond which JOIN constructs are not flattened",
+        "min": 1,
+        "max": 50
+    },
+    {
+        "id": 149,
+        "name": "logical_decoding_work_mem",
+        "type": "integer",
+        "default": 65536,
+        "description": "Sets the maximum memory to be used for logical decoding",
+        "min": 64,
+        "max": 1048576
+    },
+    {
+        "id": 170,
+        "name": "maintenance_io_concurrency",
+        "type": "integer",
+        "default": 10,
+        "description": "A variant of effective_io_concurrency that is used for maintenance work",
+        "min": 0,
+        "max": 512
+    },
+    {
+        "id": 171,
+        "name": "maintenance_work_mem",
+        "type": "integer",
+        "default": 65536,
+        "description": "Sets the maximum memory to be used for maintenance operations",
+        "min": 1024,
+        "max": 1048576
+    },
+    {
+        "id": 172,
+        "name": "max_connections",
+        "type": "integer",
+        "default": 100,
+        "description": "Sets the maximum number of concurrent connections",
+        "min": 5,
+        "max": 10000
+    },
+    {
+        "id": 173,
+        "name": "max_files_per_process",
+        "type": "integer",
+        "default": 1000,
+        "description": "Sets the maximum number of simultaneously open files for each server process",
+        "min": 64,
+        "max": 50000
+    },
+    {
+        "id": 174,
+        "name": "max_locks_per_transaction",
+        "type": "integer",
+        "default": 64,
+        "description": "Sets the maximum number of locks per transaction",
+        "min": 10,
+        "max": 1024
+    },
+    {
+        "id": 176,
+        "name": "max_parallel_maintenance_workers",
+        "type": "integer",
+        "default": 2,
+        "description": "Sets the maximum number of parallel processes per maintenance operation",
+        "min": 0,
+        "max": 256
+    },
+    {
+        "id": 177,
+        "name": "max_parallel_workers",
+        "type": "integer",
+        "default": 8,
+        "description": "Sets the maximum number of parallel workers that can be active at one time",
+        "min": 0,
+        "max": 256
+    },
+    {
+        "id": 178,
+        "name": "max_parallel_workers_per_gather",
+        "type": "integer",
+        "default": 2,
+        "description": "Sets the maximum number of parallel processes per executor node",
+        "min": 0,
+        "max": 256
+    },
+    {
+        "id": 179,
+        "name": "max_pred_locks_per_page",
+        "type": "integer",
+        "default": 2,
+        "description": "Sets the maximum number of predicate-locked tuples per page",
+        "min": 0,
+        "max": 1024
+    },
+    {
+        "id": 180,
+        "name": "max_pred_locks_per_relation",
+        "type": "integer",
+        "default": -2,
+        "description": "Sets the maximum number of predicate-locked pages and tuples per relation",
+        "min": -100,
+        "max": 1024
+    },
+    {
+        "id": 181,
+        "name": "max_pred_locks_per_transaction",
+        "type": "integer",
+        "default": 64,
+        "description": "Sets the maximum number of predicate locks per transaction",
+        "min": 10,
+        "max": 1024
+    },
+    {
+        "id": 182,
+        "name": "max_prepared_transactions",
+        "type": "integer",
+        "default": 0,
+        "description": "Sets the maximum number of simultaneously prepared transactions",
+        "min": 0,
+        "max": 1024
+    },
+    {
+        "id": 185,
+        "name": "max_stack_depth",
+        "type": "integer",
+        "default": 100,
+        "description": "Sets the maximum stack depth, in kilobytes",
+        "min": 100,
+        "max": 7680
+    },
+    {
+        "id": 190,
+        "name": "max_wal_size",
+        "type": "integer",
+        "default": 1024,
+        "description": "Sets the WAL size that triggers a checkpoint",
+        "min": 2,
+        "max": 4096
+    },
+    {
+        "id": 191,
+        "name": "max_worker_processes",
+        "type": "integer",
+        "default": 8,
+        "description": "Maximum number of concurrent worker processes",
+        "min": 0,
+        "max": 256
+    },
+    {
+        "id": 192,
+        "name": "min_parallel_index_scan_size",
+        "type": "integer",
+        "default": 64,
+        "description": "Sets the minimum amount of index data for a parallel scan",
+        "min": 0,
+        "max": 8192
+    },
+    {
+        "id": 193,
+        "name": "min_parallel_table_scan_size",
+        "type": "integer",
+        "default": 1024,
+        "description": "Sets the minimum amount of table data for a parallel scan",
+        "min": 0,
+        "max": 131072
+    },
+    {
+        "id": 194,
+        "name": "min_wal_size",
+        "type": "integer",
+        "default": 80,
+        "description": "Sets the minimum size to shrink the WAL to",
+        "min": 2,
+        "max": 256
+    },
+    {
+        "id": 195,
+        "name": "old_snapshot_threshold",
+        "type": "integer",
+        "default": -1,
+        "description": "Time before a snapshot is too old to read pages changed after the snapshot was taken",
+        "min": -1,
+        "max": 86400
+    },
+    {
+        "id": 197,
+        "name": "parallel_leader_participation",
+        "type": "enum",
+        "default": "on",
+        "description": "Controls whether Gather and Gather Merge also run subplans",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 198,
+        "name": "parallel_setup_cost",
+        "type": "real",
+        "default": 1000.0,
+        "description": "Sets the planner's estimate of the cost of starting up worker processes for parallel query",
+        "min": 0.0,
+        "max": 2500.0
+    },
+    {
+        "id": 199,
+        "name": "parallel_tuple_cost",
+        "type": "real",
+        "default": 0.1,
+        "description": "Sets the planner's estimate of the cost of passing each tuple (row) from worker to master backend",
+        "min": 0.0,
+        "max": 4.0
+    },
+    {
+        "id": 208,
+        "name": "quote_all_identifiers",
+        "type": "enum",
+        "default": "off",
+        "description": "When generating SQL fragments, quote all identifiers",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 209,
+        "name": "random_page_cost",
+        "type": "real",
+        "default": 4.0,
+        "description": "Sets the planner's estimate of the cost of a nonsequentially fetched disk page",
+        "min": 0.0,
+        "max": 8.0
+    },
+    {
+        "id": 224,
+        "name": "seq_page_cost",
+        "type": "real",
+        "default": 1.0,
+        "description": "Sets the planner's estimate of the cost of a sequentially fetched disk page",
+        "min": 0.0,
+        "max": 4.0
+    },
+    {
+        "id": 227,
+        "name": "shared_buffers",
+        "type": "integer",
+        "default": 1024,
+        "description": "Sets the number of shared memory buffers used by the server",
+        "min": 16,
+        "max": 1048576
+    },
+    {
+        "id": 258,
+        "name": "temp_buffers",
+        "type": "integer",
+        "default": 1024,
+        "description": "Sets the maximum number of temporary buffers used by each session",
+        "min": 100,
+        "max": 65536
+    },
+    {
+        "id": 259,
+        "name": "temp_file_limit",
+        "type": "integer",
+        "default": -1,
+        "description": "Limits the total size of all temporary files used by each process",
+        "min": -1,
+        "max": 100000
+    },
+    {
+        "id": 280,
+        "name": "vacuum_cost_delay",
+        "type": "integer",
+        "default": 0,
+        "description": "Vacuum cost delay in milliseconds",
+        "min": 0,
+        "max": 100
+    },
+    {
+        "id": 281,
+        "name": "vacuum_cost_limit",
+        "type": "integer",
+        "default": 200,
+        "description": "Vacuum cost amount available before napping",
+        "min": 1,
+        "max": 10000
+    },
+    {
+        "id": 282,
+        "name": "vacuum_cost_page_dirty",
+        "type": "integer",
+        "default": 20,
+        "description": "Vacuum cost for a page dirtied by vacuum",
+        "min": 0,
+        "max": 10000
+    },
+    {
+        "id": 283,
+        "name": "vacuum_cost_page_hit",
+        "type": "integer",
+        "default": 1,
+        "description": "Vacuum cost for a page found in the buffer cache",
+        "min": 0,
+        "max": 10000
+    },
+    {
+        "id": 284,
+        "name": "vacuum_cost_page_miss",
+        "type": "integer",
+        "default": 10,
+        "description": "Vacuum cost for a page not found in the buffer cache",
+        "min": 0,
+        "max": 10000
+    },
+    {
+        "id": 286,
+        "name": "vacuum_freeze_min_age",
+        "type": "integer",
+        "default": 50000000,
+        "description": "Minimum age at which VACUUM should freeze a table row",
+        "min": 0,
+        "max": 1000000000
+    },
+    {
+        "id": 287,
+        "name": "vacuum_freeze_table_age",
+        "type": "integer",
+        "default": 150000000,
+        "description": "Age at which VACUUM should scan whole table to freeze tuples",
+        "min": 0,
+        "max": 2000000000
+    },
+    {
+        "id": 288,
+        "name": "vacuum_multixact_freeze_min_age",
+        "type": "integer",
+        "default": 5000000,
+        "description": "Minimum age at which VACUUM should freeze a MultiXactId in a table row",
+        "min": 0,
+        "max": 1000000000
+    },
+    {
+        "id": 289,
+        "name": "vacuum_multixact_freeze_table_age",
+        "type": "integer",
+        "default": 150000000,
+        "description": "Multixact age at which VACUUM should scan whole table to freeze tuples",
+        "min": 0,
+        "max": 2000000000
+    },
+    {
+        "id": 290,
+        "name": "wal_buffers",
+        "type": "integer",
+        "default": -1,
+        "description": "Sets the number of disk-page buffers in shared memory for WAL",
+        "min": -1,
+        "max": 65536
+    },
+    {
+        "id": 291,
+        "name": "wal_compression",
+        "type": "enum",
+        "default": "off",
+        "description": "Compresses full-page writes written in WAL file",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 293,
+        "name": "wal_init_zero",
+        "type": "enum",
+        "default": "on",
+        "description": "Writes zeroes to new WAL files before first use",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 296,
+        "name": "wal_log_hints",
+        "type": "enum",
+        "default": "off",
+        "description": "Writes full pages to WAL when first modified after a checkpoint, even for a non-critical modification",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 300,
+        "name": "wal_recycle",
+        "type": "enum",
+        "default": "on",
+        "description": "Recycles WAL files by renaming them",
+        "choices": [
+            "on",
+            "off"
+        ]
+    },
+    {
+        "id": 303,
+        "name": "wal_skip_threshold",
+        "type": "integer",
+        "default": 2048,
+        "description": "Size of new file to fsync instead of writing WAL",
+        "min": 0,
+        "max": 131072
+    },
+    {
+        "id": 305,
+        "name": "wal_writer_delay",
+        "type": "integer",
+        "default": 200,
+        "description": "Time between WAL flushes performed in the WAL writer",
+        "min": 1,
+        "max": 4096
+    },
+    {
+        "id": 306,
+        "name": "wal_writer_flush_after",
+        "type": "integer",
+        "default": 128,
+        "description": "Amount of WAL written out by WAL writer that triggers a flush",
+        "min": 0,
+        "max": 32768
+    },
+    {
+        "id": 307,
+        "name": "work_mem",
+        "type": "integer",
+        "default": 4096,
+        "description": "Sets the maximum memory to be used for query workspaces",
+        "min": 64,
+        "max": 262144
+    },
+    {
+        "id": 308,
+        "name": "pgsysml.planner_mode",
+        "type": "enum",
+        "default": "ml",
+        "description": "Baihe planner mode, 0: pg_planner, 1: ml_planner, 2:atomic",
+        "choices": [
+            "pg",
+            "ml"
+        ]
+    },
+    {
+        "id": 309,
+        "name": "pgsysml.task_name",
+        "type": "enum",
+        "default": "'BatchCardEstTask'",
+        "description": "set the Baihe task name to start.",
+        "choices": [
+            "'BatchCardEstTask'",
+            "'LeroTask'"
+        ]
+    }
+]

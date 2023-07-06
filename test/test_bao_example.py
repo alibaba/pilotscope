@@ -1,7 +1,7 @@
 import sys
-sys.path.append("/PilotScopeCore/")
-sys.path.append("/PilotScopeCore/components")
-sys.path.append("/PilotScopeCore/examples/Bao/source")
+sys.path.append("../")
+sys.path.append("../components")
+sys.path.append("../examples/Bao/source")
 import unittest
 
 from Factory.SchedulerFactory import SchedulerFactory

@@ -1,0 +1,10 @@
+*.o
+*.so
+*.bpkg
+*.pyc
+*.so
+**__pycache__**
+.vscode
+.deps
+*.csv
+results/*

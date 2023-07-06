@@ -37,7 +37,10 @@ class BaseDBController(ABC):
 
     def disconnect(self):
         if self.connection is not None:
-            self.connection.close()
+            try:
+                self.connection.close()
+            except: # deal with connection already colse
+                pass
 
     @abstractmethod
     def modify_sql_for_ignore_records(self, sql, is_execute):
@@ -146,6 +149,10 @@ class BaseDBController(ABC):
 
     def start(self):
         pass
+    
+    def restart(self):
+        self.shutdown()
+        self.start()
 
     def write_knob_to_file(self, knobs):
         pass

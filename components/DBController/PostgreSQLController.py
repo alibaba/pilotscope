@@ -1,3 +1,4 @@
+import os
 from sqlalchemy import Table, Column, select, func, text, inspect
 from sqlalchemy.exc import OperationalError
 from typing_extensions import deprecated
@@ -7,7 +8,46 @@ from Exception.Exception import DBStatementTimeoutException
 from common.Index import Index
 
 class PostgreSQLController(BaseDBController):
+        
+    instances = set()
 
+    def __new__(cls, *args, **kwargs):
+        instance = super().__new__(cls)
+        cls.instances.add(instance)
+        return instance
+
+    def __del__(self):
+        type(self).instances.remove(self)
+
+    PG_NUM_METRICS = 60
+    PG_STAT_VIEWS = [
+        "pg_stat_archiver", "pg_stat_bgwriter",  # global
+        "pg_stat_database", "pg_stat_database_conflicts",  # local
+        "pg_stat_user_tables", "pg_statio_user_tables",  # local
+        "pg_stat_user_indexes", "pg_statio_user_indexes"  # local
+    ]
+    PG_STAT_VIEWS_LOCAL_DATABASE = ["pg_stat_database", "pg_stat_database_conflicts"]
+    PG_STAT_VIEWS_LOCAL_TABLE = ["pg_stat_user_tables", "pg_statio_user_tables"]
+    PG_STAT_VIEWS_LOCAL_INDEX = ["pg_stat_user_indexes", "pg_statio_user_indexes"]
+    NUMERIC_METRICS = [  # counter
+        # global
+        'buffers_alloc', 'buffers_backend', 'buffers_backend_fsync', 'buffers_checkpoint', 'buffers_clean',
+        'checkpoints_req', 'checkpoints_timed', 'checkpoint_sync_time', 'checkpoint_write_time', 'maxwritten_clean',
+        'archived_count', 'failed_count',
+        # db
+        'blk_read_time', 'blks_hit', 'blks_read', 'blk_write_time', 'conflicts', 'deadlocks', 'temp_bytes',
+        'temp_files', 'tup_deleted', 'tup_fetched', 'tup_inserted', 'tup_returned', 'tup_updated', 'xact_commit',
+        'xact_rollback', 'confl_tablespace', 'confl_lock', 'confl_snapshot', 'confl_bufferpin', 'confl_deadlock',
+        # table
+        'analyze_count', 'autoanalyze_count', 'autovacuum_count', 'heap_blks_hit', 'heap_blks_read', 'idx_blks_hit',
+        'idx_blks_read', 'idx_scan', 'idx_tup_fetch', 'n_dead_tup', 'n_live_tup', 'n_tup_del', 'n_tup_hot_upd',
+        'n_tup_ins', 'n_tup_upd', 'n_mod_since_analyze', 'seq_scan', 'seq_tup_read', 'tidx_blks_hit',
+        'tidx_blks_read',
+        'toast_blks_hit', 'toast_blks_read', 'vacuum_count',
+        # index
+        'idx_blks_hit', 'idx_blks_read', 'idx_scan', 'idx_tup_fetch', 'idx_tup_read'
+    ]
+    
     def __init__(self, config, echo=False, allow_to_create_db=False):
         super().__init__(config, echo, allow_to_create_db)
 
@@ -159,6 +199,101 @@ class PostgreSQLController(BaseDBController):
 
     def _explain(self, sql, comment, execute: bool):
         return self.execute(text(self.get_explain_sql(sql, execute, comment)), True)[0][0][0]
+    
+    # switch user and run
+    def _surun(self, cmd):
+        os.system("su {} -c '{}'".format(self.config.user, cmd))
+    
+    def shutdown(self):
+        self._surun("{} stop -D {}".format(self.config.pg_ctl, self.config.pgdata))
+
+    def start(self):
+        self._surun("{} start -D {}".format(self.config.pg_ctl, self.config.pgdata))
+        for instance in type(self).instances:
+            instance.connect()
+        
+    def status(self):
+        res = os.popen("su {} -c '{} status -D {}'".format(self.config.user,self.config.pg_ctl, self.config.pgdata))
+        return res.read()
+        
+    def write_knob_to_file(self, knobs):
+        with open(self.config.db_config_path, "a") as f:
+            f.write("\n")
+            for k,v in knobs.items():
+                f.write("{} = {}\n".format(k,v))
+
+    def recover_config(self):
+        with open(self.config.backup_db_config_path, "r") as f:
+            db_config_file = f.read()
+        with open(self.config.db_config_path, "w") as f:
+            f.write(db_config_file)
+
+    #NOTE: modified from DBTune (MIT liscense)
+    def get_internal_metrics(self):
+        def parse_helper(valid_variables, view_variables):
+            for view_name, variables in list(view_variables.items()):
+                for var_name, var_value in list(variables.items()):
+                    full_name = '{}.{}'.format(view_name, var_name)
+                    if full_name not in valid_variables:
+                        valid_variables[full_name] = []
+                    valid_variables[full_name].append(var_value)
+            return valid_variables
+        try:
+            metrics_dict = {
+                'global': {},
+                'local': {
+                    'db': {},
+                    'table': {},
+                    'index': {}
+                }
+            }
+
+            for view in self.PG_STAT_VIEWS:
+                sql = 'SELECT * from {}'.format(view)
+                cur=self.connection.connection.cursor()
+                cur.execute(sql)
+                results = cur.fetchall()
+                columns = [col[0] for col in cur.description]
+                results = [dict(zip(columns, row)) for row in results]
+                if view in ["pg_stat_archiver", "pg_stat_bgwriter"]:
+                    metrics_dict['global'][view] = results[0]
+                else:
+                    if view in self.PG_STAT_VIEWS_LOCAL_DATABASE:
+                        type = 'db'
+                        type_key = 'datname'
+                    elif view in self.PG_STAT_VIEWS_LOCAL_TABLE:
+                        type = 'table'
+                        type_key = 'relname'
+                    elif view in self.PG_STAT_VIEWS_LOCAL_INDEX:
+                        type = 'index'
+                        type_key = 'relname'
+                    metrics_dict['local'][type][view] = {}
+                    for res in results:
+                        type_name = res[type_key]
+                        metrics_dict['local'][type][view][type_name] = res
+
+            metrics = {}
+            for scope, sub_vars in list(metrics_dict.items()):
+                if scope == 'global':
+                    metrics.update(parse_helper(metrics, sub_vars))
+                elif scope == 'local':
+                    for _, viewnames in list(sub_vars.items()):
+                        for viewname, objnames in list(viewnames.items()):
+                            for _, view_vars in list(objnames.items()):
+                                metrics.update(parse_helper(metrics, {viewname: view_vars}))
+
+            # Combine values
+            valid_metrics = {}
+            for name, values in list(metrics.items()):
+                if name.split('.')[-1] in self.NUMERIC_METRICS:
+                    values = [float(v) for v in values if v is not None]
+                    if len(values) == 0:
+                        valid_metrics[name] = 0
+                    else:
+                        valid_metrics[name] = sum(values)
+        except Exception as ex:
+            print(ex)
+        return valid_metrics
 
 
 class SimulateIndexController:

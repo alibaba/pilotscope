@@ -30,6 +30,12 @@ class PilotConfig:
         self.training_sql_file = "../examples/stats_train.txt"
         self.test_sql_file = "../examples/stats_test.txt"
 
+        # for local postgres
+        self.pg_ctl = "pg_ctl"
+        self.pgdata = "~"
+        self.db_config_path = "/var/lib/pgsql/13.1/data/postgresql.conf"
+        self.backup_db_config_path = "postgresql-13.1.conf"
+        
     def set_db_type(self, db):
         self.db_type = db
         pass
