@@ -7,6 +7,10 @@ from examples.ExampleConfig import get_time_statistic_xlsx_file_path, get_time_s
 sys.path.append("/PilotScopeCore/")
 sys.path.append("/PilotScopeCore/components")
 sys.path.append("/PilotScopeCore/examples/Bao/source")
+sys.path.append("../")
+sys.path.append("../components")
+sys.path.append("../examples/Bao/source")
+
 import unittest
 
 from Factory.SchedulerFactory import SchedulerFactory
@@ -92,7 +96,7 @@ class BaoTest(unittest.TestCase):
     def draw_time_statistic(self):
         name_2_value = TimeStatistic.get_average_data()
         # name_2_value = TimeStatistic.get_sum_data()
-        Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db),is_rotation=True)
+        Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db), is_rotation=True)
 
     def load_training_sqls(self):
         return load_sql("../examples/stats_train_10_sql.txt")

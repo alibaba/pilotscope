@@ -1,0 +1,13 @@
+# grpcio
+# grpcio_tools
+pandas
+prettytable>=2
+scikit-learn
+
+# required
+ConfigSpace==0.4.20
+smac==1.1.0
+numpy
+
+# cpu-only torch
+# torch==1.10.1+cpu
