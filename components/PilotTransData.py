@@ -16,9 +16,15 @@ class PilotTransData:
         self.buffercache = None
         self.subquery_2_card: dict = {}
 
+        # experiment
+        self.parser_time = None
+        self.http_time = None
+        self.anchor_names = []
+        self.anchor_times = []
+
     def __str__(self) -> str:
-        return "\n".join([str(k)+": "+str(v) for k,v in self.__dict__.items()])
-    
+        return "\n".join([str(k) + ": " + str(v) for k, v in self.__dict__.items()])
+
     @classmethod
     def parse_2_instance(cls, target_json: str, sql):
         if target_json is str:

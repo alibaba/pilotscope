@@ -1,3 +1,4 @@
+import time
 from typing import Optional, List
 
 from Anchor.BaseAnchor.FetchAnchorHandler import *
@@ -9,14 +10,17 @@ from Factory.AnchorHandlerFactory import AnchorHandlerFactory
 from Factory.DBControllerFectory import DBControllerFactory
 from Factory.DataFetchFactory import DataFetchFactory
 from PilotConfig import PilotConfig
-from PilotEnum import FetchMethod
+from PilotEnum import FetchMethod, ExperimentTimeEnum
 from PilotTransData import PilotTransData
+from common.TimeStatistic import TimeStatistic
 from common.Util import pilotscope_exit, extract_anchor_handlers, extract_handlers
+
 
 class PilotStateManager:
 
     def __init__(self, config: PilotConfig) -> None:
         self.db_controller = DBControllerFactory.get_db_controller(config)
+
         self.anchor_to_handlers = {}
         self.config = config
         self.port = None
@@ -35,6 +39,7 @@ class PilotStateManager:
         try:
             origin_sql = sql
             enable_receive_pilot_data = self.is_need_to_receive_data(self.anchor_to_handlers)
+
             # create pilot comment
             comment_creator = PilotCommentCreator(enable_receive_pilot_data=enable_receive_pilot_data)
             comment_creator.add_params(self.data_fetcher.get_additional_info())
@@ -51,8 +56,8 @@ class PilotStateManager:
             if self.is_need_to_receive_data(self.anchor_to_handlers):
                 receive_data = self.data_fetcher.wait_until_get_data()
                 data: PilotTransData = PilotTransData.parse_2_instance(receive_data, origin_sql)
+                self._add_detailed_time_for_experiment(data)
                 # fetch data from outer
-                self._fetch_data_from_outer(origin_sql, data)
             else:
                 data = PilotTransData()
 
@@ -70,6 +75,19 @@ class PilotStateManager:
             return None
         except Exception as e:
             raise e
+
+    def _add_detailed_time_for_experiment(self, data: PilotTransData):
+        TimeStatistic.add_time(ExperimentTimeEnum.DB_PARSER, data.parser_time)
+        cur_time = time.time_ns() / 1000000000.0
+        TimeStatistic.add_time(ExperimentTimeEnum.DB_HTTP, float(cur_time - data.http_time))
+        for i in range(len(data.anchor_names)):
+            anchor_name = data.anchor_names[i]
+            anchor_time = data.anchor_times[i]
+            TimeStatistic.add_time(ExperimentTimeEnum.get_anchor_key(anchor_name), float(anchor_time))
+
+        if data.execution_time is not None:
+            TimeStatistic.add_time(ExperimentTimeEnum.SQL_TOTAL_TIME,data.execution_time)
+
 
     def is_need_to_receive_data(self, anchor_2_handlers):
         filter_anchor_2_handlers = self._remove_outer_fetch_anchor(
@@ -197,10 +215,10 @@ class PilotStateManager:
         anchor: RecordFetchAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
                                                                                    AnchorEnum.RECORD_FETCH_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.RECORD_FETCH_ANCHOR] = anchor
-    
+
     def fetch_buffercache(self):
         anchor: BuffercacheFetchAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
-                                                                                         AnchorEnum.BUFFERCACHE_FETCH_ANCHOR)
+                                                                                        AnchorEnum.BUFFERCACHE_FETCH_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.BUFFERCACHE_FETCH_ANCHOR] = anchor
 
     def fetch_real_node_cost(self):

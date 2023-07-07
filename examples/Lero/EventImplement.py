@@ -41,8 +41,9 @@ def extract_plan_pairs(data: DataFrame):
 
 class LeroPretrainingModelEvent(PretrainingModelEvent):
 
-    def __init__(self, config: PilotConfig, bind_model: PilotModel, enable_collection=True, enable_training=True):
-        super().__init__(config, bind_model, enable_collection, enable_training)
+    def __init__(self, config: PilotConfig, bind_model: PilotModel, save_table_name, enable_collection=True,
+                 enable_training=True):
+        super().__init__(config, bind_model, save_table_name, enable_collection, enable_training)
         self.sqls = []
         self.pilot_state_manager = PilotStateManager(self.config)
 
@@ -79,11 +80,8 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
                 column_2_value_list.append(column_2_value)
         return column_2_value_list
 
-    def _get_table_name(self):
-        return "lero_pretraining_collect_data"
-
     def _custom_pretrain_model(self, train_data_manager: PilotTrainDataManager, existed_user_model):
-        data: DataFrame = train_data_manager.read_all(self._get_table_name())
+        data: DataFrame = train_data_manager.read_all(self.save_table_name)
         plans1, plans2 = extract_plan_pairs(data)
         lero_model = training_pairwise_pilot_score(existed_user_model, plans1, plans2)
         return lero_model
@@ -104,7 +102,7 @@ class LeroPeriodTrainingEvent(PeriodTrainingEvent):
 
 class LeroDynamicCollectEventPeriod(PeriodPerCountCollectionDataEvent):
     def __init__(self, save_table_name, config, per_query_count):
-        super().__init__(save_table_name,config, per_query_count)
+        super().__init__(save_table_name, config, per_query_count)
         self.pilot_state_manager = PilotStateManager(self.config)
         self.offset = 0
         self._table_name = save_table_name
@@ -121,7 +119,7 @@ class LeroDynamicCollectEventPeriod(PeriodPerCountCollectionDataEvent):
         column_2_value_list = []
         sqls = self.load_per_sqls()
         for i, sql in enumerate(sqls):
-            print("Collecting {}-th sql".format(i + (self.offset-1)*self.per_query_count))
+            print("Collecting {}-th sql".format(i + (self.offset - 1) * self.per_query_count))
             self.pilot_state_manager.fetch_subquery_card()
             data: PilotTransData = self.pilot_state_manager.execute(sql)
             if data is None:
@@ -142,4 +140,3 @@ class LeroDynamicCollectEventPeriod(PeriodPerCountCollectionDataEvent):
                 column_2_value["scale"] = f
                 column_2_value_list.append(column_2_value)
         return column_2_value_list
-

@@ -2,7 +2,8 @@ import os
 
 from Dao.PilotTrainDataManager import PilotTrainDataManager
 from PilotModel import PilotModel
-from model import BaoRegression
+from examples.Bao.source.model import BaoRegression
+# from model import BaoRegression
 
 
 class BaoPilotModel(PilotModel):
@@ -24,8 +25,8 @@ class BaoPilotModel(PilotModel):
 
     def _load_user_model(self):
         try:
-            bao_model = BaoRegression(have_cache_data = self.have_cache_data)
+            bao_model = BaoRegression(have_cache_data=self.have_cache_data)
             bao_model.load(self.model_path)
         except FileNotFoundError:
-            bao_model = BaoRegression(have_cache_data = self.have_cache_data)
+            bao_model = BaoRegression(have_cache_data=self.have_cache_data)
         return bao_model

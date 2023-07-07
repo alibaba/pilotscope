@@ -6,6 +6,7 @@ from DBController.BaseDBController import BaseDBController
 from Exception.Exception import DBStatementTimeoutException
 from common.Index import Index
 
+
 class PostgreSQLController(BaseDBController):
 
     def __init__(self, config, echo=False, allow_to_create_db=False):

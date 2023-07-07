@@ -1,4 +1,6 @@
 from Anchor.BaseAnchor.FetchAnchorHandler import *
+from PilotEnum import ExperimentTimeEnum
+from common.TimeStatistic import TimeStatistic
 
 
 class PostgreSQLAnchorMixin:
@@ -41,6 +43,7 @@ class PostgreSQLPhysicalPlanFetchAnchorHandler(PhysicalPlanFetchAnchorHandler, P
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
+        TimeStatistic.start(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
         if fill_data.physical_plan is not None:
             return
 
@@ -48,6 +51,7 @@ class PostgreSQLPhysicalPlanFetchAnchorHandler(PhysicalPlanFetchAnchorHandler, P
             anchor_data.physical_plan = db_controller.explain_physical_plan(sql, comment=pilot_comment)
 
         fill_data.physical_plan = anchor_data.physical_plan
+        TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
 
 class PostgreSQLEstimatedCostFetchAnchorHandler(EstimatedCostFetchAnchorHandler, PostgreSQLAnchorMixin):
@@ -62,24 +66,23 @@ class PostgreSQLEstimatedCostFetchAnchorHandler(EstimatedCostFetchAnchorHandler,
 
         fill_data.estimated_cost = anchor_data.physical_plan["Plan"]["Total Cost"]
 
+
 class PostgreSQLBuffercacheFetchAnchorHandler(BuffercacheFetchAnchorHandler, PostgreSQLAnchorMixin):
 
     def __init__(self, config) -> None:
         super().__init__(config)
         self.anchor_name = AnchorEnum.BUFFERCACHE_FETCH_ANCHOR.name
 
-    def add_params_to_db_core(self, params: dict):
-        super().add_params_to_db_core(params)
-
-    def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData, fill_data: PilotTransData):
+    def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
+                         fill_data: PilotTransData):
         if fill_data.buffercache is not None:
             return
 
         if anchor_data.buffercache is None:
             anchor_data.buffercache = db_controller.get_buffercache()
-        else:
-            anchor_data.buffercache = anchor_data.buffercache
+
         fill_data.buffercache = anchor_data.buffercache
+
 
 class PostgreSQLExecutionTimeFetchAnchorHandler(ExecutionTimeFetchAnchorHandler, PostgreSQLAnchorMixin):
 

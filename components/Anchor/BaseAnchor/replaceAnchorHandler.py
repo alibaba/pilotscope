@@ -3,9 +3,11 @@ from typing import List
 from Anchor.AnchorEnum import AnchorEnum
 from Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
 from DBController.BaseDBController import BaseDBController
-from PilotEnum import ReplaceAnchorTriggerEnum
+from PilotEnum import ReplaceAnchorTriggerEnum, ExperimentTimeEnum
 from common.Index import Index
 from PilotEnum import DatabaseEnum
+from common.TimeStatistic import TimeStatistic
+
 
 class ReplaceAnchorHandler(BaseAnchorHandler):
 
@@ -74,8 +76,10 @@ class HintAnchorHandler(ReplaceAnchorHandler):
         self.key_2_value_for_hint = self.user_custom_task(sql)
 
     def execute_before_comment_sql(self, db_controller: BaseDBController):
+        TimeStatistic.start(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
         for hint, value in self.key_2_value_for_hint.items():
             db_controller.execute(db_controller.get_hint_sql(hint, value))
+        TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
     def add_params_to_db_core(self, params: dict):
         pass
@@ -85,7 +89,7 @@ class IndexAnchorHandler(ReplaceAnchorHandler):
 
     def __init__(self, config, indexes: List[Index] = None, drop_other=True) -> None:
         super().__init__(config)
-        self.anchor_name = AnchorEnum.HINT_REPLACE_ANCHOR.name
+        self.anchor_name = AnchorEnum.INDEX_REPLACE_ANCHOR.name
         self.indexes = indexes
         self.drop_other = drop_other
         self.trigger_type = ReplaceAnchorTriggerEnum.WORKLOAD
@@ -95,18 +99,23 @@ class IndexAnchorHandler(ReplaceAnchorHandler):
                            " the modification of workload level should be dealt with event")
 
     def execute_before_comment_sql(self, db_controller: BaseDBController):
+        TimeStatistic.start(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
         if self.is_can_trigger():
             if self.drop_other:
                 db_controller.drop_all_indexes()
             for index in self.indexes:
                 db_controller.create_index(index.get_index_name(), index.table, index.columns)
             self.have_been_triggered = True
+        TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
     def add_params_to_db_core(self, params: dict):
         pass
 
     def roll_back(self, db_controller):
+        TimeStatistic.start(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
         # self.is_can_trigger() is False if indexes has been built
         if not self.is_can_trigger():
             for index in self.indexes:
                 db_controller.drop_index(index.get_index_name())
+        TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
+

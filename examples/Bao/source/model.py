@@ -9,6 +9,7 @@ from sklearn.pipeline import Pipeline
 
 from torch.utils.data import DataLoader
 import net as net
+from common.TimeStatistic import TimeStatistic
 from featurize import TreeFeaturizer
 
 CUDA = torch.cuda.is_available()
@@ -184,7 +185,7 @@ class BaoRegression:
         X = [json.loads(x) if isinstance(x, str) else x for x in X]
 
         X = self.__tree_transform.transform(X)
-        
+
         self.__net.eval()
         pred = self.__net(X).cpu().detach().numpy()
         return self.__pipeline.inverse_transform(pred)

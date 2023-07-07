@@ -112,13 +112,15 @@ class ContinuousCollectionDataEvent(Event):
 
 
 class PretrainingModelEvent(Event):
-    def __init__(self, config: PilotConfig, bind_model: PilotModel, enable_collection=True, enable_training=True):
+    def __init__(self, config: PilotConfig, bind_model: PilotModel, save_table_name, enable_collection=True,
+                 enable_training=True):
         super().__init__(config)
         self.config = config
         self._model: PilotModel = bind_model
         self._train_data_manager = PilotTrainDataManager(config)
         self.enable_collection = enable_collection
         self.enable_training = enable_training
+        self.save_table_name = save_table_name
 
     def async_start(self):
         t = ValueThread(target=self._run, name="pretraining_async_start")
@@ -133,7 +135,7 @@ class PretrainingModelEvent(Event):
     def collect_and_write(self):
         if self.enable_collection:
             column_2_value_list = self._custom_collect_data()
-            table = self._get_table_name()
+            table = self.save_table_name
             self._train_data_manager.save_data_batch(table, column_2_value_list)
 
     def train(self):
@@ -143,10 +145,6 @@ class PretrainingModelEvent(Event):
 
     @abstractmethod
     def _custom_collect_data(self):
-        pass
-
-    @abstractmethod
-    def _get_table_name(self):
         pass
 
     @abstractmethod
@@ -171,3 +169,4 @@ class PeriodicDbControllerEvent(Event):
     @abstractmethod
     def _custom_update(self, db_controller: BaseDBController, training_data_manager: PilotTrainDataManager):
         pass
+

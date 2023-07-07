@@ -1,4 +1,5 @@
 import unittest
+import time
 from http.server import HTTPServer
 
 from Server.Server import RequestHandler
@@ -32,6 +33,12 @@ class MyTestCase(unittest.TestCase):
         # 等待所有线程执行结束
         for t in threads:
             t.join()
+
+    def test2(self):
+        last_time  = time.time()
+        time.sleep(1)
+        cur_time=time.time()
+        print(cur_time-last_time)
 
 
 if __name__ == '__main__':

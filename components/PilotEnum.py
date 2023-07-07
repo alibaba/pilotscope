@@ -53,3 +53,20 @@ class FetchMethod(PilotEnum):
 class TrainSwitchMode(PilotEnum):
     WAIT = 0,
     DB = 1
+
+
+class ExperimentTimeEnum:
+    END_TO_END = "EndToEnd"
+    AI_TASK = "AiTask"
+    WRITE_TABLE = "Write"
+    SQL_TOTAL_TIME = "Sql"
+    Db_SQL_TIME = "DbSql"
+    DB_PARSER = "Parser"
+    DB_HTTP = "Http"
+    ANCHOR = "{}"
+    REMAIN = "Remain"
+    FIND_INDEX = "FindIndex"
+
+    @classmethod
+    def get_anchor_key(cls, anchor_name):
+        return ExperimentTimeEnum.ANCHOR.format(anchor_name.split("_")[0])

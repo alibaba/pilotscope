@@ -108,12 +108,15 @@ class LeroModel():
             self._input_feature_dim = joblib.load(f)
 
         self._net = LeroNet(self._input_feature_dim)
+        self._net.eval()
         if CUDA:
+            self._net.cuda(device)
             self._net.load_state_dict(torch.load(_nn_path(path)))
+            self._net = torch.nn.DataParallel(
+                self._net, device_ids=GPU_LIST)
         else:
             self._net.load_state_dict(torch.load(
                 _nn_path(path), map_location=torch.device('cpu')))
-        self._net.eval()
 
         with open(_feature_generator_path(path), "rb") as f:
             self._feature_generator = joblib.load(f)
@@ -211,7 +214,7 @@ class LeroModel():
 
         tree = None
         if CUDA:
-            tree = self._net.build_trees(x)
+            tree = self._net.module.build_trees(x)
         else:
             tree = self._net.build_trees(x)
 
@@ -276,8 +279,8 @@ class LeroModelPairWise(LeroModel):
 
                 tree_x1, tree_x2 = None, None
                 if CUDA:
-                    tree_x1 = self._net.build_trees(x1)
-                    tree_x2 = self._net.build_trees(x2)
+                    tree_x1 = self._net.module.build_trees(x1)
+                    tree_x2 = self._net.module.build_trees(x2)
                 else:
                     tree_x1 = self._net.build_trees(x1)
                     tree_x2 = self._net.build_trees(x2)

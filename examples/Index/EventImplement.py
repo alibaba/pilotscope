@@ -1,6 +1,8 @@
 from DBController.BaseDBController import BaseDBController
 from Dao.PilotTrainDataManager import PilotTrainDataManager
+from PilotEnum import ExperimentTimeEnum
 from PilotEvent import PeriodicDbControllerEvent
+from common.TimeStatistic import TimeStatistic
 from examples.utils import load_sql
 from selection.algorithms.extend_algorithm import ExtendAlgorithm
 from selection.index import Index
@@ -33,6 +35,7 @@ class IndexPeriodicDbControllerEvent(PeriodicDbControllerEvent):
         return load_sql(self.config.training_sql_file)[0:10]
 
     def _custom_update(self, db_controller: BaseDBController, training_data_manager: PilotTrainDataManager):
+        TimeStatistic.start(ExperimentTimeEnum.FIND_INDEX)
         db_controller.drop_all_indexes()
         sqls = self._load_sql()
         workload = to_workload(sqls)
@@ -45,3 +48,5 @@ class IndexPeriodicDbControllerEvent(PeriodicDbControllerEvent):
         for index in indexes:
             columns = [c.name for c in index.columns]
             db_controller.create_index(index.index_idx(), index.table().name, columns)
+        TimeStatistic.end(ExperimentTimeEnum.FIND_INDEX)
+
