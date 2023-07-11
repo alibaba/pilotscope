@@ -1,0 +1,12 @@
+matplotlib
+requests
+sqlalchemy
+sqlalchemy_utils
+apscheduler
+joblib
+scipy
+scikit-learn
+prettytable>=2
+ConfigSpace==0.4.20
+smac==1.1.0
+psycopg2
