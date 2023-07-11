@@ -21,9 +21,9 @@ class Drawer:
         if is_rotation:
             plt.xticks(rotation=45)
         plt.subplots_adjust(bottom=0.2)
-        plt.show()
         # 保存图像
         plt.savefig('./Results/{}.png'.format(file_name))
+        plt.show()
 
     @classmethod
     def draw_line(cls, name_2_values: dict):

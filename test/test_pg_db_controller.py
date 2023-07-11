@@ -11,7 +11,7 @@ class MyTestCase(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         super().__init__(methodName)
         self.config = PilotConfig()
-        self.config.db = "stats"
+        # self.config.db = "stats"
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.table_name = "lero"
         self.db_controller: PostgreSQLController = DBControllerFactory.get_db_controller(self.config)
@@ -42,10 +42,11 @@ class MyTestCase(unittest.TestCase):
 
     def test_drop_index(self):
         index_name = "test_drop_index"
-        self.db_controller.create_index(None, None, None)
+        index = Index(columns=["date"], table="badges", index_name=index_name)
+        # self.db_controller.create_index(index.get_index_name(),index.table,index.columns)
         n = self.db_controller.get_index_number(self.table)
 
-        self.db_controller.drop_index(Index(columns=["date"], table="badges", index_name=index_name))
+        self.db_controller.drop_index(index.get_index_name())
         cur_n = self.db_controller.get_index_number(self.table)
 
         self.assertEqual(cur_n, n - 1)
@@ -78,6 +79,14 @@ class MyTestCase(unittest.TestCase):
     def test_get_table_index_byte(self):
         size = self.db_controller.get_table_indexes_byte(self.table)
         print("index size is {}".format(size))
+
+    def test_get_internal_metrics(self):
+        res = self.db_controller.get_internal_metrics()
+        print(res)
+
+    def test_get_all_indexes(self):
+        res = self.db_controller.get_all_indexes()
+        print(res)
 
 
 if __name__ == '__main__':

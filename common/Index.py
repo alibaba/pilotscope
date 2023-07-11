@@ -4,7 +4,7 @@ class Index:
             raise ValueError("Index needs at least 1 column")
         self.columns = tuple(columns)
         self.table = table
-        self._index_name = index_name
+        self.index_name = index_name
 
     # Used to sort indexes
     def __lt__(self, other):
@@ -36,8 +36,8 @@ class Index:
         return self.get_index_name()
 
     def get_index_name(self):
-        if self._index_name is not None:
-            return self._index_name
+        if self.index_name is not None:
+            return self.index_name
         columns = "_".join(self._column_names())
         return f"{self.table}_{columns}_idx"
 

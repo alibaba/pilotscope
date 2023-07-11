@@ -73,8 +73,11 @@ class CostEvaluation:
     def calculate_cost(self, workload, indexes, store_size=False):
         # total_cost = self._origin_calculate_cost(workload, indexes, store_size)
         # print("origin total cost is {}".format(total_cost))
+        try:
+            pilot_total_cost = self.pilot_calculate_cost(workload, indexes)
+        except Exception as e:
+            return float('inf')
 
-        pilot_total_cost = self.pilot_calculate_cost(workload, indexes)
         print("pilot total cost is {}".format(pilot_total_cost))
         # assert total_cost == pilot_total_cost
 
@@ -96,7 +99,7 @@ class CostEvaluation:
 
     def pilot_calculate_cost(self, workload, indexes):
         self.current_indexes = set(indexes)
-        state_manager = PilotStateManager(PilotConfig())
+        state_manager = PilotStateManager(self.db_connector.get_config())
         sqls = []
         pilot_indexes = []
         for query in workload.queries:
@@ -119,7 +122,7 @@ class CostEvaluation:
             if index.estimated_size is None:
                 index.estimated_size = self.db_connector.get_index_byte(index.index_idx())
 
-        state_manager.clear()
+        state_manager.reset()
         return total_cost
 
     def write_cost(self, file_name, cost):
@@ -208,7 +211,7 @@ class CostEvaluation:
         # If no cache hit request cost from database system
         else:
             # cost = self._get_cost(query)
-            data: PilotTransData = state_manager.execute(query.text, enable_clear=False)
+            data: PilotTransData = state_manager.execute(query.text, is_reset=False)
             cost = data.estimated_cost
             self.cache[(query, relevant_indexes)] = cost
             return cost

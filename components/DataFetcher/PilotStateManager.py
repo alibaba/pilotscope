@@ -17,26 +17,27 @@ from common.Util import pilotscope_exit, extract_anchor_handlers, extract_handle
 
 
 class PilotStateManager:
-
     def __init__(self, config: PilotConfig) -> None:
         self.db_controller = DBControllerFactory.get_db_controller(config)
-
         self.anchor_to_handlers = {}
         self.config = config
         self.port = None
         self.data_fetcher: DataFetcher = DataFetchFactory.get_data_fetcher(config)
 
-    def execute_batch(self, sqls, enable_clear=True) -> List[Optional[PilotTransData]]:
+    def execute_batch(self, sqls, is_reset=True) -> List[Optional[PilotTransData]]:
         datas = []
         flag = False
         for i, sql in enumerate(sqls):
             if i == len(sqls) - 1:
-                flag = enable_clear
-            datas.append(self.execute(sql, enable_clear=flag))
+                flag = is_reset
+            datas.append(self.execute(sql, is_reset=flag))
         return datas
 
-    def execute(self, sql, enable_clear=True) -> Optional[PilotTransData]:
+    def execute(self, sql, is_reset=True) -> Optional[PilotTransData]:
         try:
+            if not self.db_controller.is_connect():
+                self.db_controller.connection()
+
             origin_sql = sql
             enable_receive_pilot_data = self.is_need_to_receive_data(self.anchor_to_handlers)
 
@@ -66,8 +67,8 @@ class PilotStateManager:
             self._fetch_data_from_outer(origin_sql, data)
 
             # clear state
-            if enable_clear:
-                self.clear()
+            if is_reset:
+                self.reset()
             return data
 
         except (DBStatementTimeoutException, HttpReceiveTimeoutException) as e:
@@ -86,8 +87,7 @@ class PilotStateManager:
             TimeStatistic.add_time(ExperimentTimeEnum.get_anchor_key(anchor_name), float(anchor_time))
 
         if data.execution_time is not None:
-            TimeStatistic.add_time(ExperimentTimeEnum.SQL_TOTAL_TIME,data.execution_time)
-
+            TimeStatistic.add_time(ExperimentTimeEnum.SQL_TOTAL_TIME, data.execution_time)
 
     def is_need_to_receive_data(self, anchor_2_handlers):
         filter_anchor_2_handlers = self._remove_outer_fetch_anchor(
@@ -105,9 +105,10 @@ class PilotStateManager:
         handlers = extract_handlers(self.anchor_to_handlers.values(), is_fetch_anchor=False)
         [handler.roll_back(self.db_controller) for handler in handlers]
 
-    def clear(self):
+    def reset(self):
         self._roll_back_db()
         self.anchor_to_handlers.clear()
+        self.db_controller.disconnect()
 
     def _execute_sqls(self, comment_sql, is_execute_comment_sql):
         handlers = extract_handlers(self.anchor_to_handlers.values(), is_fetch_anchor=False)

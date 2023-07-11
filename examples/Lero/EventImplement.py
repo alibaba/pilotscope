@@ -1,5 +1,4 @@
 import json
-from abc import ABC
 
 from pandas import DataFrame
 
@@ -11,7 +10,7 @@ from PilotModel import PilotModel
 from PilotTransData import PilotTransData
 from examples.Lero.LeroParadigmCardAnchorHandler import scale_card
 from examples.Lero.source.train import training_pairwise_pilot_score, get_training_pair
-from examples.utils import load_sql
+from examples.utils import load_training_sql
 
 
 def extract_plan_pairs(data: DataFrame):
@@ -48,7 +47,7 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
         self.pilot_state_manager = PilotStateManager(self.config)
 
     def load_sql(self):
-        self.sqls = load_sql("../examples/stats_train.txt")[0:200]
+        self.sqls = load_training_sql(self.config.db)[0:200]
 
     def _custom_collect_data(self):
         print("start to collect data fro pretraining")
@@ -108,7 +107,7 @@ class LeroDynamicCollectEventPeriod(PeriodPerCountCollectionDataEvent):
         self._table_name = save_table_name
 
     def load_per_sqls(self):
-        sql_all = load_sql("../examples/stats_train.txt")
+        sql_all = load_training_sql(self.config.db)
         sqls = sql_all[self.offset * self.per_query_count:(self.offset + 1) * self.per_query_count]
         self.offset += 1
         return sqls

@@ -57,12 +57,18 @@ class TreeBuilder:
         if len(children) == 1:
             return self.plan_to_feature_tree(children[0])
 
-        if is_join(plan):
+        if is_join(plan) :
             assert len(children) == 2
             my_vec = self.__featurize_join(plan)
             left = self.plan_to_feature_tree(children[0])
             right = self.plan_to_feature_tree(children[1])
             return (my_vec, left, right)
+
+        # if plan["Node Type"] == "BitmapAnd":
+        #     assert len(children) == 2
+        #     left = self.plan_to_feature_tree(children[0])
+        #     right = self.plan_to_feature_tree(children[1])
+        #     return (np.array([0]), left, right)
 
         if is_scan(plan):
             assert not children

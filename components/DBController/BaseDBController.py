@@ -27,9 +27,8 @@ class BaseDBController(ABC):
     def _create_engine(self):
         if not database_exists(self.conn_str):
             create_database(self.conn_str, encoding="SQL_ASCII")
-        return create_engine(self.conn_str, echo=self.echo, pool_size=10, pool_recycle=3600,
-                             pool_pre_ping=True, connect_args={
-                "options": "-c statement_timeout={}".format(self.config.sql_execution_timeout * 1000)})
+        return create_engine(self.conn_str, echo=self.echo, poolclass=NullPool, connect_args={
+            "options": "-c statement_timeout={}".format(self.config.sql_execution_timeout * 1000)})
 
     def connect(self):
         self.disconnect()
@@ -39,8 +38,12 @@ class BaseDBController(ABC):
         if self.connection is not None:
             try:
                 self.connection.close()
-            except: # deal with connection already colse
+            except:  # deal with connection already close
                 pass
+            self.connection = None
+
+    def is_connect(self):
+        return self.connection is not None
 
     @abstractmethod
     def modify_sql_for_ignore_records(self, sql, is_execute):
@@ -119,17 +122,30 @@ class BaseDBController(ABC):
     def get_estimated_cost(self, sql):
         pass
 
+    def _create_inspect(self):
+        return inspect(self.engine)
+
     def get_index_number(self, table):
-        inspector = inspect(self.engine)
-        return len(inspector.get_indexes(table))
+        inspector = self._create_inspect()
+        n = len(inspector.get_indexes(table))
+        return n
 
     def get_existed_index(self, table):
-        inspector = inspect(self.engine)
+        inspector = self._create_inspect()
         db_indexes = inspector.get_indexes(table)
 
         indexes = []
         for db_index in db_indexes:
             indexes.append(Index(columns=db_index["column_names"], table=table, index_name=db_index["name"]))
+        return indexes
+
+    def get_all_indexes(self):
+        inspector = self._create_inspect()
+        indexes = []
+        for table in inspector.get_table_names():
+            db_indexes = inspector.get_indexes(table)
+            for db_index in db_indexes:
+                indexes.append(Index(columns=db_index["column_names"], table=table, index_name=db_index["name"]))
         return indexes
 
     def get_sqla_table(self, table_name) -> Table:
@@ -149,7 +165,7 @@ class BaseDBController(ABC):
 
     def start(self):
         pass
-    
+
     def restart(self):
         self.shutdown()
         self.start()

@@ -10,11 +10,10 @@ from components.PilotEnum import DatabaseEnum, EventEnum
 from components.PilotModel import PilotModel
 from components.PilotScheduler import PilotScheduler
 from examples.ExampleConfig import pg_stats_test_result_table
-from examples.Lero.EventImplement import LeroPeriodTrainingEvent, \
-    LeroPretrainingModelEvent, LeroDynamicCollectEventPeriod
+from examples.Lero.EventImplement import LeroPretrainingModelEvent
 from examples.Lero.LeroParadigmCardAnchorHandler import LeroParadigmCardAnchorHandler
 from examples.Lero.LeroPilotModel import LeroPilotModel
-from examples.utils import load_sql
+from examples.utils import load_test_sql
 
 
 class LeroTest(unittest.TestCase):
@@ -53,7 +52,7 @@ class LeroTest(unittest.TestCase):
             # start
             scheduler.init()
             print("start to test sql")
-            sqls = self.load_test_sqls()
+            sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, and it is {}".format(i, sql))
                 scheduler.simulate_db_console(sql)
@@ -76,7 +75,7 @@ class LeroTest(unittest.TestCase):
             scheduler.init()
 
             print("start to test sql")
-            sqls = load_sql(config.test_sql_file)
+            sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, and it is {}".format(i, sql))
                 scheduler.simulate_db_console(sql)
@@ -93,11 +92,6 @@ class LeroTest(unittest.TestCase):
             file_name="lero_performance"
         )
 
-    def load_training_sqls(self):
-        return load_sql("../examples/stats_train.txt")
-
-    def load_test_sqls(self):
-        return load_sql("../examples/stats_test.txt")
 
 
 if __name__ == '__main__':

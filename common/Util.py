@@ -1,3 +1,5 @@
+import json
+
 from Anchor.BaseAnchor.replaceAnchorHandler import ReplaceAnchorHandler
 
 all_https = []
@@ -70,3 +72,15 @@ def sum_list(values):
     for val in values:
         res += val
     return res
+
+
+def json_str_to_json_obj(json_data):
+    if not isinstance(json_data, dict):
+        json_obj = json.loads(json_data)
+    else:
+        json_obj = json_data
+    if type(json_obj) == list:
+        assert len(json_obj) == 1
+        json_obj = json_obj[0]
+        assert type(json_obj) == dict
+    return json_obj

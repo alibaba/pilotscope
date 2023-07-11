@@ -3,9 +3,8 @@ from Dao.PilotTrainDataManager import PilotTrainDataManager
 from PilotEnum import ExperimentTimeEnum
 from PilotEvent import PeriodicDbControllerEvent
 from common.TimeStatistic import TimeStatistic
-from examples.utils import load_sql
+from examples.utils import load_training_sql
 from selection.algorithms.extend_algorithm import ExtendAlgorithm
-from selection.index import Index
 from selection.index_selection_evaluation import to_workload
 from selection.workload import Query
 
@@ -28,11 +27,14 @@ class DbConnector:
     def get_index_byte(self, index_name):
         return self.db_controller.get_index_byte(index_name)
 
+    def get_config(self):
+        return self.db_controller.config
+
 
 class IndexPeriodicDbControllerEvent(PeriodicDbControllerEvent):
 
     def _load_sql(self):
-        return load_sql(self.config.training_sql_file)[0:10]
+        return load_training_sql(self.config.db)[0:20]
 
     def _custom_update(self, db_controller: BaseDBController, training_data_manager: PilotTrainDataManager):
         TimeStatistic.start(ExperimentTimeEnum.FIND_INDEX)

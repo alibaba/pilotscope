@@ -222,7 +222,7 @@ class SysmlExecutor(ExecutorInterface):
             accu_execution_time = 0
             execution_times = []
             for i, sql in enumerate(sqls):
-                data = self.state_manager.execute(sql, enable_clear=(i == len(sqls) - 1))
+                data = self.state_manager.execute(sql, is_reset=(i == len(sqls) - 1))
                 if data.execution_time is None:
                     raise TimeoutError
                     execution_times.append(self.db_controller.config.once_request_timeout)

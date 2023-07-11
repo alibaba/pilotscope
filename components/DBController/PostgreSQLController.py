@@ -9,7 +9,6 @@ from common.Index import Index
 
 
 class PostgreSQLController(BaseDBController):
-        
     instances = set()
 
     def __new__(cls, *args, **kwargs):
@@ -18,6 +17,7 @@ class PostgreSQLController(BaseDBController):
         return instance
 
     def __del__(self):
+        self.disconnect()
         type(self).instances.remove(self)
 
     PG_NUM_METRICS = 60
@@ -48,7 +48,7 @@ class PostgreSQLController(BaseDBController):
         # index
         'idx_blks_hit', 'idx_blks_read', 'idx_scan', 'idx_tup_fetch', 'idx_tup_read'
     ]
-    
+
     def __init__(self, config, echo=False, allow_to_create_db=False):
         super().__init__(config, echo, allow_to_create_db)
 
@@ -130,10 +130,9 @@ class PostgreSQLController(BaseDBController):
         self.execute(statement, fetch=False)
 
     def drop_all_indexes(self):
-        stmt = "select indexname from pg_indexes where schemaname='public';"
-        indexes = self.execute(stmt, fetch=True)
+        indexes = self.get_all_indexes()
         for index in indexes:
-            index_name: str = index[0]
+            index_name = index.index_name
             if not index_name.startswith("pgsysml_"):
                 self.drop_index(index_name)
 
@@ -200,11 +199,11 @@ class PostgreSQLController(BaseDBController):
 
     def _explain(self, sql, comment, execute: bool):
         return self.execute(text(self.get_explain_sql(sql, execute, comment)), True)[0][0][0]
-    
+
     # switch user and run
     def _surun(self, cmd):
         os.system("su {} -c '{}'".format(self.config.user, cmd))
-    
+
     def shutdown(self):
         self._surun("{} stop -D {}".format(self.config.pg_ctl, self.config.pgdata))
 
@@ -212,16 +211,16 @@ class PostgreSQLController(BaseDBController):
         self._surun("{} start -D {}".format(self.config.pg_ctl, self.config.pgdata))
         for instance in type(self).instances:
             instance.connect()
-        
+
     def status(self):
-        res = os.popen("su {} -c '{} status -D {}'".format(self.config.user,self.config.pg_ctl, self.config.pgdata))
+        res = os.popen("su {} -c '{} status -D {}'".format(self.config.user, self.config.pg_ctl, self.config.pgdata))
         return res.read()
-        
+
     def write_knob_to_file(self, knobs):
         with open(self.config.db_config_path, "a") as f:
             f.write("\n")
-            for k,v in knobs.items():
-                f.write("{} = {}\n".format(k,v))
+            for k, v in knobs.items():
+                f.write("{} = {}\n".format(k, v))
 
     def recover_config(self):
         with open(self.config.backup_db_config_path, "r") as f:
@@ -229,7 +228,7 @@ class PostgreSQLController(BaseDBController):
         with open(self.config.db_config_path, "w") as f:
             f.write(db_config_file)
 
-    #NOTE: modified from DBTune (MIT liscense)
+    # NOTE: modified from DBTune (MIT liscense)
     def get_internal_metrics(self):
         def parse_helper(valid_variables, view_variables):
             for view_name, variables in list(view_variables.items()):
@@ -239,6 +238,7 @@ class PostgreSQLController(BaseDBController):
                         valid_variables[full_name] = []
                     valid_variables[full_name].append(var_value)
             return valid_variables
+
         try:
             metrics_dict = {
                 'global': {},
@@ -251,7 +251,7 @@ class PostgreSQLController(BaseDBController):
 
             for view in self.PG_STAT_VIEWS:
                 sql = 'SELECT * from {}'.format(view)
-                cur=self.connection.connection.cursor()
+                cur = self.connection.connection.cursor()
                 cur.execute(sql)
                 results = cur.fetchall()
                 columns = [col[0] for col in cur.description]

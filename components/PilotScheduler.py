@@ -43,7 +43,7 @@ class PilotScheduler:
         for replace_handle in self.user_tasks:
             replace_handle.apply_replace_data(sql)
 
-        result = state_manager.execute(sql, enable_clear=False)
+        result = state_manager.execute(sql, is_reset=False)
 
         if result is not None:
             self._post_process(result)

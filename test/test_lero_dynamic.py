@@ -10,10 +10,10 @@ from components.PilotEnum import DatabaseEnum, EventEnum
 from components.PilotModel import PilotModel
 from components.PilotScheduler import PilotScheduler
 from examples.Lero.EventImplement import LeroPeriodTrainingEvent, \
-    LeroPretrainingModelEvent, LeroDynamicCollectEventPeriod
+    LeroDynamicCollectEventPeriod
 from examples.Lero.LeroParadigmCardAnchorHandler import LeroParadigmCardAnchorHandler
 from examples.Lero.LeroPilotModel import LeroPilotModel
-from examples.utils import load_sql
+from examples.utils import load_test_sql
 
 
 class LeroTest(unittest.TestCase):
@@ -25,41 +25,6 @@ class LeroTest(unittest.TestCase):
         self.test_data_table = "{}_test_data_table".format(self.model_name)
         self.pg_test_data_table = "pg_test_data_table"
         self.pretraining_data_table = "lero_pretraining_collect_data"
-
-    def test_lero(self):
-        try:
-            config = self.config
-            # model_name = "leroDynamic"
-            lero_pilot_model: PilotModel = LeroPilotModel(self.model_name)
-            lero_pilot_model.load()
-            lero_handler = LeroParadigmCardAnchorHandler(lero_pilot_model, config)
-
-            # Register what data needs to be cached for training purposes
-            state_manager = PilotStateManager(config)
-            state_manager.fetch_physical_plan()
-            state_manager.fetch_execution_time()
-
-            # core
-            scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
-            scheduler.register_anchor_handler(lero_handler)
-            scheduler.register_collect_data(training_data_save_table=self.test_data_table,
-                                            state_manager=state_manager)
-
-            # allow to pretrain model
-            pretraining_event = LeroPretrainingModelEvent(config, lero_pilot_model, self.pretraining_data_table,
-                                                          enable_collection=False, enable_training=False)
-            scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
-
-            # start
-            scheduler.init()
-
-            print("start to test sql")
-            sqls = self.load_test_sqls()
-            for i, sql in enumerate(sqls):
-                print("current is the {}-th sql, and it is {}".format(i, sql))
-                scheduler.simulate_db_console(sql)
-        finally:
-            pilotscope_exit()
 
     def test_lero_dynamic(self):
         try:
@@ -107,7 +72,7 @@ class LeroTest(unittest.TestCase):
 
             # exit()
             print("start to dynamic train and test sql")
-            sqls = self.load_training_sqls()
+            sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, and it is {}".format(i, sql))
                 scheduler.simulate_db_console(sql)
@@ -131,14 +96,14 @@ class LeroTest(unittest.TestCase):
                                             state_manager=state_manager)
 
             print("start to get pg_plan")
-            sqls = self.load_training_sqls()
+            sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, and it is {}".format(i, sql))
                 state_manager = PilotStateManager(scheduler.config)
 
                 state_manager.add_anchors(scheduler.collect_data_state_manager.anchor_to_handlers.values())
 
-                result = state_manager.execute(sql, enable_clear=False)
+                result = state_manager.execute(sql, is_reset=False)
                 if result is not None:
                     scheduler._post_process(result)
                     return result.records
@@ -162,7 +127,7 @@ class LeroTest(unittest.TestCase):
             scheduler.init()
 
             print("start to test sql")
-            sqls = load_sql(config.test_sql_file)
+            sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, and it is {}".format(i, sql))
                 scheduler.simulate_db_console(sql)
@@ -178,12 +143,6 @@ class LeroTest(unittest.TestCase):
             {"PostgreSQL": pg_results, "Lero": algo_results},
             file_name="lero_performance"
         )
-
-    def load_training_sqls(self):
-        return load_sql("../examples/stats_train.txt")
-
-    def load_test_sqls(self):
-        return load_sql("../examples/stats_test.txt")
 
 
 if __name__ == '__main__':

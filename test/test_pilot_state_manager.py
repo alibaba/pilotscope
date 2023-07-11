@@ -7,7 +7,6 @@ from PilotEnum import DatabaseEnum
 from PilotTransData import PilotTransData
 from common.Index import Index
 from common.Util import _accumulate_cost
-from examples.utils import load_sql
 
 
 class MyTestCase(unittest.TestCase):

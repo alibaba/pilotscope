@@ -5,7 +5,6 @@ from Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
 from DBController.BaseDBController import BaseDBController
 from PilotEnum import ReplaceAnchorTriggerEnum, ExperimentTimeEnum
 from common.Index import Index
-from PilotEnum import DatabaseEnum
 from common.TimeStatistic import TimeStatistic
 
 
@@ -118,4 +117,3 @@ class IndexAnchorHandler(ReplaceAnchorHandler):
             for index in self.indexes:
                 db_controller.drop_index(index.get_index_name())
         TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
-

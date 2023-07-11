@@ -8,9 +8,10 @@ from PilotConfig import PilotConfig
 from PilotEvent import PeriodTrainingEvent, PretrainingModelEvent
 from PilotModel import PilotModel
 from PilotTransData import PilotTransData
-from examples.utils import load_sql
+from common.Util import json_str_to_json_obj
 from examples.Bao.BaoParadigmHintAnchorHandler import BaoParadigmHintAnchorHandler
 from examples.Bao.source.model import BaoRegression
+from examples.utils import load_training_sql
 
 
 class BaoPretrainingModelEvent(PretrainingModelEvent):
@@ -23,7 +24,7 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
         self.bao_hint = BaoParadigmHintAnchorHandler.HintForBao(config.db_type)
 
     def load_sql(self):
-        self.sqls = load_sql(self.config.training_sql_file)[0:100]  # only for development test
+        self.sqls = load_training_sql(self.config.db)[600:850]  # only for development test
 
     def _custom_collect_data(self):
         self.load_sql()
@@ -50,8 +51,32 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
     def _custom_pretrain_model(self, train_data_manager: PilotTrainDataManager, existed_user_model):
         data: DataFrame = train_data_manager.read_all(self.save_table_name)
         bao_model = BaoRegression(verbose=True, have_cache_data=self._model.have_cache_data)
-        bao_model.fit(data["plan"].values, data["time"].values)
+        new_plans, new_times = self.filter(data["plan"].values, data["time"].values)
+        bao_model.fit(new_plans, new_times)
         return bao_model
+
+    def filter(self, plans, times):
+        new_plans = []
+        new_times = []
+
+        for i, plan in enumerate(plans):
+            if not self.contain_outlier_plan(plan):
+                new_plans.append(plans[i])
+                new_times.append(times[i])
+        return new_plans, new_times
+
+    def contain_outlier_plan(self, plan):
+        if isinstance(plan,str):
+            plan = json_str_to_json_obj(plan)["Plan"]
+        children = plan["Plans"] if "Plans" in plan else []
+        for child in children:
+            flag = self.contain_outlier_plan(child)
+            if flag:
+                return True
+
+        if plan["Node Type"] == "BitmapAnd":
+            return True
+        return False
 
 
 class BaoPeriodTrainingEvent(PeriodTrainingEvent):

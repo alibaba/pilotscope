@@ -42,23 +42,28 @@ class BaoParadigmHintAnchorHandler(HintAnchorHandler):
         return self.model.user_model.predict(plans)
 
     def user_custom_task(self, sql):
-        TimeStatistic.start(ExperimentTimeEnum.AI_TASK)
-        plans = []
-        for hint2val in self.bao_hint.arms_hint2val:
-            # print(hint2val)
-            self.pilot_state_manager.set_hint(hint2val)
-            self.pilot_state_manager.fetch_physical_plan()
-            if self.model.have_cache_data:
-                self.pilot_state_manager.fetch_buffercache()
+        try:
+            TimeStatistic.start(ExperimentTimeEnum.AI_TASK)
+            plans = []
+            for hint2val in self.bao_hint.arms_hint2val:
+                # print(hint2val)
+                self.pilot_state_manager.set_hint(hint2val)
+                self.pilot_state_manager.fetch_physical_plan()
+                if self.model.have_cache_data:
+                    self.pilot_state_manager.fetch_buffercache()
 
-            data: PilotTransData = self.pilot_state_manager.execute(sql)
-            plan = data.physical_plan
-            if self.model.have_cache_data:
-                plan["Buffers"] = data.buffercache
-            plans.append(plan)
+                data: PilotTransData = self.pilot_state_manager.execute(sql)
+                plan = data.physical_plan
+                if self.model.have_cache_data:
+                    plan["Buffers"] = data.buffercache
+                plans.append(plan)
 
-        # print("BAO: ",plans,"\n"+"*"*60)
-        est_exe_time = self.model.user_model.predict(plans)
-        print("BAO: ", est_exe_time)
-        TimeStatistic.end(ExperimentTimeEnum.AI_TASK)
-        return self.bao_hint.arms_hint2val[est_exe_time.argmin()]
+            # print("BAO: ",plans,"\n"+"*"*60)
+            est_exe_time = self.model.user_model.predict(plans)
+            print("BAO: ", est_exe_time)
+            TimeStatistic.end(ExperimentTimeEnum.AI_TASK)
+            idx = est_exe_time.argmin()
+        except:
+            idx = 0
+        print(idx)
+        return self.bao_hint.arms_hint2val[idx]
