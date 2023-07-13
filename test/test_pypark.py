@@ -54,7 +54,24 @@ class MyTestCase(unittest.TestCase):
         
         records.explain("cost")
         
-      
+        
+    def test_pyspark_sql_hive(self):
+        spark = SparkSession.builder \
+            .appName("Spark SQL basic example") \
+            .master("local[*]") \
+            .config("spark.some.config.option", "some-value") \
+            .config("spark.sql.cbo.enabled", True) \
+            .config("spark.sql.cbo.joinReorder.enabled", True) \
+            .config("spark.sql.pilotscope.enabled", True) \
+            .config("spark.sql.pilotscope.debug.enabled", True) \
+            .config("spark.sql.warehouse.dir","/home/workspace/pilotscope/lib/hive_warehouse") \
+            .enableHiveSupport() \
+            .getOrCreate()
+        
+        spark.sql("create database test")
+        
+        df=spark.sql("show databases")   
+        df.show()
       
 """
     def test_pyspark_sql_set_card(self):
@@ -108,6 +125,6 @@ class MyTestCase(unittest.TestCase):
       println("==================== Plan after setting card ======================")
       records.explain("cost")
 """
-
+    
 if __name__ == '__main__':
     unittest.main()

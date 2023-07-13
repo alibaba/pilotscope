@@ -1,307 +1,446 @@
 import os
+import logging
 from typing_extensions import deprecated
 from common.Util import pilotscope_exit
 from DBController.BaseDBController import BaseDBController
 from Exception.Exception import DBStatementTimeoutException
-from common.Index import Index
+from components.PilotConfig import PilotConfig
+from components.PilotEnum import PilotEnum
+from PilotEnum import DataFetchMethodEnum, DatabaseEnum, TrainSwitchMode
+from pyspark.sql import SparkSession
+from pyspark.sql.types import *
+from pyspark.sql import DataFrame
+from typing import Union, Dict, Tuple
+import pandas 
+import json
+import re
 
+logging.getLogger('pyspark').setLevel(logging.ERROR)
+logging.getLogger("py4j").setLevel(logging.ERROR)
+logger = logging.getLogger("PilotScope")
+
+SUCCESS = 1
+FAILURE = 0
+
+class SparkSQLTypeEnum(PilotEnum):
+    String = StringType
+    Integer = IntegerType
+    Float = FloatType
+
+class SparkSQLDataSourceEnum(PilotEnum):
+    CSV = "csv"
+    JSON = "json"
+    PARQUET = "parquet"
+    HIVE = "hive"
+    POSTGRESQL = "postgresql"
+    
+class SparkIOWriteModeEnum(PilotEnum):
+    OVERWRITE = "overwrite"
+    APPEND = "append"
+    ERROR_IF_EXISTS = "errorifexists"
+    IGNORE = "ignore"
+
+class SparkConfig(PilotConfig):
+    def __init__(self, app_name, master_url, 
+                 datasource_type, datasource_conn_info, 
+                 db_config_path="./pilotscope_spark_sql_config.txt", 
+                 backup_db_config_path="./pilotscope_spark_sql_config.backup.txt",
+                 other_configs=None) -> None:
+        super().__init__()
+        self.appName = app_name
+        self.master = master_url
+        self.datasource_type = datasource_type
+        self.datasource_conn_info = datasource_conn_info
+        self.db_config_path = db_config_path
+        self.backup_db_config_path = backup_db_config_path
+        self.configs = {}
+        if other_configs is not None:
+            for config_name in other_configs:
+                self.configs[config_name] = other_configs[config_name]
+        self.db_type = DatabaseEnum.SPARK
+
+def sparkSessionFromConfig(spark_config: SparkConfig):
+    session = SparkSession.builder \
+            .appName(spark_config.appName) \
+            .master(spark_config.master) 
+    for config_name in spark_config.configs:
+        session = session.config(config_name, spark_config.configs[config_name])
+    return session.getOrCreate()
+
+#class SparkConnection: 
+#    def __init__(self, config: SparkConfig):
+#        self.config = config
+#        self._conn = None
+
+#    def create(self):
+#        self._conn = sparkSessionFromConfig(self.config)
+        
+#    def close(self):
+#        self._conn = None
+
+class SparkColumn(StructField):
+    def __init__(self, column_name, column_type):
+        # Spark does not support primary key and auto-increment
+        super().__init__(column_name, column_type())
+
+class SparkTable:
+    def __init__(self, table_name, metadata, *columns):
+        self.table_name = table_name
+        self.columns = list(columns)
+        self.schema = StructType(list(columns))
+        self.df: DataFrame = None
+    
+    def create(self, engine, analyze=True):
+        if engine.has_table(engine.session, self.table_name, where="datasource"):
+            # Table exists in the data source, load it directly
+            self.df = engine.io.read(self.table_name)
+        else:
+            if engine.has_table(engine.session, self.table_name, where="session"):
+                # Table exists in the current session. 
+                # To avoid duplicated tables in the same session, an error will be thrown here.
+                raise RuntimeError("Duplicated table cannot be created in the current session.")
+            else:
+                # No such a table in the data source as well as in the session, 
+                # so create an empty table and persist it to the data source.
+                self.df = engine.session.createDataFrame(data=[], schema=self.schema)
+                #engine.io.write(self.df, mode=SparkIOWriteModeEnum.OVERWRITE, target_table_name=self.table_name)
+        self.df.createOrReplaceTempView(self.table_name)
+        #engine.session.catalog.cacheTable(self.table_name)
+        #if analyze:
+        #    engine.session.sql("ANALYZE TABLE {} COMPUTE STATISTICS FOR ALL COLUMNS".format(self.table_name))
+    
+    # get the SQL string for insertion
+    def insert(self, session, column_2_value):
+        column_names = list(column_2_value.keys())
+        new_row = session.createDataFrame([tuple(column_2_value[col] for col in column_names)], column_names)
+        self.df = self.df.union(new_row)
+        self.df.createOrReplaceTempView(self.table_name)
+    
+    def nrows(self):
+        return self.df.count()
+    
+    def cache(self, engine):
+        engine.session.catalog.cacheTable(self.table_name)
+    
+    def analyzeStats(self, engine):
+        self.cache(engine)
+        engine.session.sql("ANALYZE TABLE {} COMPUTE STATISTICS FOR ALL COLUMNS".format(self.table_name))
+    
+    def persist(self, engine):
+        engine.io.write(self, mode=SparkIOWriteModeEnum.OVERWRITE)
+        
+        
+class SparkIO:
+    def __init__(self, datasource_type: SparkSQLDataSourceEnum, engine, **datasource_conn_info) -> None:
+        self.reader = None
+        self.conn_info = datasource_conn_info
+        self.datasource_type = datasource_type
+        if datasource_type != SparkSQLDataSourceEnum.POSTGRESQL:
+            raise RuntimeError("SparkIO has not been tested on any other data source types than 'postgresql'.")
+        if datasource_type == SparkSQLDataSourceEnum.POSTGRESQL:
+            self.reader = engine.session.read \
+                            .format("jdbc") \
+                            .option("driver", "org.postgresql.Driver") \
+                            .option("url", "jdbc:postgresql://{}/{}".format(self.conn_info['host'], self.conn_info['dbname'])) \
+                            .option("user", self.conn_info['user']) \
+                            .option("password", self.conn_info['password']) 
+                            
+    def read(self, table_name=None, query=None) -> DataFrame:
+        assert not (table_name is not None and query is not None)
+        assert not (table_name is None and query is None)
+        if table_name is not None:
+            self.reader = self.reader.option("dbtable", table_name)
+        elif query is not None:
+            self.reader = self.reader.option("query", query)       
+        return self.reader.load()
+
+    def write(self, table_or_rows: Union[SparkTable, DataFrame], mode: SparkIOWriteModeEnum, target_table_name=None):
+        if isinstance(table_or_rows, SparkTable):
+            df = table_or_rows.df
+        else:
+            df = table_or_rows 
+        if target_table_name is None and not isinstance(table_or_rows, SparkTable):
+            raise Exception("Target table name not specified.")
+        else:
+            if target_table_name is not None:
+                table_name = target_table_name
+            elif isinstance(table_or_rows, SparkTable):
+                table_name = table_or_rows.table_name
+        if self.datasource_type == SparkSQLDataSourceEnum.POSTGRESQL:
+            write = df.write \
+                        .mode(mode.value) \
+                        .format("jdbc") \
+                        .option("driver", "org.postgresql.Driver") \
+                        .option("url", "jdbc:postgresql://{}/{}".format(self.conn_info['host'], self.conn_info['dbname'])) \
+                        .option("user", self.conn_info['user']) \
+                        .option("password", self.conn_info['password']) \
+                        .option("dbtable", table_name)
+        write.save()
+    
+    def has_table(self, table_name):
+        return self.read(table_name="information_schema.tables") \
+            .filter("table_name = '{}'".format(table_name)) \
+            .count() > 0
+                                
+                        
+class SparkEngine:
+    def __init__(self, config: SparkConfig):
+        self.config = config
+        self.session = None
+        self.io = None
+        
+    def connect(self):
+        self.session = sparkSessionFromConfig(self.config)
+        self.io = SparkIO(self.config.datasource_type, self, **(self.config.datasource_conn_info))
+        return self.session
+
+    def _has_table_in_datasource(self, table_name):
+        return self.io.has_table(table_name)
+
+    def _has_table_in_session(self, session, table_name):
+        return session.catalog.tableExists(table_name)
+
+    def has_table(self, connection: SparkSession, table_name: str, where="datasource") -> bool:
+        if where == "datasource":
+            return self._has_table_in_datasource(table_name)
+        elif where == "session":
+            return self._has_table_in_session(connection, table_name)
+        else:
+            raise ValueError("Unsupport 'where' value: {}".format(where))
+        
 
 class SparkSQLController(BaseDBController):
         
-    instances = set()
+    #instances = set()
 
-    def __new__(cls, *args, **kwargs):
-        instance = super().__new__(cls)
-        cls.instances.add(instance)
-        return instance
+    #def __new__(cls, *args, **kwargs):
+    #    instance = super().__new__(cls)
+    #    cls.instances.add(instance)
+    #    return instance
 
-    def __del__(self):
-        type(self).instances.remove(self)
-
-    PG_NUM_METRICS = 60
-    PG_STAT_VIEWS = [
-        "pg_stat_archiver", "pg_stat_bgwriter",  # global
-        "pg_stat_database", "pg_stat_database_conflicts",  # local
-        "pg_stat_user_tables", "pg_statio_user_tables",  # local
-        "pg_stat_user_indexes", "pg_statio_user_indexes"  # local
-    ]
-    PG_STAT_VIEWS_LOCAL_DATABASE = ["pg_stat_database", "pg_stat_database_conflicts"]
-    PG_STAT_VIEWS_LOCAL_TABLE = ["pg_stat_user_tables", "pg_statio_user_tables"]
-    PG_STAT_VIEWS_LOCAL_INDEX = ["pg_stat_user_indexes", "pg_statio_user_indexes"]
-    NUMERIC_METRICS = [  # counter
-        # global
-        'buffers_alloc', 'buffers_backend', 'buffers_backend_fsync', 'buffers_checkpoint', 'buffers_clean',
-        'checkpoints_req', 'checkpoints_timed', 'checkpoint_sync_time', 'checkpoint_write_time', 'maxwritten_clean',
-        'archived_count', 'failed_count',
-        # db
-        'blk_read_time', 'blks_hit', 'blks_read', 'blk_write_time', 'conflicts', 'deadlocks', 'temp_bytes',
-        'temp_files', 'tup_deleted', 'tup_fetched', 'tup_inserted', 'tup_returned', 'tup_updated', 'xact_commit',
-        'xact_rollback', 'confl_tablespace', 'confl_lock', 'confl_snapshot', 'confl_bufferpin', 'confl_deadlock',
-        # table
-        'analyze_count', 'autoanalyze_count', 'autovacuum_count', 'heap_blks_hit', 'heap_blks_read', 'idx_blks_hit',
-        'idx_blks_read', 'idx_scan', 'idx_tup_fetch', 'n_dead_tup', 'n_live_tup', 'n_tup_del', 'n_tup_hot_upd',
-        'n_tup_ins', 'n_tup_upd', 'n_mod_since_analyze', 'seq_scan', 'seq_tup_read', 'tidx_blks_hit',
-        'tidx_blks_read',
-        'toast_blks_hit', 'toast_blks_read', 'vacuum_count',
-        # index
-        'idx_blks_hit', 'idx_blks_read', 'idx_scan', 'idx_tup_fetch', 'idx_tup_read'
-    ]
+    #def __del__(self):
+    #    type(self).instances.remove(self)
     
-    def __init__(self, config, echo=False, allow_to_create_db=False):
-        super().__init__(config, echo, allow_to_create_db)
-
-        self.simulate_index_controller = None
-
-        self.engine = self.engine.execution_options(isolation_level="AUTOCOMMIT")
-        self.connect()
-
+    def __init__(self, config: SparkConfig, echo=False, allow_to_create_db=False):
+        #super().__init__(config, echo, allow_to_create_db)
+        self.config = config
+        self.echo = echo
+        self.allow_to_create_db = allow_to_create_db
+        self.engine = self._create_engine()
+        self.connection = None
+        self.name_2_table = {}
+        
     def _create_conn_str(self):
-        # postgresql://postgres@localhost/stats
-        return "{}://{}@{}/{}".format("postgresql", self.config.user, self.config.host, self.config.db)
-
-    def execute(self, sql, fetch=False):
-        row = None
-        try:
-            result = self.connection.execute(text(sql) if isinstance(sql, str) else sql)
-            if fetch:
-                row = result.all()
-        except OperationalError as e:
-            if "canceling statement due to statement timeout" in str(e):
-                raise DBStatementTimeoutException(str(e))
-            else:
-                raise e
-        except Exception as e:
-            if "PilotScopeFetchEnd" not in str(e):
-                raise e
-        return row
-
-    @deprecated('use execute instead')
-    def execute_batch(self, sqls, fetch=False):
-        try:
-            for sql in sqls[:-1]:
-                self.connection.execute(text(sql) if isinstance(sql, str) else sql)
-            result = self.connection.execute(text(sqls[-1]) if isinstance(sqls[-1], str) else sqls[-1])
-            if fetch:
-                return result.all()
-        except OperationalError as e:
-            pilotscope_exit(e)
-            if "canceling statement due to statement timeout" in str(e):
-                raise DBStatementTimeoutException(str(e))
-            else:
-                raise e
-        except Exception as e:
-            if "PilotScopeFetchEnd" not in str(e):
-                raise e
-
-    def get_hint_sql(self, key, value):
-        return "SET {} TO {}".format(key, value)
-
-    def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
-                                 enable_autoincrement_id_key=True):
-        column_2_type = self._to_db_data_type(column_2_value)
-        metadata_obj = self.metadata
-        if not self.exist_table(table_name):
-            columns = []
-            for column, column_type in column_2_type.items():
-                if column == primary_key_column:
-                    columns.append(
-                        Column(column, column_type, primary_key=True, autoincrement=enable_autoincrement_id_key))
-                else:
-                    columns.append(Column(column, column_type))
-            table = Table(table_name, metadata_obj, *columns)
-            table.create(self.engine)
-            self.name_2_table[table_name] = table
-
-    def insert(self, table_name, column_2_value: dict):
-        table = self.name_2_table[table_name]
-        self.execute(table.insert().values(column_2_value))
-
-    def create_index(self, index_name, table, columns):
-        column_names = ",".join(columns)
-        sql = f"create index {index_name} on {table} ({column_names});"
-        self.execute(sql, fetch=False)
-
-    def drop_index(self, index_name):
-        statement = (
-            f"DROP INDEX IF EXISTS {index_name};"
-        )
-        self.execute(statement, fetch=False)
-
-    def drop_all_indexes(self):
-        stmt = "select indexname from pg_indexes where schemaname='public';"
-        indexes = self.execute(stmt, fetch=True)
-        for index in indexes:
-            index_name: str = index[0]
-            if not index_name.startswith("pgsysml_"):
-                self.drop_index(index_name)
-
-    def get_all_indexes_byte(self):
-        # Returns size in bytes
-        sql = ("select sum(pg_indexes_size(table_name::text)) from "
-               "(select table_name from information_schema.tables "
-               "where table_schema='public') as all_tables;")
-        result = self.execute(sql, fetch=True)
-        return float(result[0][0])
-
-    def get_table_indexes_byte(self, table):
-        # Returns size in bytes
-        sql = f"select pg_indexes_size('{table}');"
-        result = self.execute(sql, fetch=True)
-        return float(result[0][0])
-
-    def get_index_byte(self, index_name):
-        sql = f"select pg_table_size('{index_name}');"
-        result = self.execute(sql, fetch=True)
-        return int(result[0][0])
-
-    def exist_table(self, table_name) -> bool:
-        has_table = self.engine.dialect.has_table(self.connection, table_name)
+        return ""
+    
+    def _create_engine(self):
+        return SparkEngine(self.config)
+    
+    def _to_db_data_type(self, column_2_value):
+        column_2_type = {}
+        for col, data in column_2_value.items():
+            data_type = SparkSQLTypeEnum.String.value
+            if type(data) == int:
+                data_type = SparkSQLTypeEnum.Integer.value
+            elif type(data) == float:
+                data_type = SparkSQLTypeEnum.Float.value
+            elif type(data) == str:
+                data_type = SparkSQLTypeEnum.String.value
+            elif type(data) == dict:
+                data_type = SparkSQLTypeEnum.String.value
+            elif type(data) == list:
+                data_type = SparkSQLTypeEnum.String.value
+            column_2_type[col] = data_type
+        return column_2_type
+    
+    def disconnect(self):
+        if self.connection is not None:
+            #try:
+            for table in self.name_2_table.values():
+                table.persist(self.engine)
+            self.connection.stop()
+            #except: # deal with connection already stopped
+            #    pass
+    
+    def exist_table(self, table_name, where="session") -> bool:
+        has_table = self.engine.has_table(self.connection, table_name, where)
         if has_table:
             return True
         return False
 
+    def analyze_table_stats(self):
+        for table in self.name_2_table.values():
+            table.analyzeStats(self.engine)
+
+    # check whether the input key (config name) is modifiable in runtime
+    # and set its value to the given value if it is modifiable
+    def get_hint_sql(self, key, value):
+        if self.connection.conf.isModifiable(key):
+            #self.connection.conf.set(key, value)
+            self.connection.sql("SET {} = {}".format(key, value))
+            return SUCCESS
+        else:
+            logger.warning("[get_hint_sql] Configuration '{}' is not modifiable in runtime, nothing changed".format(key))
+            return FAILURE
+
+    def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
+                                 enable_autoincrement_id_key=True):
+        if primary_key_column is not None:
+            logger.warning("[create_table_if_absences] Spark SQL does not support specifying primary key while creating table.")
+            primary_key_column = None
+        column_2_type = self._to_db_data_type(column_2_value)
+        #metadata_obj = self.metadata
+        if not self.exist_table(table_name, where="session"):
+            # Only checks whether the table exists in current session.
+            # If the table exists in the data source but not in the session, 
+            #   here self.exist_table simply returns False, 
+            #   then table.create will load it from the data source.
+            if self.exist_table(table_name, where="datasource"):
+                logger.warning("[create_table_if_absences] Table '{}' exists in the data source but not in the current session, ".format(table_name) + 
+                                "so it will be loaded from the data source and your input schema will be ignored.")
+            columns = []
+            for column, column_type in column_2_type.items():
+                columns.append(SparkColumn(column, column_type))
+            table = SparkTable(table_name, None, *columns)
+            table.create(self.engine)
+            self.name_2_table[table_name] = table
+        else:
+            logger.warning("[create_table_if_absences] Table '{}' exists, nothing changed.".format(table_name))
+
     def get_table_row_count(self, table_name):
-        stmt = select(func.count()).select_from(self.name_2_table[table_name])
-        result = self.execute(stmt, fetch=True)
-        return result[0][0]
+        if table_name not in self.name_2_table:
+            raise RuntimeError("The table '{}' not found in current session, ".format(table_name) + \
+                               "please make sure you have called 'create_table_if_absences' to create or load it.")
+        return self.name_2_table[table_name].nrows()
+        
+    def insert(self, table_name, column_2_value: dict):
+        table = self.name_2_table[table_name]
+        table.insert(self.connection, column_2_value)
 
-    def modify_sql_for_ignore_records(self, sql, is_execute):
-        return self.get_explain_sql(sql, is_execute)
-
-    def explain_physical_plan(self, sql, comment=""):
-        return self._explain(sql, comment, False)
-
-    def explain_execution_plan(self, sql, comment=""):
-        return self._explain(sql, comment, True)
-
-    def get_estimated_cost(self, sql):
-        plan = self.explain_physical_plan(sql)
-        return plan["Plan"]["Total Cost"]
-
-    def get_explain_sql(self, sql, execute: bool, comment=""):
-        return "{} explain (ANALYZE {}, VERBOSE, SETTINGS, SUMMARY, FORMAT JSON) {}".format(comment,
-                                                                                            "" if execute else "False",
-                                                                                            sql)
-
-    def get_buffercache(self):
-        sql = """
-            SELECT c.relname, count(*) AS buffers
-            FROM pg_buffercache b JOIN pg_class c
-            ON b.relfilenode = pg_relation_filenode(c.oid) AND
-            b.reldatabase IN (0, (SELECT oid FROM pg_database
-                                    WHERE datname = current_database()))
-            JOIN pg_namespace n ON n.oid = c.relnamespace
-            GROUP BY c.relname;
-            """
-        res = self.connection.execute(text(sql)).all()
-        return {k: v for k, v in res if not k.startswith("pg_")}
-
-    def _explain(self, sql, comment, execute: bool):
-        return self.execute(text(self.get_explain_sql(sql, execute, comment)), True)[0][0][0]
+    def execute(self, sql, fetch=False) -> Union[pandas.DataFrame, DataFrame]:
+        row = None
+        try:
+            df = self.connection.sql(sql)
+            row = df.toPandas()
+            if not fetch:
+                row = df
+        except Exception as e:
+            if "PilotScopeFetchEnd" not in str(e):
+                raise e
+        return row
+        
+    def _unresolvedLogicalPlan(self, query_execution):
+        return query_execution.logical()
     
+    def _resolvedLogicalPlan(self, query_execution):
+        return query_execution.analyzed()
+    
+    def _optimizedLogicalPlan(self, query_execution):
+        return query_execution.optimizedPlan()
+    
+    def _logicalPlan(self, query_execution):
+        return self._optimizedLogicalPlan(query_execution)
+    
+    def _physicalPlan(self, query_execution):
+        return query_execution.executedPlan()
+    
+    def explain_logical_plan(self, sql, comment="") -> Dict:
+        comment_pos = sql.lower().find("select") + len("select")
+        sql_with_comment = sql[:comment_pos] + " " + comment + " " + sql[comment_pos:]
+        plan = self._logicalPlan(self.execute(sql_with_comment)._jdf.queryExecution())
+        #if pretty:
+        #    return plan.prettyJson()
+        #else:
+        return json.loads(plan.toJSON())
+    
+    def explain_physical_plan(self, sql, comment="") -> Dict:
+        comment_pos = sql.lower().find("select") + len("select")
+        sql_with_comment = sql[:comment_pos] + " " + comment + " " + sql[comment_pos:]
+        plan = self._physicalPlan(self.execute(sql_with_comment)._jdf.queryExecution())
+        #if pretty:
+        #    return plan.prettyJson()
+        #else:
+        return json.loads(plan.toJSON())
+
+    def get_estimated_cost(self, sql) -> Tuple[int]:
+        plan = self._logicalPlan(self.execute(sql)._jdf.queryExecution())
+        cost_str = plan.stats().simpleString()
+        pattern = re.compile(r"sizeInBytes=([0-9.]+) B, rowCount=([0-9]+)")
+        res = pattern.search(cost_str)
+        return res.groups()[0], res.groups()[1]
+        
+    # done
+    def write_knob_to_file(self, knobs):
+        for k,v in knobs.items():
+            self.get_hint_sql(k, v)
+
+    # done
+    def recover_config(self):
+        # reset all modifiable runtime configurations
+        self.connection.sql("RESET")
+
+   
     # switch user and run
     def _surun(self, cmd):
-        os.system("su {} -c '{}'".format(self.config.user, cmd))
+        #os.system("su {} -c '{}'".format(self.config.user, cmd))
+        pass
     
     def shutdown(self):
-        self._surun("{} stop -D {}".format(self.config.pg_ctl, self.config.pgdata))
-
+        #self._surun("{} stop -D {}".format(self.config.pg_ctl, self.config.pgdata))    
+        pass
+    
     def start(self):
-        self._surun("{} start -D {}".format(self.config.pg_ctl, self.config.pgdata))
-        for instance in type(self).instances:
-            instance.connect()
+        #self._surun("{} start -D {}".format(self.config.pg_ctl, self.config.pgdata))
+        #for instance in type(self).instances:
+        #    instance.connect()
+        pass
         
+    def explain_execution_plan(self, sql, comment=""):
+        #return self._explain(sql, comment, True)
+        pass
+
+    def get_explain_sql(self, sql, execute: bool, comment=""):
+        #return "{} explain (ANALYZE {}, VERBOSE, SETTINGS, SUMMARY, FORMAT JSON) {}".format(comment,
+        #                                                                                    "" if execute else "False",
+        #                                                                                    sql)
+        pass
+
+    def modify_sql_for_ignore_records(self, sql, is_execute):
+        #return self.get_explain_sql(sql, is_execute)
+        pass
+    
     def status(self):
-        res = os.popen("su {} -c '{} status -D {}'".format(self.config.user,self.config.pg_ctl, self.config.pgdata))
-        return res.read()
+        #res = os.popen("su {} -c '{} status -D {}'".format(self.config.user,self.config.pg_ctl, self.config.pgdata))
+        #return res.read()
+        pass
         
-    def write_knob_to_file(self, knobs):
-        with open(self.config.db_config_path, "a") as f:
-            f.write("\n")
-            for k,v in knobs.items():
-                f.write("{} = {}\n".format(k,v))
-
-    def recover_config(self):
-        with open(self.config.backup_db_config_path, "r") as f:
-            db_config_file = f.read()
-        with open(self.config.db_config_path, "w") as f:
-            f.write(db_config_file)
-
+    def get_buffercache(self):
+        pass
+    
     #NOTE: modified from DBTune (MIT liscense)
     def get_internal_metrics(self):
-        def parse_helper(valid_variables, view_variables):
-            for view_name, variables in list(view_variables.items()):
-                for var_name, var_value in list(variables.items()):
-                    full_name = '{}.{}'.format(view_name, var_name)
-                    if full_name not in valid_variables:
-                        valid_variables[full_name] = []
-                    valid_variables[full_name].append(var_value)
-            return valid_variables
-        try:
-            metrics_dict = {
-                'global': {},
-                'local': {
-                    'db': {},
-                    'table': {},
-                    'index': {}
-                }
-            }
+        pass
 
-            for view in self.PG_STAT_VIEWS:
-                sql = 'SELECT * from {}'.format(view)
-                cur=self.connection.connection.cursor()
-                cur.execute(sql)
-                results = cur.fetchall()
-                columns = [col[0] for col in cur.description]
-                results = [dict(zip(columns, row)) for row in results]
-                if view in ["pg_stat_archiver", "pg_stat_bgwriter"]:
-                    metrics_dict['global'][view] = results[0]
-                else:
-                    if view in self.PG_STAT_VIEWS_LOCAL_DATABASE:
-                        type = 'db'
-                        type_key = 'datname'
-                    elif view in self.PG_STAT_VIEWS_LOCAL_TABLE:
-                        type = 'table'
-                        type_key = 'relname'
-                    elif view in self.PG_STAT_VIEWS_LOCAL_INDEX:
-                        type = 'index'
-                        type_key = 'relname'
-                    metrics_dict['local'][type][view] = {}
-                    for res in results:
-                        type_name = res[type_key]
-                        metrics_dict['local'][type][view][type_name] = res
+    def execute_batch(self, sql, fetch=False):
+        pass
 
-            metrics = {}
-            for scope, sub_vars in list(metrics_dict.items()):
-                if scope == 'global':
-                    metrics.update(parse_helper(metrics, sub_vars))
-                elif scope == 'local':
-                    for _, viewnames in list(sub_vars.items()):
-                        for viewname, objnames in list(viewnames.items()):
-                            for _, view_vars in list(objnames.items()):
-                                metrics.update(parse_helper(metrics, {viewname: view_vars}))
+    def create_index(self, index_name, table, columns):
+        pass
 
-            # Combine values
-            valid_metrics = {}
-            for name, values in list(metrics.items()):
-                if name.split('.')[-1] in self.NUMERIC_METRICS:
-                    values = [float(v) for v in values if v is not None]
-                    if len(values) == 0:
-                        valid_metrics[name] = 0
-                    else:
-                        valid_metrics[name] = sum(values)
-        except Exception as ex:
-            print(ex)
-        return valid_metrics
+    def create_index(self, index):
+        pass
 
+    def drop_index(self, index_name):
+        pass
 
-class SimulateIndexController:
-    def create_index(self, index: Index):
-        table_name = index.table()
-        statement = (
-            "select * from hypopg_create_index( "
-            f"'create index on {table_name} "
-            f"({index.joined_column_names()})';)"
-        )
-        result = self.exec_fetch(statement)
-        return result
+    def drop_all_indexes(self):
+        pass
+
+    def get_all_indexes_byte(self):
+        pass
+
+    def get_table_indexes_byte(self, table):
+        pass
+
+    def get_index_byte(self, index_name):
+        pass
