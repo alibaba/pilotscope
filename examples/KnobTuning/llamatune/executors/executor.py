@@ -196,8 +196,8 @@ class DummyExecutor(ExecutorInterface):
         return perf, metrics
 
 import sys
-sys.path.append("/PilotScopeCore/")
-sys.path.append("/PilotScopeCore/components")# TODO :after installing baihe_lib as a package, del it
+sys.path.append("../")
+sys.path.append("../components")# TODO :after installing baihe_lib as a package, del it
 
 from components.DataFetcher.PilotStateManager import PilotStateManager
 from components.PilotConfig import PilotConfig
@@ -209,19 +209,30 @@ class SysmlExecutor(ExecutorInterface):
         # self.thread=int(kwargs["thread"])
         self.sqls_file_path=kwargs["sqls_file_path"]
         # self.timeout_per_sql=int(kwargs["timeout_per_sql"]) # ms
-        self.state_manager = PilotStateManager(PilotConfig())
+        config = PilotConfig()
+        config.once_request_timeout = 120
+        config.sql_execution_timeout = 120
+        self.state_manager = PilotStateManager(config)
         self.db_controller = self.state_manager.db_controller
         
     def evaluate_configuration(self, dbms_info, benchmark_info):
         with open(self.sqls_file_path,"r") as f:
-            sqls = f.readlines()[:10]
+            sqls = f.readlines()
         try:
-            self.db_controller.write_knob_to_file(dbms_info["config"])
-            self.db_controller.restart()
+            self.state_manager.set_knob(dbms_info["config"])
             self.state_manager.fetch_execution_time()
+            # first sql: set knob and exec
             accu_execution_time = 0
             execution_times = []
-            for i, sql in enumerate(sqls):
+            data = self.state_manager.execute(sqls[0], is_reset=True)
+            if data.execution_time is None:
+                raise TimeoutError
+            else:
+                execution_times.append(data.execution_time)
+                accu_execution_time += data.execution_time
+            # the latter sql: use previous knob and exec
+            self.state_manager.fetch_execution_time()
+            for i, sql in enumerate(sqls[1:]):
                 data = self.state_manager.execute(sql, is_reset=(i == len(sqls) - 1))
                 if data.execution_time is None:
                     raise TimeoutError
@@ -230,14 +241,17 @@ class SysmlExecutor(ExecutorInterface):
                 else:
                     execution_times.append(data.execution_time)
                     accu_execution_time += data.execution_time
+            # recover config at last
             self.db_controller.recover_config()
-            perf = {"latency":sorted(execution_times)[int(0.95*len(sqls))],"runtime":accu_execution_time,"throughput":len(sqls)/accu_execution_time}
+            perf = {"latency":sorted(execution_times)[int(0.95*len(sqls))], "runtime":accu_execution_time, "throughput":len(sqls)/accu_execution_time}
             if not self.parse_metrics:
                 return perf
+            self.db_controller.connect()
             res = self.db_controller.get_internal_metrics()
             metrics = np.array([v for _,v in res.items()])
             return perf, metrics
         except Exception as e:
+            # raise e
             print(e)
             # perf = {"latency":self.state_manager.config.once_request_timeout,"runtime":self.state_manager.config.once_request_timeout*len(sqls),"throughput":1/self.state_manager.config.once_request_timeout}
             perf = None

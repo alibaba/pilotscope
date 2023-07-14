@@ -24,6 +24,8 @@ class AnchorHandlerFactory:
             return CostAnchorHandler(config)
         elif anchor == AnchorEnum.INDEX_REPLACE_ANCHOR:
             return IndexAnchorHandler(config)
+        elif anchor == AnchorEnum.KNOB_REPLACE_ANCHOR:
+            return KonbAnchorHandler(config)
         # fetch
         elif anchor == AnchorEnum.RECORD_FETCH_ANCHOR:
             return PostgreSQLRecordFetchAnchorHandler(config)

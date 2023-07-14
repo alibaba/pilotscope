@@ -6,14 +6,16 @@ import pandas as pd
 
 from DBController.BaseDBController import BaseDBController
 from Dao.PilotTrainDataManager import PilotTrainDataManager
+from PilotEnum import ExperimentTimeEnum
 from PilotEvent import PeriodicDbControllerEvent
+from common.TimeStatistic import TimeStatistic
 from examples.utils import load_training_sql
 
 pd.set_option('display.max_columns', None)
 import numpy as np
 import sys
 
-sys.path.append("/PilotScopeCore/examples/KnobTuning/llamatune")
+sys.path.append("../examples/KnobTuning/llamatune")
 from config import config
 from executors.executor import ExecutorFactory
 from optimizer import get_ddpg_optimizer, get_smac_optimizer
@@ -38,6 +40,7 @@ class KnobPeriodicDbControllerEvent(PeriodicDbControllerEvent):
 
     def _custom_update(self, db_controller: BaseDBController, training_data_manager: PilotTrainDataManager):
 
+        TimeStatistic.start(ExperimentTimeEnum.FIND_KNOB)
         db_controller.recover_config()
         db_controller.restart()
 
@@ -127,3 +130,4 @@ class KnobPeriodicDbControllerEvent(PeriodicDbControllerEvent):
 
         db_controller.write_knob_to_file(dict(exp_state.best_conf))
         db_controller.restart()
+        TimeStatistic.end(ExperimentTimeEnum.FIND_KNOB)

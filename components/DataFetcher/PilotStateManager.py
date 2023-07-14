@@ -257,6 +257,11 @@ class PilotStateManager:
         anchor.subquery_2_card = subquery_2_value
         self.anchor_to_handlers[AnchorEnum.CARD_REPLACE_ANCHOR] = anchor
 
+    def set_knob(self, key_2_value_for_knob: dict):
+        anchor: KonbAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.KNOB_REPLACE_ANCHOR)
+        anchor.key_2_value_for_knob = key_2_value_for_knob
+        self.anchor_to_handlers[AnchorEnum.KNOB_REPLACE_ANCHOR] = anchor
+
     def set_cost(self, subplan_2_cost: dict):
         anchor: CostAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.COST_REPLACE_ANCHOR)
         anchor.subplan_2_cost = subplan_2_cost

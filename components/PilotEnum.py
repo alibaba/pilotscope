@@ -68,6 +68,7 @@ class ExperimentTimeEnum:
     REMAIN = "Remain"
     PREDICT = "Predict"
     FIND_INDEX = "FindIndex"
+    FIND_KNOB = "FindKnob"
 
     @classmethod
     def get_anchor_key(cls, anchor_name):
