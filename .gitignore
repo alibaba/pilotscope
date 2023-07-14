@@ -3,3 +3,13 @@
 **/__pycache__/**
 .idea/
 test/results/**
+dev_data/
+
+*.log
+*.dat
+.attach_*
+*.db
+*.lck
+*.properties
+*.ctrl
+*.txt

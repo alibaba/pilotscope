@@ -1,5 +1,6 @@
 from DBController.BaseDBController import BaseDBController
 from DBController.PostgreSQLController import PostgreSQLController
+from DBController.SparkSQLController import SparkSQLController
 from PilotConfig import PilotConfig
 from PilotEnum import DatabaseEnum
 
@@ -19,6 +20,9 @@ class DBControllerFactory:
         db_controller = None
         if config.db_type == DatabaseEnum.POSTGRESQL:
             db_controller = PostgreSQLController(config, echo, allow_to_create_db, enable_simulate_index)
+            return PostgreSQLController(config, echo, allow_to_create_db)
+        elif config.db_type == DatabaseEnum.SPARK:
+            return SparkSQLController(config, echo, allow_to_create_db)
         else:
             raise RuntimeError()
 
