@@ -1,4 +1,5 @@
 import json
+from concurrent.futures import Future
 
 from Anchor.BaseAnchor.replaceAnchorHandler import ReplaceAnchorHandler
 
@@ -84,3 +85,11 @@ def json_str_to_json_obj(json_data):
         json_obj = json_obj[0]
         assert type(json_obj) == dict
     return json_obj
+
+
+def wait_futures_results(futures: list):
+    results = []
+    for future in futures:
+        future: Future = future
+        results.append(future.result())
+    return results

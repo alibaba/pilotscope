@@ -1,4 +1,6 @@
 import os
+from abc import ABC
+
 from sqlalchemy import Table, Column, select, func, text, inspect
 from sqlalchemy.exc import OperationalError
 from typing_extensions import deprecated
@@ -49,13 +51,33 @@ class PostgreSQLController(BaseDBController):
         'idx_blks_hit', 'idx_blks_read', 'idx_scan', 'idx_tup_fetch', 'idx_tup_read'
     ]
 
-    def __init__(self, config, echo=False, allow_to_create_db=False):
+    def __init__(self, config, echo=False, allow_to_create_db=False, enable_simulate_index=False):
         super().__init__(config, echo, allow_to_create_db)
 
         self.simulate_index_controller = None
 
-        self.engine = self.engine.execution_options(isolation_level="AUTOCOMMIT")
-        self.connect()
+        self.enable_simulate_index = enable_simulate_index
+        if self.enable_simulate_index:
+            self.simulate_index_visitor = SimulateIndexVisitor(self)
+        self._add_extension()
+
+    def _add_extension(self):
+        extensions = self.get_available_extensions()
+        if "pg_buffercache" not in extensions:
+            self.execute("create extension pg_buffercache")
+        if "pg_sysml" not in extensions:
+            self.execute("create extension pg_sysml")
+        if self.enable_simulate_index and "hypopg" not in extensions:
+            self.execute("create extension hypopg")
+
+    def get_available_extensions(self):
+        sql = ("SELECT name, default_version, installed_version FROM"
+               " pg_available_extensions ORDER BY name;")
+        res = self.execute(sql, fetch=True)
+        extensions = []
+        for row in res:
+            extensions.append(row[0])
+        return extensions
 
     def _create_conn_str(self):
         # postgresql://postgres@localhost/stats
@@ -64,7 +86,9 @@ class PostgreSQLController(BaseDBController):
     def execute(self, sql, fetch=False):
         row = None
         try:
-            result = self.connection.execute(text(sql) if isinstance(sql, str) else sql)
+            self.connect_if_loss()
+            conn = self.get_connection()
+            result = conn.execute(text(sql) if isinstance(sql, str) else sql)
             if fetch:
                 row = result.all()
         except OperationalError as e:
@@ -76,24 +100,6 @@ class PostgreSQLController(BaseDBController):
             if "PilotScopeFetchEnd" not in str(e):
                 raise e
         return row
-
-    @deprecated('use execute instead')
-    def execute_batch(self, sqls, fetch=False):
-        try:
-            for sql in sqls[:-1]:
-                self.connection.execute(text(sql) if isinstance(sql, str) else sql)
-            result = self.connection.execute(text(sqls[-1]) if isinstance(sqls[-1], str) else sqls[-1])
-            if fetch:
-                return result.all()
-        except OperationalError as e:
-            pilotscope_exit(e)
-            if "canceling statement due to statement timeout" in str(e):
-                raise DBStatementTimeoutException(str(e))
-            else:
-                raise e
-        except Exception as e:
-            if "PilotScopeFetchEnd" not in str(e):
-                raise e
 
     def get_hint_sql(self, key, value):
         return "SET {} TO {}".format(key, value)
@@ -118,45 +124,63 @@ class PostgreSQLController(BaseDBController):
         table = self.name_2_table[table_name]
         self.execute(table.insert().values(column_2_value))
 
-    def create_index(self, index_name, table, columns):
-        column_names = ",".join(columns)
-        sql = f"create index {index_name} on {table} ({column_names});"
-        self.execute(sql, fetch=False)
+    def create_index(self, index):
+        if self.enable_simulate_index:
+            self.simulate_index_visitor.create_index(index)
+        else:
+            column_names = index.joined_column_names()
+            sql = f"create index {index.index_name} on {index.table} ({column_names});"
+            self.execute(sql, fetch=False)
 
-    def drop_index(self, index_name):
-        statement = (
-            f"DROP INDEX IF EXISTS {index_name};"
-        )
-        self.execute(statement, fetch=False)
+    def drop_index(self, index):
+        if self.enable_simulate_index:
+            self.simulate_index_visitor.drop_index(index)
+        else:
+            statement = (
+                f"DROP INDEX IF EXISTS {index.index_name};"
+            )
+            self.execute(statement, fetch=False)
 
     def drop_all_indexes(self):
-        indexes = self.get_all_indexes()
-        for index in indexes:
-            index_name = index.index_name
-            if not index_name.startswith("pgsysml_"):
-                self.drop_index(index_name)
+        if self.enable_simulate_index:
+            self.simulate_index_visitor.drop_all_indexes()
+        else:
+            indexes = self.get_all_indexes()
+            for index in indexes:
+                index_name = index.index_name
+                if not index_name.startswith("pgsysml_"):
+                    self.drop_index(index)
 
     def get_all_indexes_byte(self):
-        # Returns size in bytes
-        sql = ("select sum(pg_indexes_size(table_name::text)) from "
-               "(select table_name from information_schema.tables "
-               "where table_schema='public') as all_tables;")
-        result = self.execute(sql, fetch=True)
-        return float(result[0][0])
+        if self.enable_simulate_index:
+            return self.simulate_index_visitor.get_all_indexes_byte()
+        else:
+            # Returns size in bytes
+            sql = ("select sum(pg_indexes_size(table_name::text)) from "
+                   "(select table_name from information_schema.tables "
+                   "where table_schema='public') as all_tables;")
+            result = self.execute(sql, fetch=True)
+            return float(result[0][0])
 
     def get_table_indexes_byte(self, table):
-        # Returns size in bytes
-        sql = f"select pg_indexes_size('{table}');"
-        result = self.execute(sql, fetch=True)
-        return float(result[0][0])
+        if self.enable_simulate_index:
+            return self.simulate_index_visitor.get_index_byte(table)
+        else:
+            # Returns size in bytes
+            sql = f"select pg_indexes_size('{table}');"
+            result = self.execute(sql, fetch=True)
+            return float(result[0][0])
 
-    def get_index_byte(self, index_name):
-        sql = f"select pg_table_size('{index_name}');"
-        result = self.execute(sql, fetch=True)
-        return int(result[0][0])
+    def get_index_byte(self, index):
+        if self.enable_simulate_index:
+            return self.simulate_index_visitor.get_index_byte(index)
+        else:
+            sql = f"select pg_table_size('{index.get_index_name()}');"
+            result = self.execute(sql, fetch=True)
+            return int(result[0][0])
 
     def exist_table(self, table_name) -> bool:
-        has_table = self.engine.dialect.has_table(self.connection, table_name)
+        has_table = self.engine.dialect.has_table(self.get_connection(), table_name)
         if has_table:
             return True
         return False
@@ -180,9 +204,10 @@ class PostgreSQLController(BaseDBController):
         return plan["Plan"]["Total Cost"]
 
     def get_explain_sql(self, sql, execute: bool, comment=""):
-        return "{} explain (ANALYZE {}, VERBOSE, SETTINGS, SUMMARY, FORMAT JSON) {}".format(comment,
-                                                                                            "" if execute else "False",
-                                                                                            sql)
+        # the simulate index will be disabled if there are ANALYZE even though it is false
+        return "{} explain ({} VERBOSE, SETTINGS, SUMMARY, FORMAT JSON) {}".format(comment,
+                                                                                   "ANALYZE," if execute else "",
+                                                                                   sql)
 
     def get_buffercache(self):
         sql = """
@@ -194,7 +219,7 @@ class PostgreSQLController(BaseDBController):
             JOIN pg_namespace n ON n.oid = c.relnamespace
             GROUP BY c.relname;
             """
-        res = self.connection.execute(text(sql)).all()
+        res = self.execute(sql, fetch=True)
         return {k: v for k, v in res if not k.startswith("pg_")}
 
     def _explain(self, sql, comment, execute: bool):
@@ -210,7 +235,7 @@ class PostgreSQLController(BaseDBController):
     def start(self):
         self._surun("{} start -D {}".format(self.config.pg_ctl, self.config.pgdata))
         for instance in type(self).instances:
-            instance.connect()
+            instance.connect_if_loss()
 
     def status(self):
         res = os.popen("su {} -c '{} status -D {}'".format(self.config.user, self.config.pg_ctl, self.config.pgdata))
@@ -251,7 +276,7 @@ class PostgreSQLController(BaseDBController):
 
             for view in self.PG_STAT_VIEWS:
                 sql = 'SELECT * from {}'.format(view)
-                cur = self.connection.connection.cursor()
+                cur = self.get_connection().connection.cursor()
                 cur.execute(sql)
                 results = cur.fetchall()
                 columns = [col[0] for col in cur.description]
@@ -297,13 +322,56 @@ class PostgreSQLController(BaseDBController):
         return valid_metrics
 
 
-class SimulateIndexController:
+class SimulateIndexVisitor:
+
+    def __init__(self, db_controller: PostgreSQLController):
+        super().__init__()
+        self.db_controller = db_controller
+        self.simulated_indexes = {}
+
     def create_index(self, index: Index):
-        table_name = index.table()
+        columns = index.joined_column_names()
         statement = (
             "select * from hypopg_create_index( "
-            f"'create index on {table_name} "
-            f"({index.joined_column_names()})';)"
+            f"'create index on {index.table} "
+            f"({columns})')"
         )
-        result = self.exec_fetch(statement)
-        return result
+        result = self.db_controller.execute(statement, fetch=True)[0]
+        index.hypopg_oid = result[0]
+        index.hypopg_name = result[1]
+        self.simulated_indexes[index.hypopg_oid] = index
+
+    def drop_index(self, index: Index):
+        oid = index.hypopg_oid
+        statement = f"select * from hypopg_drop_index({oid})"
+        result = self.db_controller.execute(statement, fetch=True)
+        assert result[0][0] is True, f"Could not drop simulated index with oid = {oid}."
+
+        self.simulated_indexes.pop(oid)
+
+    def drop_all_indexes(self):
+        indexes = list(self.simulated_indexes.values())
+        for index in indexes:
+            self.drop_index(index)
+        self.simulated_indexes.clear()
+
+    def get_all_indexes_byte(self):
+        # todo
+        raise NotImplementedError
+
+    def get_table_indexes_byte(self, table):
+        # todo
+        raise NotImplementedError
+
+    def get_index_byte(self, index: Index):
+        try:
+            statement = f"select hypopg_relation_size({index.hypopg_oid})"
+            result = self.db_controller.execute(statement, fetch=True)[0][0]
+            assert result > 0, "Hypothetical index does not exist."
+            return result
+        except:
+            raise RuntimeError
+
+    def get_all_indexes(self):
+        sql = "SELECT * FROM hypopg_list_indexes"
+        raise NotImplementedError

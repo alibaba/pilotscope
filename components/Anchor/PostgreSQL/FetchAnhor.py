@@ -58,6 +58,7 @@ class PostgreSQLEstimatedCostFetchAnchorHandler(EstimatedCostFetchAnchorHandler,
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
+        TimeStatistic.start(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
         if fill_data.estimated_cost is not None:
             return
 
@@ -65,6 +66,8 @@ class PostgreSQLEstimatedCostFetchAnchorHandler(EstimatedCostFetchAnchorHandler,
             anchor_data.physical_plan = db_controller.explain_physical_plan(sql, comment=pilot_comment)
 
         fill_data.estimated_cost = anchor_data.physical_plan["Plan"]["Total Cost"]
+        TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
+
 
 
 class PostgreSQLBuffercacheFetchAnchorHandler(BuffercacheFetchAnchorHandler, PostgreSQLAnchorMixin):

@@ -19,8 +19,9 @@ class IndexTest(unittest.TestCase):
     def setUp(self):
         self.config: PilotConfig = PilotConfig()
         self.config.db = "imdb"
+        # self.config.db = "stats"
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
-        self.algo = "Extend"
+        self.algo = "extend"
 
         self.test_data_table = "{}_{}_test_data_table".format(self.algo, self.config.db)
         self.pg_test_data_table = "{}_{}_test_data_table".format("pg", self.config.db)
@@ -28,6 +29,8 @@ class IndexTest(unittest.TestCase):
     def test_index(self):
         try:
             config = self.config
+            config.sql_execution_timeout = config.once_request_timeout = 50000
+            config.print()
 
             state_manager = PilotStateManager(config)
             state_manager.fetch_execution_time()
@@ -43,13 +46,13 @@ class IndexTest(unittest.TestCase):
             # start
             scheduler.init()
             print("start to test sql")
-            sqls = load_test_sql(self.config.db)[0:20]
+            sqls = load_test_sql(self.config.db)
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, and it is {}".format(i, sql))
                 TimeStatistic.start(ExperimentTimeEnum.END_TO_END)
                 scheduler.simulate_db_console(sql)
                 TimeStatistic.end(ExperimentTimeEnum.END_TO_END)
-            TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo, config.db))
+                TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo, config.db))
             self.draw_time_statistic()
         finally:
             pilotscope_exit()
@@ -58,7 +61,7 @@ class IndexTest(unittest.TestCase):
         name_2_value = TimeStatistic.get_sum_data()
         Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db), is_rotation=True)
 
-    def test_default_index(self):
+    def test_pg(self):
         try:
             config = self.config
 

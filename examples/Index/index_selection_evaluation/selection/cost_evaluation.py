@@ -1,9 +1,12 @@
 import logging
 
+from sqlalchemy.exc import OperationalError
+
 from DataFetcher.PilotStateManager import PilotStateManager
 from PilotConfig import PilotConfig
 from PilotTransData import PilotTransData
 from common.Index import Index as pilotIndex
+from examples.utils import to_pilot_index
 from selection.index import Index
 from selection.what_if_index_creation import WhatIfIndexCreation
 from selection.workload import Query
@@ -75,8 +78,11 @@ class CostEvaluation:
         # print("origin total cost is {}".format(total_cost))
         try:
             pilot_total_cost = self.pilot_calculate_cost(workload, indexes)
-        except Exception as e:
-            return float('inf')
+        except OperationalError as e:
+            if "psycopg2.errors.ProgramLimitExceeded)" in str(e):
+                return float('inf')
+            else:
+                raise e
 
         print("pilot total cost is {}".format(pilot_total_cost))
         # assert total_cost == pilot_total_cost
@@ -99,17 +105,14 @@ class CostEvaluation:
 
     def pilot_calculate_cost(self, workload, indexes):
         self.current_indexes = set(indexes)
-        state_manager = PilotStateManager(self.db_connector.get_config())
+        state_manager = self.db_connector.state_manager
         sqls = []
         pilot_indexes = []
         for query in workload.queries:
             query: Query = query
             sqls.append(query.text)
         for index in indexes:
-            index: Index = index
-            columns = [c.name for c in index.columns]
-            table = index.columns[0].table
-            pilot_indexes.append(pilotIndex(columns=columns, table=table))
+            pilot_indexes.append(to_pilot_index(index))
 
         state_manager.set_index(pilot_indexes)
         state_manager.fetch_estimated_cost()
@@ -118,11 +121,17 @@ class CostEvaluation:
             self.cost_requests += 1
             total_cost += self._request_cache_pilot(query, indexes, state_manager)
 
-        for index in indexes:
+        for i, index in enumerate(indexes):
+            pilot_index = pilot_indexes[i]
             if index.estimated_size is None:
-                index.estimated_size = self.db_connector.get_index_byte(index.index_idx())
+                try:
+                    index.estimated_size = self.db_connector.get_index_byte(pilot_index)
+                except:
+                    self.pilot_calculate_cost(workload,indexes)
+            index.hypopg_oid = pilot_index.hypopg_oid
+            index.hypopg_name = pilot_index.hypopg_name
 
-        state_manager.reset()
+        # state_manager.reset()
         return total_cost
 
     def write_cost(self, file_name, cost):
@@ -205,7 +214,7 @@ class CostEvaluation:
             self.relevant_indexes_cache[q_i_hash] = relevant_indexes
 
         # Check if query and corresponding relevant indexes in cache
-        if (query, relevant_indexes) in self.cache and False:
+        if (query, relevant_indexes) in self.cache:
             self.cache_hits += 1
             return self.cache[(query, relevant_indexes)]
         # If no cache hit request cost from database system

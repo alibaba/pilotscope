@@ -133,10 +133,12 @@ class PretrainingModelEvent(Event):
         self.train()
 
     def collect_and_write(self):
+        is_terminate = False
         if self.enable_collection:
-            column_2_value_list = self._custom_collect_data()
-            table = self.save_table_name
-            self._train_data_manager.save_data_batch(table, column_2_value_list)
+            while not is_terminate:
+                column_2_value_list, is_terminate = self._custom_collect_data()
+                table = self.save_table_name
+                self._train_data_manager.save_data_batch(table, column_2_value_list)
 
     def train(self):
         if self.enable_training:
@@ -169,4 +171,3 @@ class PeriodicDbControllerEvent(Event):
     @abstractmethod
     def _custom_update(self, db_controller: BaseDBController, training_data_manager: PilotTrainDataManager):
         pass
-

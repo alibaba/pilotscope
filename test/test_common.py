@@ -3,6 +3,7 @@ import time
 from http.server import HTTPServer
 
 from Server.Server import RequestHandler
+from examples.utils import load_training_sql
 
 
 class MyTestCase(unittest.TestCase):
@@ -35,10 +36,19 @@ class MyTestCase(unittest.TestCase):
             t.join()
 
     def test2(self):
-        last_time  = time.time()
-        time.sleep(1)
-        cur_time=time.time()
-        print(cur_time-last_time)
+        filter_sqls = []
+
+        with open("../examples/job_test.txt", "r") as f:
+            sqls = f.readlines()
+
+        for sql in sqls:
+            if not sql.isascii():
+                print('Line contains non-ASCII characters:', sql)
+            else:
+                filter_sqls.append(sql)
+        # with open("../examples/job_train_ascii.txt", "w") as f:
+        #     for sql in filter_sqls:
+        #         f.write(sql )
 
 
 if __name__ == '__main__':

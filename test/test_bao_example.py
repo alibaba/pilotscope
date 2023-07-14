@@ -29,7 +29,9 @@ from examples.utils import load_test_sql
 class BaoTest(unittest.TestCase):
     def setUp(self):
         self.config: PilotConfig = PilotConfig()
-        self.config.db = "stats"
+        # self.config.db = "imdbfull"
+        self.config.db = "statsfull"
+
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
 
         self.used_cache = False
@@ -40,14 +42,16 @@ class BaoTest(unittest.TestCase):
 
         self.test_data_table = "{}_{}_test_data_table".format(self.model_name, self.config.db)
         self.pg_test_data_table = "{}_{}_test_data_table".format("pg", self.config.db)
-        self.pretraining_data_table = ("bao_pretraining_collect_data"
+        self.pretraining_data_table = ("bao_{}_pretraining_collect_data".format(self.config.db)
                                        if not self.used_cache
-                                       else "bao_pretraining_collect_data_wc")
+                                       else "bao_{}_pretraining_collect_data_wc".format(self.config.db))
         self.algo = "bao"
 
     def test_bao(self):
         try:
             config = self.config
+            config.once_request_timeout = config.sql_execution_timeout = 50000
+            config.print()
 
             bao_pilot_model: BaoPilotModel = BaoPilotModel(self.model_name, have_cache_data=self.used_cache)
             bao_pilot_model.load()
@@ -66,23 +70,16 @@ class BaoTest(unittest.TestCase):
             scheduler.register_collect_data(training_data_save_table=self.test_data_table,
                                             state_manager=state_manager)
 
-            #  updating model periodically
-            # period_train_event = BaoPeriodTrainingEvent(training_data_save_table, config, 5, bao_pilot_model)
-            # scheduler.register_event(EventEnum.PERIOD_TRAIN_EVENT, period_train_event)
-
-            # allow to pretrain model
-
             pretraining_event = BaoPretrainingModelEvent(config, bao_pilot_model, self.pretraining_data_table,
                                                          enable_collection=False,
                                                          enable_training=False)
             scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
             # start
             scheduler.init()
-            # exit()
             print("start to test sql")
             sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):
-                print("current is the {}-th sql, and it is {}".format(i, sql))
+                print("current is the {}-th sql, total is {}".format(i, len(sqls)))
                 TimeStatistic.start(ExperimentTimeEnum.END_TO_END)
                 scheduler.simulate_db_console(sql)
                 TimeStatistic.end(ExperimentTimeEnum.END_TO_END)
@@ -96,7 +93,8 @@ class BaoTest(unittest.TestCase):
     def test_pg_plan(self):
         try:
             config = self.config
-
+            config.once_request_timeout = config.sql_execution_timeout = 50000
+            config.print()
             state_manager = PilotStateManager(config)
             state_manager.fetch_execution_time()
 
@@ -129,8 +127,8 @@ class BaoTest(unittest.TestCase):
 
     def test_compare_performance(self):
         data_manager = PilotTrainDataManager(self.config)
-        pg_results = list(data_manager.read_all(self.test_data_table)["execution_time"])[0:60]
-        algo_results = list(data_manager.read_all(self.pg_test_data_table)["execution_time"])[0:60]
+        pg_results = list(data_manager.read_all(self.pg_test_data_table)["execution_time"])
+        algo_results = list(data_manager.read_all(self.test_data_table)["execution_time"])
         Drawer.draw_bar(
             {"PostgreSQL": pg_results, "Bao": algo_results},
             file_name="bao_performance"

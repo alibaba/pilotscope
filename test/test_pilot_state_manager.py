@@ -7,6 +7,7 @@ from PilotEnum import DatabaseEnum
 from PilotTransData import PilotTransData
 from common.Index import Index
 from common.Util import _accumulate_cost
+from examples.utils import load_test_sql
 
 
 class MyTestCase(unittest.TestCase):
@@ -76,6 +77,13 @@ class MyTestCase(unittest.TestCase):
         origin_cost = _accumulate_cost(datas)
         print("index_cost is {}, origin_cost is {}".format(index_cost, origin_cost))
         self.assertFalse(abs(origin_cost - index_cost) < 100)
+
+    def test_(self):
+        sqls = load_test_sql(self.config.db)[0:10]
+        self.state_manager.reset()
+        self.state_manager.fetch_estimated_cost()
+        datas = self.state_manager.execute_parallel(sqls, is_reset=True)
+        pass
 
 
 if __name__ == '__main__':

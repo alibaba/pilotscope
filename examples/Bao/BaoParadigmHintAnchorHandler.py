@@ -6,6 +6,7 @@ from PilotModel import PilotModel
 from PilotTransData import PilotTransData
 from common.TimeStatistic import TimeStatistic
 from PilotEnum import DatabaseEnum, ExperimentTimeEnum
+from common.dotDrawer import PlanDotDrawer
 
 
 class BaoParadigmHintAnchorHandler(HintAnchorHandler):
@@ -59,11 +60,13 @@ class BaoParadigmHintAnchorHandler(HintAnchorHandler):
                 plans.append(plan)
 
             # print("BAO: ",plans,"\n"+"*"*60)
+            TimeStatistic.start(ExperimentTimeEnum.PREDICT)
             est_exe_time = self.model.user_model.predict(plans)
+            TimeStatistic.end(ExperimentTimeEnum.PREDICT)
             print("BAO: ", est_exe_time)
             TimeStatistic.end(ExperimentTimeEnum.AI_TASK)
             idx = est_exe_time.argmin()
+            pass
         except:
             idx = 0
-        print(idx)
         return self.bao_hint.arms_hint2val[idx]

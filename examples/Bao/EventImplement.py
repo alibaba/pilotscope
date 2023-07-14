@@ -9,6 +9,7 @@ from PilotEvent import PeriodTrainingEvent, PretrainingModelEvent
 from PilotModel import PilotModel
 from PilotTransData import PilotTransData
 from common.Util import json_str_to_json_obj
+from common.dotDrawer import PlanDotDrawer
 from examples.Bao.BaoParadigmHintAnchorHandler import BaoParadigmHintAnchorHandler
 from examples.Bao.source.model import BaoRegression
 from examples.utils import load_training_sql
@@ -19,34 +20,49 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
     def __init__(self, config: PilotConfig, bind_model: PilotModel, save_table_name, enable_collection=True,
                  enable_training=True):
         super().__init__(config, bind_model, save_table_name, enable_collection, enable_training)
-        self.sqls = []
         self.pilot_state_manager = PilotStateManager(self.config)
         self.bao_hint = BaoParadigmHintAnchorHandler.HintForBao(config.db_type)
+        self.sqls = self.load_sql()
+        self.cur_sql_idx = 900
 
     def load_sql(self):
-        self.sqls = load_training_sql(self.config.db)[600:850]  # only for development test
+        return load_training_sql(self.config.db)  # only for development test
 
     def _custom_collect_data(self):
         self.load_sql()
         column_2_value_list = []
-        for i, sql in enumerate(self.sqls):
-            print("current  is {}-th sql, and total sqls is {}".format(i, len(self.sqls)))
-            for hint2val in self.bao_hint.arms_hint2val:
-                column_2_value = {}
-                self.pilot_state_manager.db_controller.connect()
+
+        sql = self.sqls[self.cur_sql_idx]
+        print("current  is {}-th sql, and total sqls is {}".format(self.cur_sql_idx, len(self.sqls)))
+        for hint2val in self.bao_hint.arms_hint2val:
+            column_2_value = {}
+            self.pilot_state_manager.db_controller.connect_if_loss()
+            self.pilot_state_manager.set_hint(hint2val)
+            self.pilot_state_manager.fetch_physical_plan()
+            self.pilot_state_manager.fetch_execution_time()
+            if self._model.have_cache_data:
+                self.pilot_state_manager.fetch_buffercache()
+            data: PilotTransData = self.pilot_state_manager.execute(sql)
+            if data is not None and data.execution_time is not None:
+                column_2_value["plan"] = data.physical_plan
+                column_2_value["sql"] = sql
+                if self._model.have_cache_data:
+                    column_2_value["plan"]["Buffers"] = data.buffercache
+                column_2_value["time"] = data.execution_time
+                column_2_value["sql_idx"] = self.cur_sql_idx
+                column_2_value_list.append(column_2_value)
+            else:
                 self.pilot_state_manager.set_hint(hint2val)
                 self.pilot_state_manager.fetch_physical_plan()
-                self.pilot_state_manager.fetch_execution_time()
-                if self._model.have_cache_data:
-                    self.pilot_state_manager.fetch_buffercache()
                 data: PilotTransData = self.pilot_state_manager.execute(sql)
                 if data is not None and data.execution_time is not None:
+                    column_2_value["sql"] = sql
                     column_2_value["plan"] = data.physical_plan
-                    if self._model.have_cache_data:
-                        column_2_value["plan"]["Buffers"] = data.buffercache
-                    column_2_value["time"] = data.execution_time
+                    column_2_value["time"] = self.config.sql_execution_timeout
+                    column_2_value["sql_idx"] = self.cur_sql_idx
                     column_2_value_list.append(column_2_value)
-        return column_2_value_list
+        self.cur_sql_idx += 1
+        return column_2_value_list, True if self.cur_sql_idx >= len(self.sqls) else False
 
     def _custom_pretrain_model(self, train_data_manager: PilotTrainDataManager, existed_user_model):
         data: DataFrame = train_data_manager.read_all(self.save_table_name)
@@ -66,7 +82,7 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
         return new_plans, new_times
 
     def contain_outlier_plan(self, plan):
-        if isinstance(plan,str):
+        if isinstance(plan, str):
             plan = json_str_to_json_obj(plan)["Plan"]
         children = plan["Plans"] if "Plans" in plan else []
         for child in children:

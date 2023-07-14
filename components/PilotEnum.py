@@ -65,6 +65,7 @@ class ExperimentTimeEnum:
     DB_HTTP = "Http"
     ANCHOR = "{}"
     REMAIN = "Remain"
+    PREDICT = "Predict"
     FIND_INDEX = "FindIndex"
 
     @classmethod

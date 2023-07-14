@@ -20,7 +20,7 @@ class PilotConfig:
         self.data_fetch_method = DataFetchMethodEnum.HTTP
 
         # second
-        self.sql_execution_timeout = 500
+        self.sql_execution_timeout = 100
         self.once_request_timeout = self.sql_execution_timeout
 
         # pretraining
@@ -35,6 +35,13 @@ class PilotConfig:
         self.pgdata = "~"
         self.db_config_path = "/var/lib/pgsql/13.1/data/postgresql.conf"
         self.backup_db_config_path = "postgresql-13.1.conf"
+
+    def print(self):
+        for key, value in self.__dict__.items():
+            print("{} = {}".format(key, value))
+
+    def __str__(self):
+        return self.__dict__.__str__()
 
     def set_db_type(self, db):
         self.db_type = db

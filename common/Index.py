@@ -6,6 +6,10 @@ class Index:
         self.table = table
         self.index_name = index_name
 
+        # used by simulate index (what if)
+        self.hypopg_oid = None
+        self.hypopg_name = None
+
     # Used to sort indexes
     def __lt__(self, other):
         if len(self.columns) != len(other.columns):

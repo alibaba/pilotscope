@@ -103,7 +103,7 @@ class IndexAnchorHandler(ReplaceAnchorHandler):
             if self.drop_other:
                 db_controller.drop_all_indexes()
             for index in self.indexes:
-                db_controller.create_index(index.get_index_name(), index.table, index.columns)
+                db_controller.create_index(index)
             self.have_been_triggered = True
         TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
@@ -115,5 +115,5 @@ class IndexAnchorHandler(ReplaceAnchorHandler):
         # self.is_can_trigger() is False if indexes has been built
         if not self.is_can_trigger():
             for index in self.indexes:
-                db_controller.drop_index(index.get_index_name())
+                db_controller.drop_index(index)
         TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))

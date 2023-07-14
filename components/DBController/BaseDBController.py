@@ -1,7 +1,8 @@
+import threading
 from abc import ABC, abstractmethod
 
 from pandas import DataFrame
-from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table, NullPool, inspect
+from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table, inspect
 from sqlalchemy_utils import database_exists, create_database
 
 from PilotConfig import PilotConfig
@@ -16,7 +17,7 @@ class BaseDBController(ABC):
         self.echo = echo
         self.conn_str = self._create_conn_str()
         self.engine = self._create_engine()
-        self.connection = None
+        self.connection_thread = threading.local()
         # update info of existed tables
         self.metadata = MetaData()
         self.metadata.reflect(self.engine)
@@ -24,26 +25,31 @@ class BaseDBController(ABC):
         for table_name, table_info in self.metadata.tables.items():
             self.name_2_table[table_name] = table_info
 
+        self.connect_if_loss()
+
     def _create_engine(self):
         if not database_exists(self.conn_str):
             create_database(self.conn_str, encoding="SQL_ASCII")
-        return create_engine(self.conn_str, echo=self.echo, poolclass=NullPool, connect_args={
-            "options": "-c statement_timeout={}".format(self.config.sql_execution_timeout * 1000)})
 
-    def connect(self):
-        self.disconnect()
-        self.connection = self.engine.connect()
+        return create_engine(self.conn_str, echo=self.echo, pool_size=10, pool_recycle=3600,
+                             connect_args={
+                                 "options": "-c statement_timeout={}".format(self.config.sql_execution_timeout * 1000)},
+                             client_encoding='utf8', isolation_level="AUTOCOMMIT")
+
+    def get_connection(self):
+        return self.connection_thread.conn
+
+    def connect_if_loss(self):
+        if not self.is_connect():
+            self.connection_thread.conn = self.engine.connect()
 
     def disconnect(self):
-        if self.connection is not None:
-            try:
-                self.connection.close()
-            except:  # deal with connection already close
-                pass
-            self.connection = None
+        if self.is_connect():
+            self.connection_thread.conn.close()
+            self.connection_thread.conn = None
 
     def is_connect(self):
-        return self.connection is not None
+        return hasattr(self.connection_thread, "conn") and self.connection_thread.conn is not None
 
     @abstractmethod
     def modify_sql_for_ignore_records(self, sql, is_execute):
@@ -63,10 +69,6 @@ class BaseDBController(ABC):
 
     @abstractmethod
     def execute(self, sql, fetch=False):
-        pass
-
-    @abstractmethod
-    def execute_batch(self, sql, fetch=False):
         pass
 
     @abstractmethod
@@ -91,7 +93,7 @@ class BaseDBController(ABC):
         pass
 
     @abstractmethod
-    def create_index(self, index_name, table, columns):
+    def create_index(self, index):
         pass
 
     @abstractmethod
@@ -148,7 +150,7 @@ class BaseDBController(ABC):
                 indexes.append(Index(columns=db_index["column_names"], table=table, index_name=db_index["name"]))
         return indexes
 
-    def get_sqla_table(self, table_name) -> Table:
+    def get_sqla_table(self, table_name):
         if table_name not in self.name_2_table:
             return None
         return self.name_2_table[table_name]

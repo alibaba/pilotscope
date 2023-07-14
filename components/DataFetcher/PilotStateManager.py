@@ -1,4 +1,7 @@
+import threading
 import time
+from concurrent.futures import Future
+from concurrent.futures.thread import ThreadPoolExecutor
 from typing import Optional, List
 
 from Anchor.BaseAnchor.FetchAnchorHandler import *
@@ -12,13 +15,14 @@ from Factory.DataFetchFactory import DataFetchFactory
 from PilotConfig import PilotConfig
 from PilotEnum import FetchMethod, ExperimentTimeEnum
 from PilotTransData import PilotTransData
+from common.Thread import ValueThread
 from common.TimeStatistic import TimeStatistic
-from common.Util import pilotscope_exit, extract_anchor_handlers, extract_handlers
+from common.Util import pilotscope_exit, extract_anchor_handlers, extract_handlers, wait_futures_results
 
 
 class PilotStateManager:
-    def __init__(self, config: PilotConfig) -> None:
-        self.db_controller = DBControllerFactory.get_db_controller(config)
+    def __init__(self, config: PilotConfig, db_controller: BaseDBController = None) -> None:
+        self.db_controller = DBControllerFactory.get_db_controller(config) if db_controller is None else db_controller
         self.anchor_to_handlers = {}
         self.config = config
         self.port = None
@@ -33,10 +37,27 @@ class PilotStateManager:
             datas.append(self.execute(sql, is_reset=flag))
         return datas
 
+    def execute_parallel(self, sqls, parallel_num=10, is_reset=True):
+        if self.db_controller.enable_simulate_index:
+            raise RuntimeError("simulate index does not support execute_parallel")
+
+        parallel_num = min(len(sqls), parallel_num)
+        with ThreadPoolExecutor(max_workers=parallel_num) as pool:
+            futures = []
+            for sql in sqls:
+                future: Future = pool.submit(self.execute, sql, False)
+                future.add_done_callback(self._reset_connection)
+                futures.append(future)
+            results = wait_futures_results(futures)
+        if is_reset:
+            self.reset()
+
+        return results
+
     def execute(self, sql, is_reset=True) -> Optional[PilotTransData]:
         try:
             if not self.db_controller.is_connect():
-                self.db_controller.connection()
+                self.db_controller.connect_if_loss()
 
             origin_sql = sql
             enable_receive_pilot_data = self.is_need_to_receive_data(self.anchor_to_handlers)
@@ -51,6 +72,7 @@ class PilotStateManager:
 
             # execution sqls. Sometimes, data do not need to be got from inner
             is_execute_comment_sql = self.is_execute_comment_sql(self.anchor_to_handlers)
+
             records = self._execute_sqls(comment_sql, is_execute_comment_sql)
 
             # wait to fetch data
@@ -72,22 +94,79 @@ class PilotStateManager:
             return data
 
         except (DBStatementTimeoutException, HttpReceiveTimeoutException) as e:
+            self._add_detailed_time_for_experiment(None)
             print(e)
             return None
         except Exception as e:
             raise e
 
-    def _add_detailed_time_for_experiment(self, data: PilotTransData):
-        TimeStatistic.add_time(ExperimentTimeEnum.DB_PARSER, data.parser_time)
-        cur_time = time.time_ns() / 1000000000.0
-        TimeStatistic.add_time(ExperimentTimeEnum.DB_HTTP, float(cur_time - data.http_time))
-        for i in range(len(data.anchor_names)):
-            anchor_name = data.anchor_names[i]
-            anchor_time = data.anchor_times[i]
-            TimeStatistic.add_time(ExperimentTimeEnum.get_anchor_key(anchor_name), float(anchor_time))
+    # def execute(self, sql, is_reset=True) -> Optional[PilotTransData]:
+    #     try:
+    #         if not self.db_controller.is_connect():
+    #             TimeStatistic.start("connect")
+    #             self.db_controller.connect()
+    #             TimeStatistic.end("connect")
+    #
+    #         origin_sql = sql
+    #         enable_receive_pilot_data = self.is_need_to_receive_data(self.anchor_to_handlers)
+    #
+    #         # create pilot comment
+    #         comment_creator = PilotCommentCreator(enable_receive_pilot_data=enable_receive_pilot_data)
+    #         comment_creator.add_params(self.data_fetcher.get_additional_info())
+    #         comment_creator.enable_terminate(
+    #             False if AnchorEnum.RECORD_FETCH_ANCHOR in self.anchor_to_handlers else True)
+    #         comment_creator.add_anchor_params(self._get_anchor_params_as_comment())
+    #         comment_sql = comment_creator.create_comment_sql(sql)
+    #
+    #         # execution sqls. Sometimes, data do not need to be got from inner
+    #         is_execute_comment_sql = self.is_execute_comment_sql(self.anchor_to_handlers)
+    #
+    #         records = self._execute_sqls(comment_sql, is_execute_comment_sql)
+    #
+    #         data = PilotTransData()
+    #         if records is not None:
+    #             # wait to fetch data
+    #             if self.is_need_to_receive_data(self.anchor_to_handlers):
+    #                 receive_data = self.data_fetcher.wait_until_get_data()
+    #                 data: PilotTransData = PilotTransData.parse_2_instance(receive_data, origin_sql)
+    #                 self._add_detailed_time_for_experiment(data)
+    #                 # fetch data from outer
+    #             else:
+    #                 data = PilotTransData()
+    #
+    #             data.records = records
+    #             data.sql = origin_sql
+    #
+    #         TimeStatistic.start("_fetch_data_from_outer")
+    #         self._fetch_data_from_outer(origin_sql, data)
+    #         TimeStatistic.end("_fetch_data_from_outer")
+    #
+    #         # clear state
+    #         if is_reset:
+    #             self.reset()
+    #         return data
+    #
+    #     except (DBStatementTimeoutException, HttpReceiveTimeoutException) as e:
+    #         self._add_detailed_time_for_experiment(None)
+    #         print(e)
+    #         return None
+    #     except Exception as e:
+    #         raise e
 
-        if data.execution_time is not None:
-            TimeStatistic.add_time(ExperimentTimeEnum.SQL_TOTAL_TIME, data.execution_time)
+    def _add_detailed_time_for_experiment(self, data: PilotTransData):
+        if data is not None:
+            TimeStatistic.add_time(ExperimentTimeEnum.DB_PARSER, data.parser_time)
+            cur_time = time.time_ns() / 1000000000.0
+            TimeStatistic.add_time(ExperimentTimeEnum.DB_HTTP, float(cur_time - data.http_time))
+            for i in range(len(data.anchor_names)):
+                anchor_name = data.anchor_names[i]
+                anchor_time = data.anchor_times[i]
+                TimeStatistic.add_time(ExperimentTimeEnum.get_anchor_key(anchor_name), float(anchor_time))
+
+            if data.execution_time is not None:
+                TimeStatistic.add_time(ExperimentTimeEnum.SQL_TOTAL_TIME, data.execution_time)
+        else:
+            TimeStatistic.add_time(ExperimentTimeEnum.SQL_TOTAL_TIME, self.config.sql_execution_timeout)
 
     def is_need_to_receive_data(self, anchor_2_handlers):
         filter_anchor_2_handlers = self._remove_outer_fetch_anchor(
@@ -108,6 +187,10 @@ class PilotStateManager:
     def reset(self):
         self._roll_back_db()
         self.anchor_to_handlers.clear()
+        self._reset_connection()
+
+    def _reset_connection(self, *args, **kwargs):
+        print(threading.get_ident())
         self.db_controller.disconnect()
 
     def _execute_sqls(self, comment_sql, is_execute_comment_sql):
