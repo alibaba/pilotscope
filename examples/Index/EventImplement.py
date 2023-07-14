@@ -42,6 +42,8 @@ class IndexPeriodicDbControllerEvent(PeriodicDbControllerEvent):
     def _load_sql(self):
         sqls: list = load_test_sql(self.config.db)
         random.shuffle(sqls)
+        if "imdb" in self.config.db:
+            sqls = sqls[0:len(sqls) // 2]
         return sqls
 
     def _custom_update(self, db_controller: BaseDBController, training_data_manager: PilotTrainDataManager):

@@ -127,7 +127,7 @@ class CostEvaluation:
                 try:
                     index.estimated_size = self.db_connector.get_index_byte(pilot_index)
                 except:
-                    self.pilot_calculate_cost(workload,indexes)
+                    self.pilot_calculate_cost(workload, indexes)
             index.hypopg_oid = pilot_index.hypopg_oid
             index.hypopg_name = pilot_index.hypopg_name
 

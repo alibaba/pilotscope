@@ -56,7 +56,8 @@ class TrainSwitchMode(PilotEnum):
 
 
 class ExperimentTimeEnum:
-    END_TO_END = "EndToEnd"
+    PIPE_END_TO_END = "PIPEEndToEnd"
+    SQL_END_TO_END = "SQLEndToEnd"
     AI_TASK = "AiTask"
     WRITE_TABLE = "Write"
     SQL_TOTAL_TIME = "Sql"
@@ -71,3 +72,11 @@ class ExperimentTimeEnum:
     @classmethod
     def get_anchor_key(cls, anchor_name):
         return ExperimentTimeEnum.ANCHOR.format(anchor_name.split("_")[0])
+
+
+class SparkSQLDataSourceEnum(PilotEnum):
+    CSV = "csv"
+    JSON = "json"
+    PARQUET = "parquet"
+    HIVE = "hive"
+    POSTGRESQL = "postgresql"

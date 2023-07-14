@@ -1,6 +1,6 @@
 import os
 
-from PilotEnum import DataFetchMethodEnum, DatabaseEnum, TrainSwitchMode
+from PilotEnum import DataFetchMethodEnum, DatabaseEnum, TrainSwitchMode, SparkSQLDataSourceEnum
 import logging
 
 # 配置日志记录器
@@ -10,14 +10,13 @@ pilot_logger = logging.getLogger("PilotScope")
 
 class PilotConfig:
 
-    def __init__(self) -> None:
-        self.db_type: DatabaseEnum = DatabaseEnum.POSTGRESQL
-        self.pilotscope_core_url = "localhost"
-        self.host = "localhost"
-        self.user = "postgres"
-        self.db = "stats"
-        self.SEP = "###"
+    def __init__(self, db_type: DatabaseEnum, db="stats", pilotscope_core_url="localhost", db_host="localhost") -> None:
+        self.db_type: DatabaseEnum = db_type
+
+        self.pilotscope_core_url = pilotscope_core_url
         self.data_fetch_method = DataFetchMethodEnum.HTTP
+        self.db = db
+        self.db_host = db_host
 
         # second
         self.sql_execution_timeout = 100
@@ -25,16 +24,6 @@ class PilotConfig:
 
         # pretraining
         self.pretraining_model = TrainSwitchMode.WAIT
-
-        # training and test sql file
-        self.training_sql_file = "../examples/stats_train.txt"
-        self.test_sql_file = "../examples/stats_test.txt"
-
-        # for local postgres
-        self.pg_ctl = "pg_ctl"
-        self.pgdata = "~"
-        self.db_config_path = "/var/lib/pgsql/13.1/data/postgresql.conf"
-        self.backup_db_config_path = "postgresql-13.1.conf"
 
     def print(self):
         for key, value in self.__dict__.items():
@@ -46,3 +35,55 @@ class PilotConfig:
     def set_db_type(self, db):
         self.db_type = db
         pass
+
+
+class PostgreSQLConfig(PilotConfig):
+    def __init__(self) -> None:
+        super().__init__(db_type=DatabaseEnum.POSTGRESQL)
+        # common config
+        self.host = "localhost"
+        self.user = "postgres"
+        self.pwd = ""
+
+        # for local postgres
+        self.pg_ctl = "pg_ctl"
+        self.pgdata = "~"
+        self.db_config_path = "/var/lib/pgsql/13.1/data/postgresql.conf"
+        self.backup_db_config_path = "postgresql-13.1.conf"
+
+
+class SparkConfig(PilotConfig):
+    def __init__(self, app_name, master_url) -> None:
+        super().__init__(db_type=DatabaseEnum.SPARK)
+        # spark
+        self.app_name = app_name,
+        self.master_url = master_url,
+
+        # datasource
+        self.datasource_type = None
+        self.host = None
+        self.user = None
+        self.pwd = None
+
+        self.spark_configs = {}
+
+        # spark config file path
+        self.db_config_path = None
+        self.backup_db_config_path = None
+
+    def set_spark_session_config(self, config: dict):
+        self.spark_configs.update(config)
+        return self
+
+    def set_datasource(self, datasource_type: SparkSQLDataSourceEnum, db_host, db, user, pwd):
+        self.datasource_type = datasource_type
+        self.host = db_host
+        self.db = db
+        self.user = user
+        self.pwd = pwd
+        return self
+
+    def set_knob_config(self, db_config_path, backup_db_config_path):
+        self.db_config_path = db_config_path
+        self.backup_db_config_path = backup_db_config_path
+        return self

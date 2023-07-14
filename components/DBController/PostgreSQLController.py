@@ -4,6 +4,8 @@ from abc import ABC
 from sqlalchemy import Table, Column, select, func, text, inspect
 from sqlalchemy.exc import OperationalError
 from typing_extensions import deprecated
+
+from PilotConfig import PostgreSQLConfig
 from common.Util import pilotscope_exit
 from DBController.BaseDBController import BaseDBController
 from Exception.Exception import DBStatementTimeoutException
@@ -53,6 +55,7 @@ class PostgreSQLController(BaseDBController):
 
     def __init__(self, config, echo=False, allow_to_create_db=False, enable_simulate_index=False):
         super().__init__(config, echo, allow_to_create_db)
+        self.config: PostgreSQLConfig = config
 
         self.simulate_index_controller = None
 
@@ -60,6 +63,7 @@ class PostgreSQLController(BaseDBController):
         if self.enable_simulate_index:
             self.simulate_index_visitor = SimulateIndexVisitor(self)
         self._add_extension()
+        pass
 
     def _add_extension(self):
         extensions = self.get_available_extensions()
@@ -373,5 +377,5 @@ class SimulateIndexVisitor:
             raise RuntimeError
 
     def get_all_indexes(self):
-        sql = "SELECT * FROM hypopg_list_indexes"
+        # sql = "SELECT * FROM hypopg_list_indexes"
         raise NotImplementedError

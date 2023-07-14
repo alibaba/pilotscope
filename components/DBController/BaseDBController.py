@@ -10,8 +10,8 @@ from common.Index import Index
 
 
 class BaseDBController(ABC):
-    def __init__(self, config, echo=False, allow_to_create_db=False):
-        self.config: PilotConfig = config
+    def __init__(self, config, echo=True, allow_to_create_db=False):
+        self.config = config
         self.allow_to_create_db = allow_to_create_db
 
         self.echo = echo
@@ -42,6 +42,7 @@ class BaseDBController(ABC):
     def connect_if_loss(self):
         if not self.is_connect():
             self.connection_thread.conn = self.engine.connect()
+        pass
 
     def disconnect(self):
         if self.is_connect():

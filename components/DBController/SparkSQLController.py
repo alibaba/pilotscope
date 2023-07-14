@@ -11,7 +11,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql import DataFrame
 from typing import Union, Dict, Tuple
-import pandas 
+import pandas
 import json
 import re
 
@@ -22,10 +22,12 @@ logger = logging.getLogger("PilotScope")
 SUCCESS = 1
 FAILURE = 0
 
+
 class SparkSQLTypeEnum(PilotEnum):
     String = StringType
     Integer = IntegerType
     Float = FloatType
+
 
 class SparkSQLDataSourceEnum(PilotEnum):
     CSV = "csv"
@@ -33,17 +35,19 @@ class SparkSQLDataSourceEnum(PilotEnum):
     PARQUET = "parquet"
     HIVE = "hive"
     POSTGRESQL = "postgresql"
-    
+
+
 class SparkIOWriteModeEnum(PilotEnum):
     OVERWRITE = "overwrite"
     APPEND = "append"
     ERROR_IF_EXISTS = "errorifexists"
     IGNORE = "ignore"
 
+
 class SparkConfig(PilotConfig):
-    def __init__(self, app_name, master_url, 
-                 datasource_type, datasource_conn_info, 
-                 db_config_path="./pilotscope_spark_sql_config.txt", 
+    def __init__(self, app_name, master_url,
+                 datasource_type, datasource_conn_info,
+                 db_config_path="./pilotscope_spark_sql_config.txt",
                  backup_db_config_path="./pilotscope_spark_sql_config.backup.txt",
                  other_configs=None) -> None:
         super().__init__()
@@ -59,22 +63,24 @@ class SparkConfig(PilotConfig):
                 self.configs[config_name] = other_configs[config_name]
         self.db_type = DatabaseEnum.SPARK
 
+
 def sparkSessionFromConfig(spark_config: SparkConfig):
     session = SparkSession.builder \
-            .appName(spark_config.appName) \
-            .master(spark_config.master) 
+        .appName(spark_config.appName) \
+        .master(spark_config.master)
     for config_name in spark_config.configs:
         session = session.config(config_name, spark_config.configs[config_name])
     return session.getOrCreate()
 
-#class SparkConnection: 
+
+# class SparkConnection:
 #    def __init__(self, config: SparkConfig):
 #        self.config = config
 #        self._conn = None
 
 #    def create(self):
 #        self._conn = sparkSessionFromConfig(self.config)
-        
+
 #    def close(self):
 #        self._conn = None
 
@@ -83,13 +89,14 @@ class SparkColumn(StructField):
         # Spark does not support primary key and auto-increment
         super().__init__(column_name, column_type())
 
+
 class SparkTable:
     def __init__(self, table_name, metadata, *columns):
         self.table_name = table_name
         self.columns = list(columns)
         self.schema = StructType(list(columns))
         self.df: DataFrame = None
-    
+
     def create(self, engine, analyze=True):
         if engine.has_table(engine.session, self.table_name, where="datasource"):
             # Table exists in the data source, load it directly
@@ -103,33 +110,33 @@ class SparkTable:
                 # No such a table in the data source as well as in the session, 
                 # so create an empty table and persist it to the data source.
                 self.df = engine.session.createDataFrame(data=[], schema=self.schema)
-                #engine.io.write(self.df, mode=SparkIOWriteModeEnum.OVERWRITE, target_table_name=self.table_name)
+                # engine.io.write(self.df, mode=SparkIOWriteModeEnum.OVERWRITE, target_table_name=self.table_name)
         self.df.createOrReplaceTempView(self.table_name)
-        #engine.session.catalog.cacheTable(self.table_name)
-        #if analyze:
+        # engine.session.catalog.cacheTable(self.table_name)
+        # if analyze:
         #    engine.session.sql("ANALYZE TABLE {} COMPUTE STATISTICS FOR ALL COLUMNS".format(self.table_name))
-    
+
     # get the SQL string for insertion
     def insert(self, session, column_2_value):
         column_names = list(column_2_value.keys())
         new_row = session.createDataFrame([tuple(column_2_value[col] for col in column_names)], column_names)
         self.df = self.df.union(new_row)
         self.df.createOrReplaceTempView(self.table_name)
-    
+
     def nrows(self):
         return self.df.count()
-    
+
     def cache(self, engine):
         engine.session.catalog.cacheTable(self.table_name)
-    
+
     def analyzeStats(self, engine):
         self.cache(engine)
         engine.session.sql("ANALYZE TABLE {} COMPUTE STATISTICS FOR ALL COLUMNS".format(self.table_name))
-    
+
     def persist(self, engine):
         engine.io.write(self, mode=SparkIOWriteModeEnum.OVERWRITE)
-        
-        
+
+
 class SparkIO:
     def __init__(self, datasource_type: SparkSQLDataSourceEnum, engine, **datasource_conn_info) -> None:
         self.reader = None
@@ -139,26 +146,26 @@ class SparkIO:
             raise RuntimeError("SparkIO has not been tested on any other data source types than 'postgresql'.")
         if datasource_type == SparkSQLDataSourceEnum.POSTGRESQL:
             self.reader = engine.session.read \
-                            .format("jdbc") \
-                            .option("driver", "org.postgresql.Driver") \
-                            .option("url", "jdbc:postgresql://{}/{}".format(self.conn_info['host'], self.conn_info['dbname'])) \
-                            .option("user", self.conn_info['user']) \
-                            .option("password", self.conn_info['password']) 
-                            
+                .format("jdbc") \
+                .option("driver", "org.postgresql.Driver") \
+                .option("url", "jdbc:postgresql://{}/{}".format(self.conn_info['host'], self.conn_info['dbname'])) \
+                .option("user", self.conn_info['user']) \
+                .option("password", self.conn_info['password'])
+
     def read(self, table_name=None, query=None) -> DataFrame:
         assert not (table_name is not None and query is not None)
         assert not (table_name is None and query is None)
         if table_name is not None:
             self.reader = self.reader.option("dbtable", table_name)
         elif query is not None:
-            self.reader = self.reader.option("query", query)       
+            self.reader = self.reader.option("query", query)
         return self.reader.load()
 
     def write(self, table_or_rows: Union[SparkTable, DataFrame], mode: SparkIOWriteModeEnum, target_table_name=None):
         if isinstance(table_or_rows, SparkTable):
             df = table_or_rows.df
         else:
-            df = table_or_rows 
+            df = table_or_rows
         if target_table_name is None and not isinstance(table_or_rows, SparkTable):
             raise Exception("Target table name not specified.")
         else:
@@ -168,27 +175,27 @@ class SparkIO:
                 table_name = table_or_rows.table_name
         if self.datasource_type == SparkSQLDataSourceEnum.POSTGRESQL:
             write = df.write \
-                        .mode(mode.value) \
-                        .format("jdbc") \
-                        .option("driver", "org.postgresql.Driver") \
-                        .option("url", "jdbc:postgresql://{}/{}".format(self.conn_info['host'], self.conn_info['dbname'])) \
-                        .option("user", self.conn_info['user']) \
-                        .option("password", self.conn_info['password']) \
-                        .option("dbtable", table_name)
+                .mode(mode.value) \
+                .format("jdbc") \
+                .option("driver", "org.postgresql.Driver") \
+                .option("url", "jdbc:postgresql://{}/{}".format(self.conn_info['host'], self.conn_info['dbname'])) \
+                .option("user", self.conn_info['user']) \
+                .option("password", self.conn_info['password']) \
+                .option("dbtable", table_name)
         write.save()
-    
+
     def has_table(self, table_name):
         return self.read(table_name="information_schema.tables") \
             .filter("table_name = '{}'".format(table_name)) \
             .count() > 0
-                                
-                        
+
+
 class SparkEngine:
     def __init__(self, config: SparkConfig):
         self.config = config
         self.session = None
         self.io = None
-        
+
     def connect(self):
         self.session = sparkSessionFromConfig(self.config)
         self.io = SparkIO(self.config.datasource_type, self, **(self.config.datasource_conn_info))
@@ -207,35 +214,35 @@ class SparkEngine:
             return self._has_table_in_session(connection, table_name)
         else:
             raise ValueError("Unsupport 'where' value: {}".format(where))
-        
+
 
 class SparkSQLController(BaseDBController):
-        
-    #instances = set()
 
-    #def __new__(cls, *args, **kwargs):
+    # instances = set()
+
+    # def __new__(cls, *args, **kwargs):
     #    instance = super().__new__(cls)
     #    cls.instances.add(instance)
     #    return instance
 
-    #def __del__(self):
+    # def __del__(self):
     #    type(self).instances.remove(self)
-    
+
     def __init__(self, config: SparkConfig, echo=False, allow_to_create_db=False):
-        #super().__init__(config, echo, allow_to_create_db)
+        # super().__init__(config, echo, allow_to_create_db)
         self.config = config
         self.echo = echo
         self.allow_to_create_db = allow_to_create_db
         self.engine = self._create_engine()
         self.connection = None
         self.name_2_table = {}
-        
+
     def _create_conn_str(self):
         return ""
-    
+
     def _create_engine(self):
         return SparkEngine(self.config)
-    
+
     def _to_db_data_type(self, column_2_value):
         column_2_type = {}
         for col, data in column_2_value.items():
@@ -252,16 +259,16 @@ class SparkSQLController(BaseDBController):
                 data_type = SparkSQLTypeEnum.String.value
             column_2_type[col] = data_type
         return column_2_type
-    
+
     def disconnect(self):
         if self.connection is not None:
-            #try:
+            # try:
             for table in self.name_2_table.values():
                 table.persist(self.engine)
             self.connection.stop()
-            #except: # deal with connection already stopped
+            # except: # deal with connection already stopped
             #    pass
-    
+
     def exist_table(self, table_name, where="session") -> bool:
         has_table = self.engine.has_table(self.connection, table_name, where)
         if has_table:
@@ -276,28 +283,32 @@ class SparkSQLController(BaseDBController):
     # and set its value to the given value if it is modifiable
     def get_hint_sql(self, key, value):
         if self.connection.conf.isModifiable(key):
-            #self.connection.conf.set(key, value)
+            # self.connection.conf.set(key, value)
             self.connection.sql("SET {} = {}".format(key, value))
             return SUCCESS
         else:
-            logger.warning("[get_hint_sql] Configuration '{}' is not modifiable in runtime, nothing changed".format(key))
+            logger.warning(
+                "[get_hint_sql] Configuration '{}' is not modifiable in runtime, nothing changed".format(key))
             return FAILURE
 
     def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
                                  enable_autoincrement_id_key=True):
         if primary_key_column is not None:
-            logger.warning("[create_table_if_absences] Spark SQL does not support specifying primary key while creating table.")
+            logger.warning(
+                "[create_table_if_absences] Spark SQL does not support specifying primary key while creating table.")
             primary_key_column = None
         column_2_type = self._to_db_data_type(column_2_value)
-        #metadata_obj = self.metadata
+        # metadata_obj = self.metadata
         if not self.exist_table(table_name, where="session"):
             # Only checks whether the table exists in current session.
             # If the table exists in the data source but not in the session, 
             #   here self.exist_table simply returns False, 
             #   then table.create will load it from the data source.
             if self.exist_table(table_name, where="datasource"):
-                logger.warning("[create_table_if_absences] Table '{}' exists in the data source but not in the current session, ".format(table_name) + 
-                                "so it will be loaded from the data source and your input schema will be ignored.")
+                logger.warning(
+                    "[create_table_if_absences] Table '{}' exists in the data source but not in the current session, ".format(
+                        table_name) +
+                    "so it will be loaded from the data source and your input schema will be ignored.")
             columns = []
             for column, column_type in column_2_type.items():
                 columns.append(SparkColumn(column, column_type))
@@ -312,7 +323,7 @@ class SparkSQLController(BaseDBController):
             raise RuntimeError("The table '{}' not found in current session, ".format(table_name) + \
                                "please make sure you have called 'create_table_if_absences' to create or load it.")
         return self.name_2_table[table_name].nrows()
-        
+
     def insert(self, table_name, column_2_value: dict):
         table = self.name_2_table[table_name]
         table.insert(self.connection, column_2_value)
@@ -328,38 +339,38 @@ class SparkSQLController(BaseDBController):
             if "PilotScopeFetchEnd" not in str(e):
                 raise e
         return row
-        
+
     def _unresolvedLogicalPlan(self, query_execution):
         return query_execution.logical()
-    
+
     def _resolvedLogicalPlan(self, query_execution):
         return query_execution.analyzed()
-    
+
     def _optimizedLogicalPlan(self, query_execution):
         return query_execution.optimizedPlan()
-    
+
     def _logicalPlan(self, query_execution):
         return self._optimizedLogicalPlan(query_execution)
-    
+
     def _physicalPlan(self, query_execution):
         return query_execution.executedPlan()
-    
+
     def explain_logical_plan(self, sql, comment="") -> Dict:
         comment_pos = sql.lower().find("select") + len("select")
         sql_with_comment = sql[:comment_pos] + " " + comment + " " + sql[comment_pos:]
         plan = self._logicalPlan(self.execute(sql_with_comment)._jdf.queryExecution())
-        #if pretty:
+        # if pretty:
         #    return plan.prettyJson()
-        #else:
+        # else:
         return json.loads(plan.toJSON())
-    
+
     def explain_physical_plan(self, sql, comment="") -> Dict:
         comment_pos = sql.lower().find("select") + len("select")
         sql_with_comment = sql[:comment_pos] + " " + comment + " " + sql[comment_pos:]
         plan = self._physicalPlan(self.execute(sql_with_comment)._jdf.queryExecution())
-        #if pretty:
+        # if pretty:
         #    return plan.prettyJson()
-        #else:
+        # else:
         return json.loads(plan.toJSON())
 
     def get_estimated_cost(self, sql) -> Tuple[int]:
@@ -368,10 +379,10 @@ class SparkSQLController(BaseDBController):
         pattern = re.compile(r"sizeInBytes=([0-9.]+) B, rowCount=([0-9]+)")
         res = pattern.search(cost_str)
         return res.groups()[0], res.groups()[1]
-        
+
     # done
     def write_knob_to_file(self, knobs):
-        for k,v in knobs.items():
+        for k, v in knobs.items():
             self.get_hint_sql(k, v)
 
     # done
@@ -379,45 +390,44 @@ class SparkSQLController(BaseDBController):
         # reset all modifiable runtime configurations
         self.connection.sql("RESET")
 
-   
     # switch user and run
     def _surun(self, cmd):
-        #os.system("su {} -c '{}'".format(self.config.user, cmd))
+        # os.system("su {} -c '{}'".format(self.config.user, cmd))
         pass
-    
+
     def shutdown(self):
-        #self._surun("{} stop -D {}".format(self.config.pg_ctl, self.config.pgdata))    
+        # self._surun("{} stop -D {}".format(self.config.pg_ctl, self.config.pgdata))
         pass
-    
+
     def start(self):
-        #self._surun("{} start -D {}".format(self.config.pg_ctl, self.config.pgdata))
-        #for instance in type(self).instances:
+        # self._surun("{} start -D {}".format(self.config.pg_ctl, self.config.pgdata))
+        # for instance in type(self).instances:
         #    instance.connect()
         pass
-        
+
     def explain_execution_plan(self, sql, comment=""):
-        #return self._explain(sql, comment, True)
+        # return self._explain(sql, comment, True)
         pass
 
     def get_explain_sql(self, sql, execute: bool, comment=""):
-        #return "{} explain (ANALYZE {}, VERBOSE, SETTINGS, SUMMARY, FORMAT JSON) {}".format(comment,
+        # return "{} explain (ANALYZE {}, VERBOSE, SETTINGS, SUMMARY, FORMAT JSON) {}".format(comment,
         #                                                                                    "" if execute else "False",
         #                                                                                    sql)
         pass
 
     def modify_sql_for_ignore_records(self, sql, is_execute):
-        #return self.get_explain_sql(sql, is_execute)
+        # return self.get_explain_sql(sql, is_execute)
         pass
-    
+
     def status(self):
-        #res = os.popen("su {} -c '{} status -D {}'".format(self.config.user,self.config.pg_ctl, self.config.pgdata))
-        #return res.read()
+        # res = os.popen("su {} -c '{} status -D {}'".format(self.config.user,self.config.pg_ctl, self.config.pgdata))
+        # return res.read()
         pass
-        
+
     def get_buffercache(self):
         pass
-    
-    #NOTE: modified from DBTune (MIT liscense)
+
+    # NOTE: modified from DBTune (MIT liscense)
     def get_internal_metrics(self):
         pass
 

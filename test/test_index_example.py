@@ -44,15 +44,18 @@ class IndexTest(unittest.TestCase):
             scheduler.register_collect_data(self.test_data_table, state_manager)
 
             # start
+            TimeStatistic.start(ExperimentTimeEnum.PIPE_END_TO_END)
             scheduler.init()
             print("start to test sql")
             sqls = load_test_sql(self.config.db)
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, and it is {}".format(i, sql))
-                TimeStatistic.start(ExperimentTimeEnum.END_TO_END)
+                TimeStatistic.start(ExperimentTimeEnum.SQL_END_TO_END)
                 scheduler.simulate_db_console(sql)
-                TimeStatistic.end(ExperimentTimeEnum.END_TO_END)
+                TimeStatistic.end(ExperimentTimeEnum.SQL_END_TO_END)
                 TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo, config.db))
+            TimeStatistic.end(ExperimentTimeEnum.PIPE_END_TO_END)
+
             self.draw_time_statistic()
         finally:
             pilotscope_exit()

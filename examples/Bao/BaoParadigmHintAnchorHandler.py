@@ -1,12 +1,14 @@
+from concurrent.futures.thread import ThreadPoolExecutor
+
 from Anchor.BaseAnchor.replaceAnchorHandler import HintAnchorHandler
+from DataFetcher.PilotStateManager import PilotStateManager
 from Factory.DBControllerFectory import DBControllerFactory
 from PilotConfig import PilotConfig
-from DataFetcher.PilotStateManager import PilotStateManager
+from PilotEnum import DatabaseEnum, ExperimentTimeEnum
 from PilotModel import PilotModel
 from PilotTransData import PilotTransData
 from common.TimeStatistic import TimeStatistic
-from PilotEnum import DatabaseEnum, ExperimentTimeEnum
-from common.dotDrawer import PlanDotDrawer
+from common.Util import wait_futures_results
 
 
 class BaoParadigmHintAnchorHandler(HintAnchorHandler):
@@ -36,7 +38,6 @@ class BaoParadigmHintAnchorHandler(HintAnchorHandler):
         self.model = model
         self.config = config
         self.db_controller = DBControllerFactory.get_db_controller(config)
-        self.pilot_state_manager = PilotStateManager(config)
         self.bao_hint = self.HintForBao(config.db_type)
 
     def predict(self, plans):
@@ -45,21 +46,14 @@ class BaoParadigmHintAnchorHandler(HintAnchorHandler):
     def user_custom_task(self, sql):
         try:
             TimeStatistic.start(ExperimentTimeEnum.AI_TASK)
-            plans = []
-            for hint2val in self.bao_hint.arms_hint2val:
-                # print(hint2val)
-                self.pilot_state_manager.set_hint(hint2val)
-                self.pilot_state_manager.fetch_physical_plan()
-                if self.model.have_cache_data:
-                    self.pilot_state_manager.fetch_buffercache()
+            with ThreadPoolExecutor(max_workers=len(self.bao_hint.arms_hint2val)) as pool:
+                futures = []
+                for hint2val in self.bao_hint.arms_hint2val:
+                    future = pool.submit(self._get_plan, sql, hint2val)
+                    futures.append(future)
+                plans = wait_futures_results(futures)
+                pass
 
-                data: PilotTransData = self.pilot_state_manager.execute(sql)
-                plan = data.physical_plan
-                if self.model.have_cache_data:
-                    plan["Buffers"] = data.buffercache
-                plans.append(plan)
-
-            # print("BAO: ",plans,"\n"+"*"*60)
             TimeStatistic.start(ExperimentTimeEnum.PREDICT)
             est_exe_time = self.model.user_model.predict(plans)
             TimeStatistic.end(ExperimentTimeEnum.PREDICT)
@@ -67,6 +61,24 @@ class BaoParadigmHintAnchorHandler(HintAnchorHandler):
             TimeStatistic.end(ExperimentTimeEnum.AI_TASK)
             idx = est_exe_time.argmin()
             pass
-        except:
+        except Exception as e:
+            raise e
+            print(e)
             idx = 0
         return self.bao_hint.arms_hint2val[idx]
+
+    def _get_plan(self, sql, hint2val):
+        pilot_state_manager = PilotStateManager(self.config)
+        # print(hint2val)
+        pilot_state_manager.set_hint(hint2val)
+        pilot_state_manager.fetch_physical_plan()
+        if self.model.have_cache_data:
+            pilot_state_manager.fetch_buffercache()
+
+        data: PilotTransData = pilot_state_manager.execute(sql)
+        plan = data.physical_plan
+        if self.model.have_cache_data:
+            plan["Buffers"] = data.buffercache
+        return plan
+
+
