@@ -44,6 +44,7 @@ class SparkIOWriteModeEnum(PilotEnum):
     ERROR_IF_EXISTS = "errorifexists"
     IGNORE = "ignore"
 
+
 """
 class SparkConfig(PilotConfig):
     def __init__(self, app_name, master_url,
@@ -64,6 +65,7 @@ class SparkConfig(PilotConfig):
                 self.configs[config_name] = other_configs[config_name]
         self.db_type = DatabaseEnum.SPARK
 """
+
 
 def sparkSessionFromConfig(spark_config: SparkConfig):
     session = SparkSession.builder \
@@ -201,7 +203,8 @@ class SparkEngine:
 
     def connect(self):
         self.session = sparkSessionFromConfig(self.config)
-        self.io = SparkIO(self.config.datasource_type, self, host=self.config.host, db=self.config.db, user=self.config.user, pwd=self.config.pwd)
+        self.io = SparkIO(self.config.datasource_type, self, host=self.config.host, db=self.config.db,
+                          user=self.config.user, pwd=self.config.pwd)
         return self.session
 
     def _has_table_in_datasource(self, table_name):
@@ -217,8 +220,8 @@ class SparkEngine:
             return self._has_table_in_session(connection, table_name)
         else:
             raise ValueError("Unsupport 'where' value: {}".format(where))
-    
-    #def clearCachedTables(self):
+
+    # def clearCachedTables(self):
     #    self.session.catalog.clearCache()
 
 
@@ -235,14 +238,11 @@ class SparkSQLController(BaseDBController):
     #    type(self).instances.remove(self)
 
     def __init__(self, config: SparkConfig, echo=False, allow_to_create_db=False):
-        # super().__init__(config, echo, allow_to_create_db)
-        self.config = config
-        self.echo = echo
-        self.allow_to_create_db = allow_to_create_db
-        self.engine = self._create_engine()
-        #self.connection = None
+        super().__init__(config, echo, allow_to_create_db)
         self.name_2_table = {}
-        self.connection_thread = threading.local()
+
+    def _db_init(self):
+        self.engine: SparkEngine = self._create_engine()
 
     def _create_conn_str(self):
         return ""
@@ -270,13 +270,16 @@ class SparkSQLController(BaseDBController):
     def disconnect(self):
         if self.get_connection() is not None:
             # try:
-            for table in self.name_2_table.values():
-                table.persist(self.engine)
+            self.persist_table()
             self.engine.clearCachedTables()
             self.connection_thread.conn.stop()
             self.connection_thread.conn = None
             # except: # deal with connection already stopped
             #    pass
+
+    def persist_table(self):
+        for table in self.name_2_table.values():
+            table.persist(self.engine)
 
     def exist_table(self, table_name, where="session") -> bool:
         has_table = self.engine.has_table(self.get_connection(), table_name, where)
@@ -289,9 +292,10 @@ class SparkSQLController(BaseDBController):
             table.analyzeStats(self.engine)
 
     def clear_all_tables(self):
-        self.get_connection().catalog.clearCache()
-        for tablename in self.name_2_table:
-            self.get_connection().catalog.dropTempView(tablename)
+        conn = self.get_connection()
+        conn.catalog.clearCache()
+        for table_name in self.name_2_table:
+            conn.catalog.dropTempView(table_name)
         self.name_2_table.clear()
 
     # check whether the input key (config name) is modifiable in runtime

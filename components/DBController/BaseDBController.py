@@ -13,11 +13,13 @@ class BaseDBController(ABC):
     def __init__(self, config, echo=True, allow_to_create_db=False):
         self.config = config
         self.allow_to_create_db = allow_to_create_db
-
         self.echo = echo
-        self.conn_str = self._create_conn_str()
-        self.engine = self._create_engine()
         self.connection_thread = threading.local()
+        self._db_init()
+
+    def _db_init(self):
+        self.engine = self._create_engine()
+
         # update info of existed tables
         self.metadata = MetaData()
         self.metadata.reflect(self.engine)
@@ -28,10 +30,11 @@ class BaseDBController(ABC):
         self.connect_if_loss()
 
     def _create_engine(self):
-        if not database_exists(self.conn_str):
-            create_database(self.conn_str, encoding="SQL_ASCII")
+        conn_str = self._create_conn_str()
+        if not database_exists(conn_str):
+            create_database(conn_str, encoding="SQL_ASCII")
 
-        return create_engine(self.conn_str, echo=self.echo, pool_size=10, pool_recycle=3600,
+        return create_engine(conn_str, echo=self.echo, pool_size=10, pool_recycle=3600,
                              connect_args={
                                  "options": "-c statement_timeout={}".format(self.config.sql_execution_timeout * 1000)},
                              client_encoding='utf8', isolation_level="AUTOCOMMIT")
