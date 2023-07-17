@@ -15,6 +15,7 @@ import pandas
 import json
 import re
 import threading
+import numpy as np
 
 logging.getLogger('pyspark').setLevel(logging.ERROR)
 logging.getLogger("py4j").setLevel(logging.ERROR)
@@ -102,10 +103,14 @@ class SparkTable:
         self.schema = StructType(list(columns))
         self.df: DataFrame = None
 
+    def load(self, engine):
+        self.df = engine.io.read(self.table_name)
+        
     def create(self, engine, analyze=True):
         if engine.has_table(engine.session, self.table_name, where="datasource"):
             # Table exists in the data source, load it directly
-            self.df = engine.io.read(self.table_name)
+            #self.df = engine.io.read(self.table_name)
+            self.load(engine)
         else:
             if engine.has_table(engine.session, self.table_name, where="session"):
                 # Table exists in the current session. 
@@ -193,6 +198,11 @@ class SparkIO:
         return self.read(table_name="information_schema.tables") \
             .filter("table_name = '{}'".format(table_name)) \
             .count() > 0
+    
+    def get_all_table_names_in_datasource(self) -> np.ndarray:
+        return self.read(table_name="information_schema.tables") \
+            .filter("table_schema != 'pg_catalog'") \
+            .filter("table_schema != 'information_schema'").toPandas()["table_name"].values
 
 
 class SparkEngine:
@@ -220,6 +230,9 @@ class SparkEngine:
             return self._has_table_in_session(connection, table_name)
         else:
             raise ValueError("Unsupport 'where' value: {}".format(where))
+
+    def get_all_table_names_in_datasource(self) -> np.ndarray:
+        return self.io.get_all_table_names_in_datasource()
 
     # def clearCachedTables(self):
     #    self.session.catalog.clearCache()
@@ -267,17 +280,28 @@ class SparkSQLController(BaseDBController):
             column_2_type[col] = data_type
         return column_2_type
 
+    def connect_if_loss(self):
+        if not self.is_connect():
+            self.connection_thread.conn = self.engine.connect()
+            all_user_created_table_names = self.engine.get_all_table_names_in_datasource()
+            for table_name in all_user_created_table_names:
+                self.load_table_if_exists_in_datasource(table_name)
+        pass
+
     def disconnect(self):
         if self.get_connection() is not None:
             # try:
-            self.persist_table()
+            self.persist_tables()
             self.engine.clearCachedTables()
             self.connection_thread.conn.stop()
             self.connection_thread.conn = None
             # except: # deal with connection already stopped
             #    pass
 
-    def persist_table(self):
+    def persist_table(self, table_name):
+        self.name_2_table[table_name].persist(self.engine)
+        
+    def persist_tables(self):
         for table in self.name_2_table.values():
             table.persist(self.engine)
 
@@ -287,10 +311,30 @@ class SparkSQLController(BaseDBController):
             return True
         return False
 
-    def analyze_table_stats(self):
+    def load_table_if_exists_in_datasource(self, table_name):
+        if (not self.exist_table(table_name, where="session")) and self.exist_table(table_name, where="datasource"):
+            # If the table exists in the data source but not in the current session, 
+            #   then the table will be loaded from the data source.
+            
+            #logger.debug(
+            #    "[create_table_if_absences] Table '{}' exists in the data source but not in the current session, ".format(
+            #        table_name) +
+            #    "so it will be loaded from the data source and your input schema will be ignored.")
+            
+            table = SparkTable(table_name, None)
+            table.load(self.engine)
+            self.name_2_table[table_name] = table
+
+    # collect statistics for the given table
+    def analyze_table_stats(self, table_name):
+        self.load_table_if_exists_in_datasource(table_name)
+        self.name_2_table[table_name].analyzeStats(self.engine)
+        
+    def analyze_all_table_stats(self):
         for table in self.name_2_table.values():
             table.analyzeStats(self.engine)
 
+    # clear all SparkTable instances in cache 
     def clear_all_tables(self):
         conn = self.get_connection()
         conn.catalog.clearCache()
@@ -338,12 +382,13 @@ class SparkSQLController(BaseDBController):
             logger.warning("[create_table_if_absences] Table '{}' exists, nothing changed.".format(table_name))
 
     def get_table_row_count(self, table_name):
+        self.load_table_if_exists_in_datasource(table_name)
         if table_name not in self.name_2_table:
-            raise RuntimeError("The table '{}' not found in current session, ".format(table_name) + \
-                               "please make sure you have called 'create_table_if_absences' to create or load it.")
+            raise RuntimeError("The table '{}' not found in both current session and the data source.".format(table_name))
         return self.name_2_table[table_name].nrows()
 
     def insert(self, table_name, column_2_value: dict):
+        self.load_table_if_exists_in_datasource(table_name)
         table = self.name_2_table[table_name]
         table.insert(self.get_connection(), column_2_value)
 

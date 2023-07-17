@@ -57,18 +57,10 @@ class MyTestCase(unittest.TestCase):
         self.db_controller.clear_all_tables()
 
     def test_get_table_row_count(self):
-        #self.db_controller.connect_if_loss()
-
-        try:
-            self.db_controller.get_table_row_count("test_create_table")
-            assert False
-        except Exception as e:
-            assert (isinstance(e, RuntimeError))
-
-        print("!!!: ", self.db_controller.exist_table("test_create_table"))
-        self.db_controller.create_table_if_absences("test_create_table", {})
+        self.db_controller.get_table_row_count("test_create_table")
         assert (self.db_controller.get_table_row_count("test_create_table") == 0)
-
+        self.db_controller.insert("test_create_table", {"ID": 1, "name": "Tom"})
+        assert (self.db_controller.get_table_row_count("test_create_table") == 1)
         self.db_controller.clear_all_tables()
         
     def test_insert(self):
@@ -101,7 +93,7 @@ class MyTestCase(unittest.TestCase):
 
         self.db_controller.create_table_if_absences("test_create_table", {"ID": 1, "name": "Tom"})
         self.db_controller.insert("test_create_table", {"ID": 2, "name": "Jerry"})
-        self.db_controller.analyze_table_stats()
+        self.db_controller.analyze_table_stats("test_create_table")
 
         sql = "SELECT * FROM test_create_table"
         print(json.dumps(self.db_controller.explain_logical_plan(sql), indent=2))
