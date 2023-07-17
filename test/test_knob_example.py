@@ -66,7 +66,7 @@ class KnobTest(unittest.TestCase):
         # core
         scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
 
-        scheduler.register_collect_data("default_knob_data", state_manager)
+        scheduler.register_collect_data("default_knob_data_stats", state_manager)
 
         # start
         # db_controller = state_manager.db_controller
@@ -75,7 +75,7 @@ class KnobTest(unittest.TestCase):
         
         scheduler.init()
         print("start to test sql")
-        sqls = load_sql("../eexamples/stats_test.txt")
+        sqls = load_sql("../examples/stats_test.txt")
         for i, sql in enumerate(sqls):
             print("current is the {}-th sql, and it is {}".format(i, sql))
             TimeStatistic.start(ExperimentTimeEnum.END_TO_END)
@@ -91,5 +91,7 @@ class KnobTest(unittest.TestCase):
 if __name__ == '__main__':
     try:
         unittest.main()
+    except Exception as e:
+        raise e
     finally:
         pilotscope_exit()

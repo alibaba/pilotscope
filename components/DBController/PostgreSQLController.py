@@ -8,7 +8,7 @@ from typing_extensions import deprecated
 from PilotConfig import PostgreSQLConfig
 from common.Util import pilotscope_exit
 from DBController.BaseDBController import BaseDBController
-from Exception.Exception import DBStatementTimeoutException
+from Exception.Exception import DBStatementTimeoutException, DatabaseCrashException, DatabaseStartException
 from common.Index import Index
 
 
@@ -69,8 +69,8 @@ class PostgreSQLController(BaseDBController):
         extensions = self.get_available_extensions()
         if "pg_buffercache" not in extensions:
             self.execute("create extension pg_buffercache")
-        if "pg_sysml" not in extensions:
-            self.execute("create extension pg_sysml")
+        if "pilotscope" not in extensions:
+            self.execute("create extension pilotscope")
         if self.enable_simulate_index and "hypopg" not in extensions:
             self.execute("create extension hypopg")
 
@@ -231,13 +231,25 @@ class PostgreSQLController(BaseDBController):
 
     # switch user and run
     def _surun(self, cmd):
-        os.system("su {} -c '{}'".format(self.config.user, cmd))
+        return os.system("su {} -c '{}'".format(self.config.user, cmd))
 
     def shutdown(self):
+        for instance in type(self).instances:
+            # if hasattr(instance, "engine"):
+            instance.disconnect() # to set DBController's self.connection_thread.conn is None
+            instance.engine.dispose(close = True)
+            # del instance.engine
         self._surun("{} stop -D {}".format(self.config.pg_ctl, self.config.pgdata))
 
     def start(self):
-        self._surun("{} start -D {}".format(self.config.pg_ctl, self.config.pgdata))
+        res = self._surun("{} start -D {}".format(self.config.pg_ctl, self.config.pgdata))
+        if res != 0: 
+            self.recover_config()
+            res = self._surun("{} start -D {}".format(self.config.pg_ctl, self.config.pgdata))
+            if res == 0:
+                raise DatabaseStartException
+            else:
+                raise DatabaseCrashException
         for instance in type(self).instances:
             instance.connect_if_loss()
 

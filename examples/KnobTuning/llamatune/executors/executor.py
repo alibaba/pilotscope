@@ -15,6 +15,8 @@ from scipy.spatial.distance import euclidean, cityblock
 
 from sklearn.preprocessing import StandardScaler
 
+from Exception.Exception import DatabaseCrashException
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
@@ -241,17 +243,17 @@ class SysmlExecutor(ExecutorInterface):
                 else:
                     execution_times.append(data.execution_time)
                     accu_execution_time += data.execution_time
-            # recover config at last
-            self.db_controller.recover_config()
             perf = {"latency":sorted(execution_times)[int(0.95*len(sqls))], "runtime":accu_execution_time, "throughput":len(sqls)/accu_execution_time}
             if not self.parse_metrics:
                 return perf
-            self.db_controller.connect()
             res = self.db_controller.get_internal_metrics()
             metrics = np.array([v for _,v in res.items()])
             return perf, metrics
+        except DatabaseCrashException as e:
+            raise e
         except Exception as e:
-            # raise e
+            
+            # raise e # to check bugs, uncomment here
             print(e)
             # perf = {"latency":self.state_manager.config.once_request_timeout,"runtime":self.state_manager.config.once_request_timeout*len(sqls),"throughput":1/self.state_manager.config.once_request_timeout}
             perf = None
@@ -259,7 +261,10 @@ class SysmlExecutor(ExecutorInterface):
                 return perf
             metrics = self.db_controller.get_internal_metrics()
             metrics = np.array([v for _,v in res.items()])
-            return perf, metrics
+            return perf, metrics # this class can't raise any error when DB fail to start
+        finally:
+            # recover config at last
+            self.db_controller.recover_config()
 
 class ExecutorFactory:
     concrete_classes = {
