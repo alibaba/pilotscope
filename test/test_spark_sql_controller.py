@@ -21,7 +21,7 @@ class MyTestCase(unittest.TestCase):
         super().__init__(methodName)
         datasource_type = SparkSQLDataSourceEnum.POSTGRESQL
         datasource_conn_info = {
-            'db_host': 'localhost',
+            'host': 'localhost',
             'db': 'root',
             'user': 'root',
             'pwd': 'root'
@@ -32,12 +32,11 @@ class MyTestCase(unittest.TestCase):
         )
         self.config.set_datasource(
             datasource_type, 
-            db_host = datasource_conn_info["db_host"], 
+            host = datasource_conn_info["host"], 
             db = datasource_conn_info["db"], 
             user = datasource_conn_info["user"], 
             pwd = datasource_conn_info["pwd"]    
         )
-        self.config.db = "stats"
         self.config.set_db_type(DatabaseEnum.SPARK)
         self.table_name = "lero"
         self.db_controller: SparkSQLController = DBControllerFactory.get_db_controller(self.config)

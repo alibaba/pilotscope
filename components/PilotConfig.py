@@ -61,10 +61,11 @@ class SparkConfig(PilotConfig):
 
         # datasource
         self.datasource_type = None
-        self.datasource_conn_info = {}
-        #self.host = None
-        #self.user = None
-        #self.pwd = None
+        self.host = None
+        self.db = None
+        self.user = None
+        self.pwd = None
+        self.jdbc = "org.postgresql:postgresql:42.6.0"
 
         self.spark_configs = {}
 
@@ -79,14 +80,12 @@ class SparkConfig(PilotConfig):
     def set_datasource(self, datasource_type: SparkSQLDataSourceEnum, **datasource_conn_info):
         self.datasource_type = datasource_type
         if self.datasource_type == SparkSQLDataSourceEnum.POSTGRESQL:
-            self.datasource_conn_info["db_host"] = datasource_conn_info["db_host"]
-            self.datasource_conn_info["db"] = datasource_conn_info["db"]
-            self.datasource_conn_info["user"] = datasource_conn_info["user"]
-            self.datasource_conn_info["pwd"] = datasource_conn_info["pwd"]
+            self.host = datasource_conn_info["host"]
+            self.db = datasource_conn_info["db"]
+            self.user = datasource_conn_info["user"]
+            self.pwd = datasource_conn_info["pwd"]
             if "jdbc" in datasource_conn_info and datasource_conn_info["jdbc"] is not None:
-                self.datasource_conn_info["jdbc"] = datasource_conn_info["jdbc"] 
-            else:
-                self.datasource_conn_info["jdbc"] = "org.postgresql:postgresql:42.6.0"
+                self.jdbc = datasource_conn_info["jdbc"] 
         else:   
             raise NotImplementedError("Unsupported datasource type: '{}'".format(self.datasource_type))
         return self

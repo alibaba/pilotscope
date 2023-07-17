@@ -72,7 +72,7 @@ def sparkSessionFromConfig(spark_config: SparkConfig):
     for config_name in spark_config.spark_configs:
         session = session.config(config_name, spark_config.spark_configs[config_name])
     if spark_config.datasource_type == SparkSQLDataSourceEnum.POSTGRESQL:
-        session = session.config("spark.jars.packages", spark_config.datasource_conn_info["jdbc"])
+        session = session.config("spark.jars.packages", spark_config.jdbc)
     return session.getOrCreate()
 
 
@@ -151,7 +151,7 @@ class SparkIO:
             self.reader = engine.session.read \
                 .format("jdbc") \
                 .option("driver", "org.postgresql.Driver") \
-                .option("url", "jdbc:postgresql://{}/{}".format(self.conn_info['db_host'], self.conn_info['db'])) \
+                .option("url", "jdbc:postgresql://{}/{}".format(self.conn_info['host'], self.conn_info['db'])) \
                 .option("user", self.conn_info['user']) \
                 .option("password", self.conn_info['pwd'])
 
@@ -181,7 +181,7 @@ class SparkIO:
                 .mode(mode.value) \
                 .format("jdbc") \
                 .option("driver", "org.postgresql.Driver") \
-                .option("url", "jdbc:postgresql://{}/{}".format(self.conn_info['db_host'], self.conn_info['db'])) \
+                .option("url", "jdbc:postgresql://{}/{}".format(self.conn_info['host'], self.conn_info['db'])) \
                 .option("user", self.conn_info['user']) \
                 .option("password", self.conn_info['pwd']) \
                 .option("dbtable", table_name)
@@ -201,7 +201,7 @@ class SparkEngine:
 
     def connect(self):
         self.session = sparkSessionFromConfig(self.config)
-        self.io = SparkIO(self.config.datasource_type, self, **(self.config.datasource_conn_info))
+        self.io = SparkIO(self.config.datasource_type, self, host=self.config.host, db=self.config.db, user=self.config.user, pwd=self.config.pwd)
         return self.session
 
     def _has_table_in_datasource(self, table_name):
