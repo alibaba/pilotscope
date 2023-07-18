@@ -13,7 +13,7 @@ def load_training_sql(db):
     elif "imdb" in db:
         return load_sql("../examples/job_train_ascii.txt")
     elif "tpcds" in db.lower():
-        raise NotImplementedError
+        return load_sql("../examples/tpcds_train_sql.txt")
     else:
         raise NotImplementedError
 
@@ -24,7 +24,7 @@ def load_test_sql(db):
     elif "imdb" in db:
         return load_sql("../examples/job_test.txt")
     elif "tpcds" in db.lower():
-        raise NotImplementedError
+        return load_sql("../examples/tpcds_test_sql.txt")
     else:
         raise NotImplementedError
 
