@@ -105,8 +105,9 @@ class PostgreSQLController(BaseDBController):
                 raise e
         return row
 
-    def get_hint_sql(self, key, value):
-        return "SET {} TO {}".format(key, value)
+    def set_hint(self, key, value):
+        sql = "SET {} TO {}".format(key, value)
+        self.execute(sql)
 
     def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
                                  enable_autoincrement_id_key=True):

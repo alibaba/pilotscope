@@ -76,7 +76,7 @@ class BaseDBController(ABC):
         pass
 
     @abstractmethod
-    def get_hint_sql(self, key, value):
+    def set_hint(self, key, value):
         raise NotImplementedError
 
     @abstractmethod

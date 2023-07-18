@@ -56,8 +56,11 @@ class PilotStateManager:
 
     def execute(self, sql, is_reset=True) -> Optional[PilotTransData]:
         try:
+            TimeStatistic.start("connect_if_loss")
             if not self.db_controller.is_connect():
                 self.db_controller.connect_if_loss()
+            TimeStatistic.end("connect_if_loss")
+
 
             origin_sql = sql
             enable_receive_pilot_data = self.is_need_to_receive_data(self.anchor_to_handlers)
@@ -73,9 +76,12 @@ class PilotStateManager:
             # execution sqls. Sometimes, data do not need to be got from inner
             is_execute_comment_sql = self.is_execute_comment_sql(self.anchor_to_handlers)
 
+            TimeStatistic.start("_execute_sqls")
             records = self._execute_sqls(comment_sql, is_execute_comment_sql)
+            TimeStatistic.end("_execute_sqls")
 
             # wait to fetch data
+            TimeStatistic.start("is_need_to_receive_data")
             if self.is_need_to_receive_data(self.anchor_to_handlers):
                 receive_data = self.data_fetcher.wait_until_get_data()
                 data: PilotTransData = PilotTransData.parse_2_instance(receive_data, origin_sql)
@@ -83,10 +89,13 @@ class PilotStateManager:
                 # fetch data from outer
             else:
                 data = PilotTransData()
+            TimeStatistic.end("is_need_to_receive_data")
 
             data.records = records
             data.sql = origin_sql
+            TimeStatistic.start("_fetch_data_from_outer")
             self._fetch_data_from_outer(origin_sql, data)
+            TimeStatistic.end("_fetch_data_from_outer")
 
             # clear state
             if is_reset:
@@ -195,9 +204,15 @@ class PilotStateManager:
 
     def _execute_sqls(self, comment_sql, is_execute_comment_sql):
         handlers = extract_handlers(self.anchor_to_handlers.values(), is_fetch_anchor=False)
+        TimeStatistic.start("execute_before_comment_sql")
         for handler in handlers:
             handler.execute_before_comment_sql(self.db_controller)
-        return self.db_controller.execute(comment_sql, fetch=True) if is_execute_comment_sql else None
+        TimeStatistic.end("execute_before_comment_sql")
+
+        TimeStatistic.start("self.db_controller.execute")
+        records= self.db_controller.execute(comment_sql, fetch=True) if is_execute_comment_sql else None
+        TimeStatistic.end("self.db_controller.execute")
+        return records
 
     def _get_anchor_params_as_comment(self):
         anchor_params = {}

@@ -21,7 +21,7 @@ class PilotTrainDataManager:
         self.user_data_manager = PilotUserDataManager(self.config)
         self.table_primary_key = PilotSysConfig.DATA_COLLECT_TABLE_PRIMARY_ID
 
-    def create_table_if_absence(self, table_name, column_2_value):
+    def _create_table_if_absence(self, table_name, column_2_value):
         # other
         new_column_2_value = dict(column_2_value)
         new_column_2_value[self.table_primary_key] = 0
@@ -34,16 +34,15 @@ class PilotTrainDataManager:
 
     def save_data(self, table_name, column_2_value):
         if len(column_2_value) > 0:
-            column_2_value = self.convert_data_type(column_2_value)
-            self.create_table_if_absence(table_name, column_2_value)
-            self.insert(table_name, column_2_value)
+            column_2_value = self._convert_data_type(column_2_value)
+            self._create_table_if_absence(table_name, column_2_value)
+            self.db_controller.insert(table_name, column_2_value)
 
     def save_data_batch(self, table_name, column_2_value_list):
         for i, column_2_value in enumerate(column_2_value_list):
             self.save_data(table_name, column_2_value)
-        pass
 
-    def convert_data_type(self, column_2_value: dict):
+    def _convert_data_type(self, column_2_value: dict):
         res = {}
         for key, value in column_2_value.items():
             if is_number(value) or isinstance(value, str):
@@ -57,43 +56,37 @@ class PilotTrainDataManager:
             res[key] = value
         return res
 
-    def insert(self, table_name, column_2_value: dict):
-        self.db_controller.insert(table_name, column_2_value)
-
-    def query_row_count(self, table_name):
+    def get_table_row_count(self, table_name):
         return self.db_controller.get_table_row_count(table_name)
 
     def read_all(self, table_name):
-        table: Table = self.db_controller.get_sqla_table(table_name)
-        query = select(table)
-        res = self.db_controller.get_data(query)
+        query = "select * from {}".format(table_name)
+        res = DataFrame(self.db_controller.execute(query, fetch=True))
 
         # update id
-        cur_id = self._extract_max_id_from_df(res)
+        cur_id = self._extract_max_id(res)
         self._update_table_last_id(table_name, cur_id)
 
         return res
 
     def read_update(self, table_name):
-        table: Table = self.db_controller.get_sqla_table(table_name)
-        last_id = self._read_table_last_id(table_name)
-        if last_id is None:
-            last_id = -1
-        # res = self.db_controller. get_data_with_larger_id(table_name, last_id)
-        query = select(table).where(getattr(table.c, self.table_primary_key) > last_id)
-        res = self.db_controller.get_data(query)
+        last_id = self._get_table_last_id(table_name)
+        last_id = -1 if last_id is None else last_id
+
+        query = "select * from {} where {} > {}".format(table_name, self.table_primary_key, last_id)
+        res = DataFrame(self.db_controller.execute(query, fetch=True))
 
         # update id
         if len(res) > 0:
-            cur_id = self._extract_max_id_from_df(res)
+            cur_id = self._extract_max_id(res)
             self._update_table_last_id(table_name, cur_id)
 
         return res
 
-    def _extract_max_id_from_df(self, df: DataFrame):
+    def _extract_max_id(self, df: DataFrame):
         return int(df.at[df.index[-1], PilotSysConfig.DATA_COLLECT_TABLE_PRIMARY_ID])
 
-    def _read_table_last_id(self, table):
+    def _get_table_last_id(self, table):
         return self.user_data_manager.read_training_data_visit_id(table)
 
     def _update_table_last_id(self, table, cur_id):

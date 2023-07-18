@@ -85,10 +85,22 @@ class SparkConfig(PilotConfig):
             self.user = datasource_conn_info["user"]
             self.pwd = datasource_conn_info["pwd"]
             if "jdbc" in datasource_conn_info and datasource_conn_info["jdbc"] is not None:
-                self.jdbc = datasource_conn_info["jdbc"] 
-        else:   
+                self.jdbc = datasource_conn_info["jdbc"]
+        else:
             raise NotImplementedError("Unsupported datasource type: '{}'".format(self.datasource_type))
         return self
+
+    def use_postgresql_datasource(self, datasource_type: SparkSQLDataSourceEnum, host, db, user, pwd):
+        self.datasource_type = datasource_type
+        jdbc = "org.postgresql:postgresql:42.6.0"
+        self._use_dbms_datasource(host, db, user, pwd, jdbc)
+
+    def _use_dbms_datasource(self, host, db, user, pwd, jdbc):
+        self.host = host
+        self.db = db
+        self.user = user
+        self.pwd = pwd
+        self.jdbc = jdbc
 
     def set_knob_config(self, db_config_path, backup_db_config_path):
         self.db_config_path = db_config_path

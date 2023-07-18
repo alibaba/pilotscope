@@ -11,6 +11,12 @@ from common.TimeStatistic import TimeStatistic
 from common.Util import wait_futures_results
 
 
+def modify_sql_for_spark(config, sql: str):
+    if config.db_type == DatabaseEnum.SPARK:
+        sql = sql.replace("::timestamp", "")
+    return sql
+
+
 class BaoParadigmHintAnchorHandler(HintAnchorHandler):
     class HintForBao:
         def __init__(self, db_type: DatabaseEnum) -> None:  # Hint Chores Factory
@@ -20,18 +26,29 @@ class BaoParadigmHintAnchorHandler(HintAnchorHandler):
                     "enable_seqscan", "enable_indexscan", "enable_indexonlyscan"
                 ]
                 self.ARMS_OPTION = [63, 62, 43, 42, 59]  # each arm's option in binary format
-
-                def arm_idx_to_hint2val(arm_idx):
-                    hint2val = dict()
-                    for i in range(len(self.ALL_OPTIONS)):
-                        hint2val[self.ALL_OPTIONS[i]] = ["off", "on"][1 & (self.ARMS_OPTION[arm_idx] >> i)]
-                    return hint2val
-
-                self.arms_hint2val = [arm_idx_to_hint2val(i) for i in range(len(self.ARMS_OPTION))]
+                self.arms_hint2val = [self.arm_idx_to_hint2val(i, self.ARMS_OPTION, self.ALL_OPTIONS, ["off", "on"]) for
+                                      i in range(len(self.ARMS_OPTION))]
+                pass
             elif db_type == DatabaseEnum.SPARK:
-                raise NotImplementedError
+                self.ALL_OPTIONS = [
+                    "spark.sql.cbo.enabled",
+                    "spark.sql.join.preferSortMergeJoin",
+                    "spark.sql.adaptive.skewJoin.enabled",
+                    "spark.sql.codegen.wholeStag",
+                    "spark.sql.cbo.joinReorder.enabled  ",
+                    "spark.sql.sources.bucketing.autoBucketedScan.enabled"
+                ]
+                self.ARMS_OPTION = [63, 62, 43, 42, 59]  # each arm's option in binary format
+                self.arms_hint2val = [self.arm_idx_to_hint2val(i, self.ARMS_OPTION, self.ALL_OPTIONS, ["false", "true"])
+                                      for i in range(len(self.ARMS_OPTION))]
             else:
-                raise KeyError
+                raise NotImplementedError
+
+        def arm_idx_to_hint2val(self, arm_idx, arms_option, all_options, value_names: list):
+            hint2val = dict()
+            for i in range(len(all_options)):
+                hint2val[all_options[i]] = value_names[1 & (arms_option[arm_idx] >> i)]
+            return hint2val
 
     def __init__(self, model: PilotModel, config: PilotConfig) -> None:
         super().__init__(config)
@@ -44,6 +61,7 @@ class BaoParadigmHintAnchorHandler(HintAnchorHandler):
         return self.model.user_model.predict(plans)
 
     def user_custom_task(self, sql):
+        sql = modify_sql_for_spark(self.config, sql)
         try:
             TimeStatistic.start(ExperimentTimeEnum.AI_TASK)
             with ThreadPoolExecutor(max_workers=len(self.bao_hint.arms_hint2val)) as pool:
@@ -80,5 +98,3 @@ class BaoParadigmHintAnchorHandler(HintAnchorHandler):
         if self.model.have_cache_data:
             plan["Buffers"] = data.buffercache
         return plan
-
-

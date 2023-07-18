@@ -22,20 +22,20 @@ class MyTestCase(unittest.TestCase):
         datasource_type = SparkSQLDataSourceEnum.POSTGRESQL
         datasource_conn_info = {
             'host': 'localhost',
-            'db': 'root',
-            'user': 'root',
-            'pwd': 'root'
+            'db': 'sparkStats',
+            'user': 'postgres',
+            'pwd': 'postgres'
         }
         self.config = SparkConfig(
             app_name="testApp",
             master_url="local[*]"
         )
         self.config.set_datasource(
-            datasource_type, 
-            host = datasource_conn_info["host"], 
-            db = datasource_conn_info["db"], 
-            user = datasource_conn_info["user"], 
-            pwd = datasource_conn_info["pwd"]    
+            datasource_type,
+            host=datasource_conn_info["host"],
+            db=datasource_conn_info["db"],
+            user=datasource_conn_info["user"],
+            pwd=datasource_conn_info["pwd"]
         )
         self.config.set_db_type(DatabaseEnum.SPARK)
         self.table_name = "lero"
@@ -44,33 +44,35 @@ class MyTestCase(unittest.TestCase):
         self.table = "badges"
         self.column = "date"
         self.db_controller.connect_if_loss()
-        
+        print("1" + str(self.db_controller.name_2_table))
+
     def test_get_hint_sql(self):
-        # print(self.db_controller.connection.sparkContext.getConf().getAll())
-        assert self.db_controller.get_hint_sql("spark.sql.autoBroadcastJoinThreshold", "1234") == SUCCESS
-        assert self.db_controller.get_hint_sql("spark.execution.memory", "1234") == FAILURE
+        self.db_controller.set_hint("spark.sql.autoBroadcastJoinThreshold", "1234")
+        self.db_controller.set_hint("spark.execution.memory", "1234")
         self.db_controller.clear_all_tables()
-        
+
     def test_create_table(self):
-        #self.db_controller.connect_if_loss()
+        # self.db_controller.connect_if_loss()
         self.db_controller.create_table_if_absences("test_create_table", {"ID": 1, "name": "Tom"})
         self.db_controller.clear_all_tables()
+        pass
 
     def test_get_table_row_count(self):
         self.db_controller.get_table_row_count("test_create_table")
+
         assert (self.db_controller.get_table_row_count("test_create_table") == 0)
         self.db_controller.insert("test_create_table", {"ID": 1, "name": "Tom"})
         assert (self.db_controller.get_table_row_count("test_create_table") == 1)
         self.db_controller.clear_all_tables()
-        
+
     def test_insert(self):
-        #self.db_controller.connect_if_loss()
+        # self.db_controller.connect_if_loss()
         self.db_controller.create_table_if_absences("test_create_table", {"ID": 1, "name": "Tom"})
         self.db_controller.insert("test_create_table", {"ID": 1, "name": "Tom"})
         self.db_controller.clear_all_tables()
-        
+
     def test_set_and_recover_knobs(self):
-        #self.db_controller.connect_if_loss()
+        # self.db_controller.connect_if_loss()
 
         self.db_controller.write_knob_to_file(
             {"spark.sql.ansi.enabled": "true", "spark.sql.autoBroadcastJoinThreshold": "1234"})
@@ -81,9 +83,9 @@ class MyTestCase(unittest.TestCase):
         assert (self.db_controller.get_connection().conf.get("spark.sql.ansi.enabled") == 'false')
         assert (self.db_controller.get_connection().conf.get("spark.sql.autoBroadcastJoinThreshold") == '10485760b')
         self.db_controller.clear_all_tables()
-        
+
     def test_plan_and_get_cost(self):
-        #self.db_controller.connect_if_loss()
+        # self.db_controller.connect_if_loss()
 
         self.db_controller.write_knob_to_file({
             "spark.sql.cbo.enabled": "true",
@@ -101,6 +103,7 @@ class MyTestCase(unittest.TestCase):
         print(self.db_controller.get_estimated_cost(sql))
 
         self.db_controller.clear_all_tables()
+
 
 if __name__ == '__main__':
     unittest.main()

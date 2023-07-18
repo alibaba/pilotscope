@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("..")
 sys.path.append("../components")
 
@@ -69,10 +70,10 @@ class KnobTest(unittest.TestCase):
         scheduler.register_collect_data("default_knob_data_stats", state_manager)
 
         # start
-        # db_controller = state_manager.db_controller
-        # db_controller.recover_config()
-        # db_controller.restart()
-        
+        db_controller = state_manager.db_controller
+        db_controller.recover_config()
+        db_controller.restart()
+
         scheduler.init()
         print("start to test sql")
         sqls = load_sql("../examples/stats_test.txt")
@@ -86,6 +87,19 @@ class KnobTest(unittest.TestCase):
             print("{}-th sql OK".format(i),flush = True)
         name_2_value = TimeStatistic.get_sum_data()
         Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db), is_rotation=True)
+
+    def test_compare_performance(self):
+
+        data_manager = PilotTrainDataManager(self.config)
+        pg_results = list(data_manager.read_all("default_knob_data")[
+                              "execution_time"])  # [0.7868, 0.5763, 0.3646, 0.5928, 0.5978, 0.7326, 0.626, 0.3306, 0.5859, 0.5794, 0.6649]
+        llamatune_results = list(data_manager.read_all("llamatune_data")[
+                                     "execution_time"])  # [0.7467, 0.5382, 0.3189, 0.577, 0.4795, 0.6371, 0.5719, 0.3398, 0.5898, 0.4836, 0.6703]
+        print(pg_results, llamatune_results)
+        # Drawer.draw_bar(
+        #     {"PostgreSQL": pg_results, "llamatune": llamatune_results},
+        #     file_name="llamatune_performance"
+        # )
 
 
 if __name__ == '__main__':

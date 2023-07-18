@@ -2,16 +2,17 @@ import unittest
 
 from DBController.PostgreSQLController import PostgreSQLController
 from Factory.DBControllerFectory import DBControllerFactory
-from PilotConfig import PilotConfig
+from PilotConfig import PilotConfig, PostgreSQLConfig
 from PilotEnum import DatabaseEnum
 from common.Index import Index
+from examples.utils import recover_imdb_index
 
 
 class MyTestCase(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         super().__init__(methodName)
-        self.config = PilotConfig()
-        # self.config.db = "stats"
+        self.config = PostgreSQLConfig()
+        self.config.db = "stats"
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.table_name = "lero"
         self.db_controller: PostgreSQLController = DBControllerFactory.get_db_controller(self.config)
@@ -33,6 +34,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_create_index(self):
         pass
+
     # index_name = "test_create_index"
     #     n = self.db_controller.get_index_number(self.table)
     #     self.db_controller.create_index(None, None, None)
@@ -86,6 +88,17 @@ class MyTestCase(unittest.TestCase):
         print(res)
 
     def test_get_all_indexes(self):
+        self.config.db = "imdbfull"
+        # self.config.db = "imdb"
+        self.db_controller: PostgreSQLController = DBControllerFactory.get_db_controller(self.config)
+        res = self.db_controller.get_all_indexes()
+        print(res)
+
+    def test_recover_imdb_index(self):
+        # self.config.db = "imdbfull"
+        self.config.db = "imdb"
+        self.db_controller: PostgreSQLController = DBControllerFactory.get_db_controller(self.config)
+        recover_imdb_index(self.db_controller)
         res = self.db_controller.get_all_indexes()
         print(res)
 
