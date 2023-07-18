@@ -103,14 +103,17 @@ class SparkTable:
         self.schema = StructType(list(columns))
         self.df: DataFrame = None
 
-    def load(self, engine):
+    def load(self, engine, analyze=True):
         self.df = engine.io.read(self.table_name)
-        
+        self.df.createOrReplaceTempView(self.table_name)
+        if analyze:
+            self.analyzeStats(engine)
+                
     def create(self, engine, analyze=True):
         if engine.has_table(engine.session, self.table_name, where="datasource"):
             # Table exists in the data source, load it directly
             #self.df = engine.io.read(self.table_name)
-            self.load(engine)
+            self.load(engine, analyze)
         else:
             if engine.has_table(engine.session, self.table_name, where="session"):
                 # Table exists in the current session. 
@@ -121,17 +124,21 @@ class SparkTable:
                 # so create an empty table and persist it to the data source.
                 self.df = engine.session.createDataFrame(data=[], schema=self.schema)
                 # engine.io.write(self.df, mode=SparkIOWriteModeEnum.OVERWRITE, target_table_name=self.table_name)
-        self.df.createOrReplaceTempView(self.table_name)
+            self.df.createOrReplaceTempView(self.table_name)
+            if analyze:
+                self.analyzeStats(engine)
         # engine.session.catalog.cacheTable(self.table_name)
         # if analyze:
         #    engine.session.sql("ANALYZE TABLE {} COMPUTE STATISTICS FOR ALL COLUMNS".format(self.table_name))
 
     # get the SQL string for insertion
-    def insert(self, session, column_2_value):
+    def insert(self, engine, column_2_value, analyze=True):
         column_names = list(column_2_value.keys())
-        new_row = session.createDataFrame([tuple(column_2_value[col] for col in column_names)], column_names)
+        new_row = engine.session.createDataFrame([tuple(column_2_value[col] for col in column_names)], column_names)
         self.df = self.df.union(new_row)
         self.df.createOrReplaceTempView(self.table_name)
+        if analyze:
+            self.analyzeStats(engine)
 
     def nrows(self):
         return self.df.count()
@@ -280,6 +287,11 @@ class SparkSQLController(BaseDBController):
             column_2_type[col] = data_type
         return column_2_type
 
+    def load_all_tables_from_datasource(self):
+        all_user_created_table_names = self.engine.get_all_table_names_in_datasource()
+        for table_name in all_user_created_table_names:
+            self.load_table_if_exists_in_datasource(table_name)
+
     def connect_if_loss(self):
         if not self.is_connect():
             self.connection_thread.conn = self.engine.connect()
@@ -390,7 +402,7 @@ class SparkSQLController(BaseDBController):
     def insert(self, table_name, column_2_value: dict):
         self.load_table_if_exists_in_datasource(table_name)
         table = self.name_2_table[table_name]
-        table.insert(self.get_connection(), column_2_value)
+        table.insert(self.engine, column_2_value)
 
     def execute(self, sql, fetch=False) -> Union[pandas.DataFrame, DataFrame]:
         row = None

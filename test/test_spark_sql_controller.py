@@ -37,6 +37,9 @@ class MyTestCase(unittest.TestCase):
             user = datasource_conn_info["user"], 
             pwd = datasource_conn_info["pwd"]    
         )
+        self.config.set_spark_session_config({
+            "spark.sql.pilotscope.enabled": True
+        })
         self.config.set_db_type(DatabaseEnum.SPARK)
         self.table_name = "lero"
         self.db_controller: SparkSQLController = DBControllerFactory.get_db_controller(self.config)
@@ -47,16 +50,19 @@ class MyTestCase(unittest.TestCase):
         
     def test_get_hint_sql(self):
         # print(self.db_controller.connection.sparkContext.getConf().getAll())
+        self.db_controller.load_all_tables_from_datasource()
         assert self.db_controller.get_hint_sql("spark.sql.autoBroadcastJoinThreshold", "1234") == SUCCESS
         assert self.db_controller.get_hint_sql("spark.execution.memory", "1234") == FAILURE
         self.db_controller.clear_all_tables()
         
     def test_create_table(self):
+        self.db_controller.load_all_tables_from_datasource()
         #self.db_controller.connect_if_loss()
         self.db_controller.create_table_if_absences("test_create_table", {"ID": 1, "name": "Tom"})
         self.db_controller.clear_all_tables()
 
     def test_get_table_row_count(self):
+        self.db_controller.load_all_tables_from_datasource()
         self.db_controller.get_table_row_count("test_create_table")
         assert (self.db_controller.get_table_row_count("test_create_table") == 0)
         self.db_controller.insert("test_create_table", {"ID": 1, "name": "Tom"})
@@ -64,12 +70,14 @@ class MyTestCase(unittest.TestCase):
         self.db_controller.clear_all_tables()
         
     def test_insert(self):
+        self.db_controller.load_all_tables_from_datasource()
         #self.db_controller.connect_if_loss()
         self.db_controller.create_table_if_absences("test_create_table", {"ID": 1, "name": "Tom"})
         self.db_controller.insert("test_create_table", {"ID": 1, "name": "Tom"})
         self.db_controller.clear_all_tables()
         
     def test_set_and_recover_knobs(self):
+        self.db_controller.load_all_tables_from_datasource()
         #self.db_controller.connect_if_loss()
 
         self.db_controller.write_knob_to_file(
@@ -83,6 +91,7 @@ class MyTestCase(unittest.TestCase):
         self.db_controller.clear_all_tables()
         
     def test_plan_and_get_cost(self):
+        self.db_controller.load_all_tables_from_datasource()
         #self.db_controller.connect_if_loss()
 
         self.db_controller.write_knob_to_file({
@@ -101,6 +110,17 @@ class MyTestCase(unittest.TestCase):
         print(self.db_controller.get_estimated_cost(sql))
 
         self.db_controller.clear_all_tables()
+    
+    def test_execute(self):
+        self.db_controller.load_all_tables_from_datasource()
+        #self.db_controller.connect_if_loss()
+        res = self.db_controller.execute(
+            '/*pilotscope {"anchor": {"EXECUTION_TIME_FETCH_ANCHOR": {"enable": true, "name": "EXECUTION_TIME_FETCH_ANCHOR"}}, "enableTerminate": true, "enableReceiveData": true, "port": 57205, "url": "localhost", "tid": "140335169763072"} pilotscope*/ select  count(*) from badges as b,     posts as p where b.UserId = p.OwnerUserId  AND p.PostTypeId=2  AND p.Score>=0  AND p.Score<=20  AND p.CommentCount<=12  AND p.CreationDate>=\'2010-09-05 08:36:31\';', 
+            True            
+        )
+        print("res: ", res.head())
+        self.db_controller.clear_all_tables()
+
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(warnings='ignore')
