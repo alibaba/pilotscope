@@ -77,7 +77,7 @@ class HintAnchorHandler(ReplaceAnchorHandler):
     def execute_before_comment_sql(self, db_controller: BaseDBController):
         TimeStatistic.start(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
         for hint, value in self.key_2_value_for_hint.items():
-            db_controller.execute(db_controller.get_hint_sql(hint, value))
+            db_controller.set_hint(hint, value)
         TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
     def add_params_to_db_core(self, params: dict):

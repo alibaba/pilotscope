@@ -2,7 +2,7 @@ import unittest
 
 from DBController.PostgreSQLController import PostgreSQLController
 from Dao.PilotUserDataManager import PilotUserDataManager
-from components.PilotConfig import PilotConfig
+from components.PilotConfig import PilotConfig, PostgreSQLConfig
 from Dao.PilotTrainDataManager import PilotTrainDataManager
 from components.PilotEnum import DatabaseEnum
 
@@ -11,21 +11,21 @@ class MyTestCase(unittest.TestCase):
 
     def __init__(self, methodName='runTest'):
         super().__init__(methodName)
-        self.config = PilotConfig()
+        self.config = PostgreSQLConfig()
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.train_data_manager = PilotTrainDataManager(self.config)
         self.table_name = "lero"
 
     def test_create_table(self):
         data = {"name": "wlg", "age": 10}
-        self.train_data_manager.create_table_if_absence(self.table_name, data)
+        self.train_data_manager._create_table_if_absence(self.table_name, data)
 
-    def test_insert(self):
+    def test_save_data(self):
         data = {"name": "wlg", "age": 10}
-        self.train_data_manager.insert(self.table_name, data)
+        self.train_data_manager.save_data(self.table_name, data)
 
     def test_count(self):
-        print("row count is {}".format(self.train_data_manager.query_row_count(self.table_name)))
+        print("row count is {}".format(self.train_data_manager.get_table_row_count(self.table_name)))
 
     def test_read_all(self):
         res = self.train_data_manager.read_all(self.table_name)
@@ -40,13 +40,11 @@ class MyTestCase(unittest.TestCase):
         print(res)
 
     def test_read_data_visit_count(self):
-        self.config.db = "PilotScopeMeta"
         table = "lero"
         user_data_dao = PilotUserDataManager(self.config)
         print(user_data_dao.read_training_data_visit_id(table))
 
     def test_set_data_visit_count(self):
-        self.config.db = "PilotScopeMeta"
         table = "lero"
         user_data_dao = PilotUserDataManager(self.config)
         user_data_dao.update_training_data_visit_id(table, 0)

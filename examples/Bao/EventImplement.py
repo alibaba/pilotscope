@@ -10,7 +10,7 @@ from PilotModel import PilotModel
 from PilotTransData import PilotTransData
 from common.Util import json_str_to_json_obj
 from common.dotDrawer import PlanDotDrawer
-from examples.Bao.BaoParadigmHintAnchorHandler import BaoParadigmHintAnchorHandler
+from examples.Bao.BaoParadigmHintAnchorHandler import BaoParadigmHintAnchorHandler, modify_sql_for_spark
 from examples.Bao.source.model import BaoRegression
 from examples.utils import load_training_sql
 
@@ -23,16 +23,18 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
         self.pilot_state_manager = PilotStateManager(self.config)
         self.bao_hint = BaoParadigmHintAnchorHandler.HintForBao(config.db_type)
         self.sqls = self.load_sql()
-        self.cur_sql_idx = 900
+        self.cur_sql_idx = 0
 
     def load_sql(self):
-        return load_training_sql(self.config.db)  # only for development test
+        return load_training_sql(self.config.db)[0:10]  # only for development test
 
     def _custom_collect_data(self):
         self.load_sql()
         column_2_value_list = []
 
         sql = self.sqls[self.cur_sql_idx]
+        sql = modify_sql_for_spark(self.config, sql)
+
         print("current  is {}-th sql, and total sqls is {}".format(self.cur_sql_idx, len(self.sqls)))
         for hint2val in self.bao_hint.arms_hint2val:
             column_2_value = {}
@@ -51,16 +53,6 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
                 column_2_value["time"] = data.execution_time
                 column_2_value["sql_idx"] = self.cur_sql_idx
                 column_2_value_list.append(column_2_value)
-            else:
-                self.pilot_state_manager.set_hint(hint2val)
-                self.pilot_state_manager.fetch_physical_plan()
-                data: PilotTransData = self.pilot_state_manager.execute(sql)
-                if data is not None and data.execution_time is not None:
-                    column_2_value["sql"] = sql
-                    column_2_value["plan"] = data.physical_plan
-                    column_2_value["time"] = self.config.sql_execution_timeout
-                    column_2_value["sql_idx"] = self.cur_sql_idx
-                    column_2_value_list.append(column_2_value)
         self.cur_sql_idx += 1
         return column_2_value_list, True if self.cur_sql_idx >= len(self.sqls) else False
 

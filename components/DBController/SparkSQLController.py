@@ -105,11 +105,11 @@ class SparkTable:
 
     def load(self, engine):
         self.df = engine.io.read(self.table_name)
-        
+
     def create(self, engine, analyze=True):
         if engine.has_table(engine.session, self.table_name, where="datasource"):
             # Table exists in the data source, load it directly
-            #self.df = engine.io.read(self.table_name)
+            # self.df = engine.io.read(self.table_name)
             self.load(engine)
         else:
             if engine.has_table(engine.session, self.table_name, where="session"):
@@ -198,7 +198,7 @@ class SparkIO:
         return self.read(table_name="information_schema.tables") \
             .filter("table_name = '{}'".format(table_name)) \
             .count() > 0
-    
+
     def get_all_table_names_in_datasource(self) -> np.ndarray:
         return self.read(table_name="information_schema.tables") \
             .filter("table_schema != 'pg_catalog'") \
@@ -300,7 +300,7 @@ class SparkSQLController(BaseDBController):
 
     def persist_table(self, table_name):
         self.name_2_table[table_name].persist(self.engine)
-        
+
     def persist_tables(self):
         for table in self.name_2_table.values():
             table.persist(self.engine)
@@ -315,12 +315,12 @@ class SparkSQLController(BaseDBController):
         if (not self.exist_table(table_name, where="session")) and self.exist_table(table_name, where="datasource"):
             # If the table exists in the data source but not in the current session, 
             #   then the table will be loaded from the data source.
-            
-            #logger.debug(
+
+            # logger.debug(
             #    "[create_table_if_absences] Table '{}' exists in the data source but not in the current session, ".format(
             #        table_name) +
             #    "so it will be loaded from the data source and your input schema will be ignored.")
-            
+
             table = SparkTable(table_name, None)
             table.load(self.engine)
             self.name_2_table[table_name] = table
@@ -329,7 +329,7 @@ class SparkSQLController(BaseDBController):
     def analyze_table_stats(self, table_name):
         self.load_table_if_exists_in_datasource(table_name)
         self.name_2_table[table_name].analyzeStats(self.engine)
-        
+
     def analyze_all_table_stats(self):
         for table in self.name_2_table.values():
             table.analyzeStats(self.engine)
@@ -344,15 +344,14 @@ class SparkSQLController(BaseDBController):
 
     # check whether the input key (config name) is modifiable in runtime
     # and set its value to the given value if it is modifiable
-    def get_hint_sql(self, key, value):
+    def set_hint(self, key, value):
         if self.get_connection().conf.isModifiable(key):
             # self.connection.conf.set(key, value)
-            self.get_connection().sql("SET {} = {}".format(key, value))
-            return SUCCESS
+            sql = "SET {} = {}".format(key, value)
+            self.execute(sql)
         else:
             logger.warning(
                 "[get_hint_sql] Configuration '{}' is not modifiable in runtime, nothing changed".format(key))
-            return FAILURE
 
     def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
                                  enable_autoincrement_id_key=True):
@@ -384,7 +383,8 @@ class SparkSQLController(BaseDBController):
     def get_table_row_count(self, table_name):
         self.load_table_if_exists_in_datasource(table_name)
         if table_name not in self.name_2_table:
-            raise RuntimeError("The table '{}' not found in both current session and the data source.".format(table_name))
+            raise RuntimeError(
+                "The table '{}' not found in both current session and the data source.".format(table_name))
         return self.name_2_table[table_name].nrows()
 
     def insert(self, table_name, column_2_value: dict):
@@ -447,7 +447,7 @@ class SparkSQLController(BaseDBController):
     # done
     def write_knob_to_file(self, knobs):
         for k, v in knobs.items():
-            self.get_hint_sql(k, v)
+            self.set_hint(k, v)
 
     # done
     def recover_config(self):

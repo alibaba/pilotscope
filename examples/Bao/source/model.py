@@ -14,17 +14,22 @@ from featurize import TreeFeaturizer
 
 CUDA = torch.cuda.is_available()
 
+
 def _nn_path(base):
     return os.path.join(base, "nn_weights")
+
 
 def _x_transform_path(base):
     return os.path.join(base, "x_transform")
 
+
 def _y_transform_path(base):
     return os.path.join(base, "y_transform")
 
+
 def _channels_path(base):
     return os.path.join(base, "channels")
+
 
 def _n_path(base):
     return os.path.join(base, "n")
@@ -32,6 +37,7 @@ def _n_path(base):
 
 def _inv_log1p(x):
     return np.exp(x) - 1
+
 
 class BaoData:
     def __init__(self, data):
@@ -45,6 +51,7 @@ class BaoData:
         return (self.__data[idx]["tree"],
                 self.__data[idx]["target"])
 
+
 def collate(x):
     trees = []
     targets = []
@@ -56,10 +63,12 @@ def collate(x):
     targets = torch.tensor(targets)
     return trees, targets
 
+
 class BaoRegression:
-    def __init__(self, verbose=False, have_cache_data=False):
+    def __init__(self, verbose=False, have_cache_data=False, is_spark=False):
         self.__net = None
         self.__verbose = verbose
+        self.is_spark = is_spark
 
         log_transformer = preprocessing.FunctionTransformer(
             np.log1p, _inv_log1p,
@@ -68,29 +77,29 @@ class BaoRegression:
 
         self.__pipeline = Pipeline([("log", log_transformer),
                                     ("scale", scale_transformer)])
-        
-        self.__tree_transform = TreeFeaturizer()
+
+        self.__tree_transform = TreeFeaturizer(is_spark=is_spark)
         self.__have_cache_data = have_cache_data
         self.__in_channels = None
         self.__n = 0
-        
+
     def __log(self, *args):
         if self.__verbose:
             print(*args)
 
     def num_items_trained_on(self):
         return self.__n
-            
+
     def load(self, path):
         with open(_n_path(path), "rb") as f:
             self.__n = joblib.load(f)
         with open(_channels_path(path), "rb") as f:
             self.__in_channels = joblib.load(f)
-            
+
         self.__net = net.BaoNet(self.__in_channels)
         self.__net.load_state_dict(torch.load(_nn_path(path)))
         self.__net.eval()
-        
+
         with open(_y_transform_path(path), "rb") as f:
             self.__pipeline = joblib.load(f)
         with open(_x_transform_path(path), "rb") as f:
@@ -99,7 +108,7 @@ class BaoRegression:
     def save(self, path):
         # try to create a directory here
         os.makedirs(path, exist_ok=True)
-        
+
         torch.save(self.__net.state_dict(), _nn_path(path))
         with open(_y_transform_path(path), "wb") as f:
             joblib.dump(self.__pipeline, f)
@@ -116,12 +125,12 @@ class BaoRegression:
 
         X = [json.loads(x) if isinstance(x, str) else x for x in X]
         self.__n = len(X)
-            
+
         # transform the set of trees into feature vectors using a log
         # (assuming the tail behavior exists, TODO investigate
         #  the quantile transformer from scikit)
         y = self.__pipeline.fit_transform(y.reshape(-1, 1)).astype(np.float32)
-        
+
         self.__tree_transform.fit(X)
         X = self.__tree_transform.transform(X)
 
@@ -150,7 +159,7 @@ class BaoRegression:
 
         optimizer = torch.optim.Adam(self.__net.parameters())
         loss_fn = torch.nn.MSELoss()
-        
+
         losses = []
         for epoch in range(100):
             loss_accum = 0
@@ -160,7 +169,7 @@ class BaoRegression:
                 y_pred = self.__net(x)
                 loss = loss_fn(y_pred, y)
                 loss_accum += loss.item()
-        
+
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
@@ -189,4 +198,3 @@ class BaoRegression:
         self.__net.eval()
         pred = self.__net(X).cpu().detach().numpy()
         return self.__pipeline.inverse_transform(pred)
-
