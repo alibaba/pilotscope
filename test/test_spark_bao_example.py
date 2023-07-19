@@ -31,7 +31,7 @@ from examples.utils import load_test_sql, to_tree_json
 
 class SparkBaoTest(unittest.TestCase):
     def setUp(self):
-        db = "tpcds"
+        db = "stats"
         self.config: SparkConfig = SparkConfig(app_name="PiloScopeBao", master_url="local[*]")
         self.config.use_postgresql_datasource(SparkSQLDataSourceEnum.POSTGRESQL, host="localhost", db=db,
                                               user="postgres", pwd="postgres")
