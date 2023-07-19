@@ -91,7 +91,7 @@ def sparkSessionFromConfig(spark_config: SparkConfig):
 #        self._conn = None
 
 class SparkColumn(StructField):
-    def __init__(self, column_name, column_type):
+    def __init__(self, column_name, column_type: SparkSQLTypeEnum):
         # Spark does not support primary key and auto-increment
         super().__init__(column_name, column_type())
 
@@ -106,6 +106,7 @@ class SparkTable:
     def load(self, engine, analyze=True):
         self.df = engine.io.read(self.table_name)
         self.df.createOrReplaceTempView(self.table_name)
+        self.schema = self.df.schema
         if analyze:
             self.analyzeStats(engine)
                 
@@ -132,13 +133,15 @@ class SparkTable:
         #    engine.session.sql("ANALYZE TABLE {} COMPUTE STATISTICS FOR ALL COLUMNS".format(self.table_name))
 
     # get the SQL string for insertion
-    def insert(self, engine, column_2_value, analyze=True):
+    def insert(self, engine, column_2_value, analyze=True, persist=True):
         column_names = list(column_2_value.keys())
         new_row = engine.session.createDataFrame([tuple(column_2_value[col] for col in column_names)], column_names)
         self.df = self.df.union(new_row)
         self.df.createOrReplaceTempView(self.table_name)
         if analyze:
             self.analyzeStats(engine)
+        if persist:
+            engine.io.write(new_row, mode=SparkIOWriteModeEnum.APPEND, target_table_name=self.table_name)
 
     def nrows(self):
         return self.df.count()
@@ -153,6 +156,12 @@ class SparkTable:
     def persist(self, engine):
         engine.io.write(self, mode=SparkIOWriteModeEnum.OVERWRITE)
 
+    def clear_rows(self, engine, persist=False):
+        self.df = engine.session.createDataFrame(data=[], schema=self.schema)
+        self.df.createOrReplaceTempView(self.table_name)
+        self.analyzeStats(engine)
+        if persist:
+            self.persist(engine)
 
 class SparkIO:
     def __init__(self, datasource_type: SparkSQLDataSourceEnum, engine, **datasource_conn_info) -> None:
@@ -273,18 +282,18 @@ class SparkSQLController(BaseDBController):
     def _to_db_data_type(self, column_2_value):
         column_2_type = {}
         for col, data in column_2_value.items():
-            data_type = SparkSQLTypeEnum.String.value
+            data_type = SparkSQLTypeEnum.String
             if type(data) == int:
-                data_type = SparkSQLTypeEnum.Integer.value
+                data_type = SparkSQLTypeEnum.Integer
             elif type(data) == float:
-                data_type = SparkSQLTypeEnum.Float.value
+                data_type = SparkSQLTypeEnum.Float
             elif type(data) == str:
-                data_type = SparkSQLTypeEnum.String.value
+                data_type = SparkSQLTypeEnum.String
             elif type(data) == dict:
-                data_type = SparkSQLTypeEnum.String.value
+                data_type = SparkSQLTypeEnum.String
             elif type(data) == list:
-                data_type = SparkSQLTypeEnum.String.value
-            column_2_type[col] = data_type
+                data_type = SparkSQLTypeEnum.String
+            column_2_type[col] = data_type.value
         return column_2_type
 
     def load_all_tables_from_datasource(self):
@@ -400,10 +409,10 @@ class SparkSQLController(BaseDBController):
             raise RuntimeError("The table '{}' not found in both current session and the data source.".format(table_name))
         return self.name_2_table[table_name].nrows()
 
-    def insert(self, table_name, column_2_value: dict):
+    def insert(self, table_name, column_2_value: dict, persist=True):
         self.load_table_if_exists_in_datasource(table_name)
         table = self.name_2_table[table_name]
-        table.insert(self.engine, column_2_value)
+        table.insert(self.engine, column_2_value, persist=persist)
 
     def execute(self, sql, fetch=False) -> Union[pandas.DataFrame, DataFrame]:
         row = None
