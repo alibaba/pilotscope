@@ -38,7 +38,8 @@ class MyTestCase(unittest.TestCase):
             pwd=datasource_conn_info["pwd"]
         )
         self.config.set_spark_session_config({
-            "spark.sql.pilotscope.enabled": True
+            "spark.sql.pilotscope.enabled": True,
+            "spark.executor.memory": "20g"
         })
         self.config.set_db_type(DatabaseEnum.SPARK)
         self.table_name = "lero"

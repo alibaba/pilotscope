@@ -38,7 +38,6 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
         print("current  is {}-th sql, and total sqls is {}".format(self.cur_sql_idx, len(self.sqls)))
         for hint2val in self.bao_hint.arms_hint2val:
             column_2_value = {}
-            self.pilot_state_manager.db_controller.connect_if_loss()
             self.pilot_state_manager.set_hint(hint2val)
             self.pilot_state_manager.fetch_physical_plan()
             self.pilot_state_manager.fetch_execution_time()
