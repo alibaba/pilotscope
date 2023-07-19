@@ -81,8 +81,6 @@ class BaoParadigmHintAnchorHandler(HintAnchorHandler):
             pass
         except Exception as e:
             raise e
-            print(e)
-            idx = 0
         return self.bao_hint.arms_hint2val[idx]
 
     def _get_plan(self, sql, hint2val):

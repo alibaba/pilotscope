@@ -13,7 +13,7 @@ from Factory.AnchorHandlerFactory import AnchorHandlerFactory
 from Factory.DBControllerFectory import DBControllerFactory
 from Factory.DataFetchFactory import DataFetchFactory
 from PilotConfig import PilotConfig
-from PilotEnum import FetchMethod, ExperimentTimeEnum
+from PilotEnum import FetchMethod, ExperimentTimeEnum, DatabaseEnum
 from PilotTransData import PilotTransData
 from common.Thread import ValueThread
 from common.TimeStatistic import TimeStatistic
@@ -61,7 +61,6 @@ class PilotStateManager:
                 self.db_controller.connect_if_loss()
             TimeStatistic.end("connect_if_loss")
 
-
             origin_sql = sql
             enable_receive_pilot_data = self.is_need_to_receive_data(self.anchor_to_handlers)
 
@@ -77,7 +76,7 @@ class PilotStateManager:
             is_execute_comment_sql = self.is_execute_comment_sql(self.anchor_to_handlers)
 
             TimeStatistic.start("_execute_sqls")
-            records = self._execute_sqls(comment_sql, is_execute_comment_sql)
+            records, python_sql_execution_time = self._execute_sqls(comment_sql, is_execute_comment_sql)
             TimeStatistic.end("_execute_sqls")
 
             # wait to fetch data
@@ -97,6 +96,9 @@ class PilotStateManager:
             self._fetch_data_from_outer(origin_sql, data)
             TimeStatistic.end("_fetch_data_from_outer")
 
+            if self.config.db_type == DatabaseEnum.SPARK:
+                self._add_execution_time_from_python(data, python_sql_execution_time)
+
             # clear state
             if is_reset:
                 self.reset()
@@ -108,6 +110,10 @@ class PilotStateManager:
             return None
         except Exception as e:
             raise e
+
+    def _add_execution_time_from_python(self, data: PilotTransData, python_sql_execution_time):
+        if AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR in self.anchor_to_handlers:
+            data.execution_time = python_sql_execution_time
 
     # def execute(self, sql, is_reset=True) -> Optional[PilotTransData]:
     #     try:
@@ -210,9 +216,13 @@ class PilotStateManager:
         TimeStatistic.end("execute_before_comment_sql")
 
         TimeStatistic.start("self.db_controller.execute")
-        records= self.db_controller.execute(comment_sql, fetch=True) if is_execute_comment_sql else None
+        records = python_sql_execution_time = None
+        if is_execute_comment_sql:
+            start_time = time.time()
+            records = self.db_controller.execute(comment_sql, fetch=True)
+            python_sql_execution_time = time.time() - start_time
         TimeStatistic.end("self.db_controller.execute")
-        return records
+        return records, python_sql_execution_time
 
     def _get_anchor_params_as_comment(self):
         anchor_params = {}

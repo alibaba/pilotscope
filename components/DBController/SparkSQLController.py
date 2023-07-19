@@ -108,11 +108,11 @@ class SparkTable:
         self.df.createOrReplaceTempView(self.table_name)
         if analyze:
             self.analyzeStats(engine)
-                
+
     def create(self, engine, analyze=True):
         if engine.has_table(engine.session, self.table_name, where="datasource"):
             # Table exists in the data source, load it directly
-            #self.df = engine.io.read(self.table_name)
+            # self.df = engine.io.read(self.table_name)
             self.load(engine, analyze)
         else:
             if engine.has_table(engine.session, self.table_name, where="session"):
