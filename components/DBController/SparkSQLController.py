@@ -298,6 +298,7 @@ class SparkSQLController(BaseDBController):
             all_user_created_table_names = self.engine.get_all_table_names_in_datasource()
             for table_name in all_user_created_table_names:
                 self.load_table_if_exists_in_datasource(table_name)
+                logger.debug("[connect_if_loss] Loaded table '{}'".format(table_name))
         pass
 
     def disconnect(self):
