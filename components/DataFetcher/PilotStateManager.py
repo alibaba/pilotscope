@@ -188,6 +188,12 @@ class PilotStateManager:
             extract_anchor_handlers(anchor_2_handlers, is_fetch_anchor=True))
         if AnchorEnum.RECORD_FETCH_ANCHOR in filter_anchor_2_handlers:
             filter_anchor_2_handlers.pop(AnchorEnum.RECORD_FETCH_ANCHOR)
+
+        # the execution time is not needed to be received for spark
+        if self.config.db_type == DatabaseEnum.SPARK:
+            if AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR in filter_anchor_2_handlers:
+                filter_anchor_2_handlers.pop(AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR)
+
         return len(filter_anchor_2_handlers) > 0
 
     def is_execute_comment_sql(self, anchor_2_handlers):
@@ -205,8 +211,9 @@ class PilotStateManager:
         self._reset_connection()
 
     def _reset_connection(self, *args, **kwargs):
-        print(threading.get_ident())
-        self.db_controller.disconnect()
+        # todo
+        if self.config.db_type != DatabaseEnum.SPARK:
+            self.db_controller.disconnect()
 
     def _execute_sqls(self, comment_sql, is_execute_comment_sql):
         handlers = extract_handlers(self.anchor_to_handlers.values(), is_fetch_anchor=False)

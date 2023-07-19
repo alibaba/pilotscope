@@ -201,6 +201,9 @@ class PostgreSQLController(BaseDBController):
     def explain_physical_plan(self, sql, comment=""):
         return self._explain(sql, comment, False)
 
+    def explain_logical_plan(self, sql, comment=""):
+        return self.explain_physical_plan(sql, comment)
+
     def explain_execution_plan(self, sql, comment=""):
         return self._explain(sql, comment, True)
 

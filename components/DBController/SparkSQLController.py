@@ -432,29 +432,23 @@ class SparkSQLController(BaseDBController):
         return query_execution.executedPlan()
 
     def explain_logical_plan(self, sql, comment="") -> Dict:
-        comment_pos = sql.lower().find("select") + len("select")
-        sql_with_comment = sql[:comment_pos] + " " + comment + " " + sql[comment_pos:]
-        plan = self._logicalPlan(self.execute(sql_with_comment)._jdf.queryExecution())
-        # if pretty:
-        #    return plan.prettyJson()
-        # else:
+        sql = "{} {}".format(comment, sql)
+        plan = self._logicalPlan(self.execute(sql)._jdf.queryExecution())
         return json.loads(plan.toJSON())
 
     def explain_physical_plan(self, sql, comment="") -> Dict:
-        comment_pos = sql.lower().find("select") + len("select")
-        sql_with_comment = sql[:comment_pos] + " " + comment + " " + sql[comment_pos:]
-        plan = self._physicalPlan(self.execute(sql_with_comment)._jdf.queryExecution())
-        # if pretty:
-        #    return plan.prettyJson()
-        # else:
-        return json.loads(plan.toJSON())
+        sql = "{} {}".format(comment, sql)
+        plan = self._physicalPlan(self.execute(sql)._jdf.queryExecution())
+        return json.loads(plan.toJSON())[0]
 
     def get_estimated_cost(self, sql) -> Tuple[int]:
+        raise NotImplementedError("Spark SQL does not support cost estimation.You can use row count or sizeByte instead.")
         plan = self._logicalPlan(self.execute(sql)._jdf.queryExecution())
         cost_str = plan.stats().simpleString()
         pattern = re.compile(r"sizeInBytes=([0-9.]+) B, rowCount=([0-9]+)")
         res = pattern.search(cost_str)
         return res.groups()[0], res.groups()[1]
+
 
     # done
     def write_knob_to_file(self, knobs):

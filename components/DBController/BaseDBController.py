@@ -64,6 +64,10 @@ class BaseDBController(ABC):
         pass
 
     @abstractmethod
+    def explain_logical_plan(self, sql):
+        pass
+
+    @abstractmethod
     def explain_execution_plan(self, sql):
         pass
 

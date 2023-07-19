@@ -22,6 +22,7 @@ class DBControllerFactory:
             db_controller = PostgreSQLController(config, echo, allow_to_create_db, enable_simulate_index)
         elif config.db_type == DatabaseEnum.SPARK:
             db_controller = SparkSQLController(config, echo, allow_to_create_db)
+            pass
         else:
             raise RuntimeError()
 

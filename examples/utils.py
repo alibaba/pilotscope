@@ -8,7 +8,7 @@ from common.Util import json_str_to_json_obj
 
 
 def load_training_sql(db):
-    if "stats" in db:
+    if "stats" in db.lower():
         return load_sql("../examples/stats_train.txt")
     elif "imdb" in db:
         return load_sql("../examples/job_train_ascii.txt")
