@@ -1,0 +1,152 @@
+[
+    {
+        "id": 2,
+        "description": "The default number of partitions to use when shuffling data for joins or aggregations. Note: For structured streaming, this configuration cannot be changed between query restarts from the same checkpoint location.",
+        "default": 200,
+        "name": "spark.sql.shuffle.partitions",
+        "type": "integer",
+        "max": 20000,
+        "min": 1
+    },
+    {
+        "id": 3,
+        "description": "",
+        "default": 0,
+        "name": "spark.sql.files.openCostInBytes",
+        "type": "integer",
+        "max": 100,
+        "min": 0
+    },
+    {
+        "id": 4,
+        "description": "The maximum number of bytes to pack into a single partition when reading files. This configuration is effective only when using file-based sources such as Parquet, JSON and ORC.",
+        "default": 1280255769,
+        "name": "spark.sql.files.maxPartitionBytes",
+        "type": "integer",
+        "max": 10240255769,
+        "min": 1
+    },
+    {
+        "id": 5,
+        "description": "Sets the compression codec used when writing Parquet files. If either compression or parquet.compression is specified in the table-specific options/properties, the precedence would be compression, parquet.compression, spark.sql.parquet.compression.codec. Acceptable values include: none, uncompressed, snappy, gzip, lzo, brotli, lz4, zstd.",
+        "default": "uncompressed",
+        "name": "spark.sql.parquet.compression.codec",
+        "type": "enum",
+        "choices": [
+            "uncompressed","snappy", "gzip", "lzo", "brotli", "lz4", "zstd"
+        ]
+    },
+    {
+        "id": 6,
+        "description": "",
+        "default": "true",
+        "name": "spark.sql.codegen.wholeStage",
+        "type": "enum",
+        "choices": [
+            "true",
+            "false"
+        ]
+    },
+    {
+        "id": 7,
+        "description": "When true and 'spark.sql.adaptive.enabled' is true, Spark will coalesce contiguous shuffle partitions according to the target size (specified by 'spark.sql.adaptive.advisoryPartitionSizeInBytes'), to avoid too many small tasks.",
+        "default": "true",
+        "name": "spark.sql.adaptive.coalescePartitions.enabled",
+        "type": "enum",
+        "choices": [
+            "true",
+            "false"
+        ]
+    },
+    {
+        "id": 8,
+        "description": "The minimum size of shuffle partitions after coalescing. This is useful when the adaptively calculated target size is too small during partition coalescing.",
+        "default": 1048576,
+        "name": "spark.sql.adaptive.coalescePartitions.minPartitionSize",
+        "type": "integer",
+        "max": 104857600,
+        "min": 1
+    },
+    {
+        "id": 9,
+        "description": "When true, Spark does not respect the target size specified by 'spark.sql.adaptive.advisoryPartitionSizeInBytes' (default 64MB) when coalescing contiguous shuffle partitions, but adaptively calculate the target size according to the default parallelism of the Spark cluster. The calculated size is usually smaller than the configured target size. This is to maximize the parallelism and avoid performance regression when enabling adaptive query execution. It's recommended to set this config to false and respect the configured target size.",
+        "default": "true",
+        "name": "spark.sql.adaptive.coalescePartitions.parallelismFirst",
+        "type": "enum",
+        "choices": [
+            "true",
+            "false"
+        ]
+    },
+    {
+        "id": 10,
+        "description": "When true, force enable OptimizeSkewedJoin even if it introduces extra shuffle.",
+        "default": "false",
+        "name": "spark.sql.adaptive.forceOptimizeSkewedJoin",
+        "type": "enum",
+        "choices": [
+            "true",
+            "false"
+        ]
+    },
+    {
+        "id": 11,
+        "description": "When true and 'spark.sql.adaptive.enabled' is true, Spark tries to use local shuffle reader to read the shuffle data when the shuffle partitioning is not needed, for example, after converting sort-merge join to broadcast-hash join.",
+        "default": "true",
+        "name": "spark.sql.adaptive.localShuffleReader.enabled",
+        "type": "enum",
+        "choices": [
+            "true",
+            "false"
+        ]
+    },
+    {
+        "id": 12,
+        "description": "When true and 'spark.sql.adaptive.enabled' is true, Spark will optimize the skewed shuffle partitions in RebalancePartitions and split them to smaller ones according to the target size (specified by 'spark.sql.adaptive.advisoryPartitionSizeInBytes'), to avoid data skew.",
+        "default": "true",
+        "name": "spark.sql.adaptive.optimizeSkewsInRebalancePartitions.enabled",
+        "type": "enum",
+        "choices": [
+            "true",
+            "false"
+        ]
+    },
+    {
+        "id": 13,
+        "description": "A partition will be merged during splitting if its size is small than this factor multiply spark.sql.adaptive.advisoryPartitionSizeInBytes.",
+        "default": 0.2,
+        "name": "spark.sql.adaptive.rebalancePartitionsSmallPartitionFactor",
+        "type": "real",
+        "max": 0.9,
+        "min": 0.1
+    },
+    {
+        "id": 14,
+        "description": "When true and 'spark.sql.adaptive.enabled' is true, Spark dynamically handles skew in shuffled join (sort-merge and shuffled hash) by splitting (and replicating if needed) skewed partitions.",
+        "default": "true",
+        "name": "spark.sql.adaptive.skewJoin.enabled",
+        "type": "enum",
+        "choices": [
+            "true",
+            "false"
+        ]
+    },
+    {
+        "id": 15,
+        "description": "A partition is considered as skewed if its size is larger than this factor multiplying the median partition size and also larger than 'spark.sql.adaptive.skewJoin.skewedPartitionThresholdInBytes'",
+        "default": 5,
+        "name": "spark.sql.adaptive.skewJoin.skewedPartitionFactor",
+        "type": "integer",
+        "max": 500,
+        "min": 1
+    },
+    {
+        "id": 16,
+        "description": "A partition is considered as skewed if its size in bytes is larger than this threshold and also larger than 'spark.sql.adaptive.skewJoin.skewedPartitionFactor' multiplying the median partition size. Ideally this config should be set larger than 'spark.sql.adaptive.advisoryPartitionSizeInBytes'.",
+        "default": 268435456,
+        "name": "spark.sql.adaptive.skewJoin.skewedPartitionThresholdInBytes",
+        "type": "integer",
+        "max": 2684354560,
+        "min": 1
+    }
+]
