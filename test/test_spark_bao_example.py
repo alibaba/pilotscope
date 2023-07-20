@@ -31,14 +31,14 @@ from examples.utils import load_test_sql, to_tree_json
 
 class SparkBaoTest(unittest.TestCase):
     def setUp(self):
-        db = "sparkStats"
+        db = "tpcds"
         self.config: SparkConfig = SparkConfig(app_name="PiloScopeBao", master_url="local[*]")
         self.config.use_postgresql_datasource(SparkSQLDataSourceEnum.POSTGRESQL, host="localhost", db=db,
                                               user="postgres", pwd="postgres")
         self.config.set_spark_session_config({
             "spark.sql.pilotscope.enabled": True,
-            "spark.executor.memory": "20g",
-            "spark.driver.memory": "20g"
+            "spark.executor.memory": "40g",
+            "spark.driver.memory": "40g"
         })
 
         self.used_cache = False

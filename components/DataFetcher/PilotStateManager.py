@@ -115,59 +115,6 @@ class PilotStateManager:
         if AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR in self.anchor_to_handlers:
             data.execution_time = python_sql_execution_time
 
-    # def execute(self, sql, is_reset=True) -> Optional[PilotTransData]:
-    #     try:
-    #         if not self.db_controller.is_connect():
-    #             TimeStatistic.start("connect")
-    #             self.db_controller.connect()
-    #             TimeStatistic.end("connect")
-    #
-    #         origin_sql = sql
-    #         enable_receive_pilot_data = self.is_need_to_receive_data(self.anchor_to_handlers)
-    #
-    #         # create pilot comment
-    #         comment_creator = PilotCommentCreator(enable_receive_pilot_data=enable_receive_pilot_data)
-    #         comment_creator.add_params(self.data_fetcher.get_additional_info())
-    #         comment_creator.enable_terminate(
-    #             False if AnchorEnum.RECORD_FETCH_ANCHOR in self.anchor_to_handlers else True)
-    #         comment_creator.add_anchor_params(self._get_anchor_params_as_comment())
-    #         comment_sql = comment_creator.create_comment_sql(sql)
-    #
-    #         # execution sqls. Sometimes, data do not need to be got from inner
-    #         is_execute_comment_sql = self.is_execute_comment_sql(self.anchor_to_handlers)
-    #
-    #         records = self._execute_sqls(comment_sql, is_execute_comment_sql)
-    #
-    #         data = PilotTransData()
-    #         if records is not None:
-    #             # wait to fetch data
-    #             if self.is_need_to_receive_data(self.anchor_to_handlers):
-    #                 receive_data = self.data_fetcher.wait_until_get_data()
-    #                 data: PilotTransData = PilotTransData.parse_2_instance(receive_data, origin_sql)
-    #                 self._add_detailed_time_for_experiment(data)
-    #                 # fetch data from outer
-    #             else:
-    #                 data = PilotTransData()
-    #
-    #             data.records = records
-    #             data.sql = origin_sql
-    #
-    #         TimeStatistic.start("_fetch_data_from_outer")
-    #         self._fetch_data_from_outer(origin_sql, data)
-    #         TimeStatistic.end("_fetch_data_from_outer")
-    #
-    #         # clear state
-    #         if is_reset:
-    #             self.reset()
-    #         return data
-    #
-    #     except (DBStatementTimeoutException, HttpReceiveTimeoutException) as e:
-    #         self._add_detailed_time_for_experiment(None)
-    #         print(e)
-    #         return None
-    #     except Exception as e:
-    #         raise e
-
     def _add_detailed_time_for_experiment(self, data: PilotTransData):
         if data is not None:
             TimeStatistic.add_time(ExperimentTimeEnum.DB_PARSER, data.parser_time)

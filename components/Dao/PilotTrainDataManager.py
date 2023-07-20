@@ -8,6 +8,7 @@ from DBController.BaseDBController import BaseDBController
 from Dao.PilotUserDataManager import PilotUserDataManager
 from Factory.DBControllerFectory import DBControllerFactory
 from PilotConfig import PilotConfig
+from PilotEnum import DatabaseEnum
 from PilotSysConfig import PilotSysConfig
 from common.Util import is_number
 
@@ -23,8 +24,11 @@ class PilotTrainDataManager:
 
     def _create_table_if_absence(self, table_name, column_2_value):
         # other
-        new_column_2_value = dict(column_2_value)
-        new_column_2_value[self.table_primary_key] = 0
+        if self.config.db_type != DatabaseEnum.SPARK:
+            new_column_2_value = dict(column_2_value)
+            new_column_2_value[self.table_primary_key] = 0
+        else:
+            new_column_2_value = column_2_value
         self.db_controller.create_table_if_absences(table_name, new_column_2_value,
                                                     primary_key_column=self.table_primary_key,
                                                     enable_autoincrement_id_key=True)

@@ -26,7 +26,7 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
         self.cur_sql_idx = 0
 
     def load_sql(self):
-        return load_training_sql(self.config.db)[0:10]  # only for development test
+        return load_training_sql(self.config.db)  # only for development test
 
     def _custom_collect_data(self):
         self.load_sql()

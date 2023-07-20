@@ -18,6 +18,7 @@ class PilotCommentCreator:
     def enable_terminate(self, enable):
         self.enable_terminate_flag = enable
 
+    # todo: remove
     def enable_receive_pilot_data(self, enable):
         self.enable_receive_pilot_data_flag = enable
 
