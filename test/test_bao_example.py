@@ -7,9 +7,6 @@ from common.TimeStatistic import TimeStatistic
 from common.dotDrawer import PlanDotDrawer
 from examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
 
-sys.path.append("/PilotScopeCore/")
-sys.path.append("/PilotScopeCore/components")
-sys.path.append("/PilotScopeCore/examples/Bao/source")
 sys.path.append("../")
 sys.path.append("../components")
 sys.path.append("../examples/Bao/source")

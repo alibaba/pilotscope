@@ -12,7 +12,7 @@ class BaoPilotModel(PilotModel):
 
     def __init__(self, model_name, have_cache_data=False, is_spark=False):
         super().__init__(model_name)
-        self.bao_model_save_dir = "/PilotScopeCore/examples/ExampleData/Bao/Model"
+        self.bao_model_save_dir = "../examples/ExampleData/Bao/Model"
         self.model_path = os.path.join(self.bao_model_save_dir, self.model_name)
         self.have_cache_data = have_cache_data
         self.is_spark = is_spark

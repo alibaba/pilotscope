@@ -48,6 +48,24 @@ class CardAnchorHandler(ReplaceAnchorHandler):
         super().add_params_to_db_core(params)
         params.update({"subquery": list(self.subquery_2_card.keys()), "card": list(self.subquery_2_card.values())})
 
+class KonbAnchorHandler(ReplaceAnchorHandler):
+
+    def __init__(self, config, key_2_value_for_knob: dict = None) -> None:
+        super().__init__(config)
+        self.anchor_name = AnchorEnum.KNOB_REPLACE_ANCHOR.name
+        self.key_2_value_for_knob = key_2_value_for_knob
+
+    def apply_replace_data(self, sql):
+        self.key_2_value_for_knob = self.user_custom_task(sql)
+
+    def execute_before_comment_sql(self, db_controller: BaseDBController):
+        TimeStatistic.start(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
+        db_controller.write_knob_to_file(self.key_2_value_for_knob)
+        db_controller.restart()
+        TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
+
+    def add_params_to_db_core(self, params: dict):
+        pass
 
 class CostAnchorHandler(ReplaceAnchorHandler):
 

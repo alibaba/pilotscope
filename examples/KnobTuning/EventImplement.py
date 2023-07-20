@@ -6,14 +6,16 @@ import pandas as pd
 
 from DBController.BaseDBController import BaseDBController
 from Dao.PilotTrainDataManager import PilotTrainDataManager
+from PilotEnum import ExperimentTimeEnum
 from PilotEvent import PeriodicDbControllerEvent
+from common.TimeStatistic import TimeStatistic
 from examples.utils import load_training_sql
 
 pd.set_option('display.max_columns', None)
 import numpy as np
 import sys
 
-sys.path.append("/PilotScopeCore/examples/KnobTuning/llamatune")
+sys.path.append("../examples/KnobTuning/llamatune")
 from config import config
 from executors.executor import ExecutorFactory
 from optimizer import get_ddpg_optimizer, get_smac_optimizer
@@ -29,20 +31,22 @@ logger = logging.getLogger()
 
 class KnobPeriodicDbControllerEvent(PeriodicDbControllerEvent):
 
-    def __init__(self, config, per_query_count, exec_in_init=True, optimizer_type="ddpg"):
-        super().__init__(config, per_query_count, exec_in_init=True)
+    def __init__(self, config, per_query_count, llamatune_config_file, exec_in_init=True, optimizer_type="ddpg"):
+        super().__init__(config, per_query_count, exec_in_init = exec_in_init)
         self.optimizer_type = optimizer_type
+        self.llamatune_config_file = llamatune_config_file
 
     def _load_sql(self):
         return load_training_sql(self.config.db)
 
     def _custom_update(self, db_controller: BaseDBController, training_data_manager: PilotTrainDataManager):
 
+        TimeStatistic.start(ExperimentTimeEnum.FIND_KNOB)
         db_controller.recover_config()
         db_controller.restart()
 
         conf = {
-            "conf_filepath": "../examples/KnobTuning/llamatune/configs/llama_config.ini",
+            "conf_filepath": self.llamatune_config_file,
             "seed": int(time.time()),
             "optimizer": self.optimizer_type  # "ddpg" or "smac"
         }
@@ -127,3 +131,4 @@ class KnobPeriodicDbControllerEvent(PeriodicDbControllerEvent):
 
         db_controller.write_knob_to_file(dict(exp_state.best_conf))
         db_controller.restart()
+        TimeStatistic.end(ExperimentTimeEnum.FIND_KNOB)
