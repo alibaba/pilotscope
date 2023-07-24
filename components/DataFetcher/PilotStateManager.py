@@ -118,8 +118,7 @@ class PilotStateManager:
     def _add_detailed_time_for_experiment(self, data: PilotTransData):
         if data is not None:
             TimeStatistic.add_time(ExperimentTimeEnum.DB_PARSER, data.parser_time)
-            cur_time = time.time_ns() / 1000000000.0
-            TimeStatistic.add_time(ExperimentTimeEnum.DB_HTTP, float(cur_time - data.http_time))
+                        
             for i in range(len(data.anchor_names)):
                 anchor_name = data.anchor_names[i]
                 anchor_time = data.anchor_times[i]
@@ -136,10 +135,11 @@ class PilotStateManager:
         if AnchorEnum.RECORD_FETCH_ANCHOR in filter_anchor_2_handlers:
             filter_anchor_2_handlers.pop(AnchorEnum.RECORD_FETCH_ANCHOR)
 
+        # for experiment need, Pilotscope_SparkSQL will send http_time and parser_time via http, so we comment this
         # the execution time is not needed to be received for spark
-        if self.config.db_type == DatabaseEnum.SPARK:
-            if AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR in filter_anchor_2_handlers:
-                filter_anchor_2_handlers.pop(AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR)
+        # if self.config.db_type == DatabaseEnum.SPARK:
+        #     if AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR in filter_anchor_2_handlers:
+        #         filter_anchor_2_handlers.pop(AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR)
 
         return len(filter_anchor_2_handlers) > 0
 

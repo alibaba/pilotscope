@@ -16,6 +16,7 @@ from scipy.spatial.distance import euclidean, cityblock
 from sklearn.preprocessing import StandardScaler
 
 from Exception.Exception import DatabaseCrashException
+from examples.utils import load_sql
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
@@ -313,8 +314,7 @@ class SparkExecutor(ExecutorInterface):
         self.db_controller = self.state_manager.db_controller
         
     def evaluate_configuration(self, dbms_info, benchmark_info):
-        with open(self.sqls_file_path,"r") as f:
-            sqls = f.readlines()
+        sqls = load_sql(self.sqls_file_path)
         try:
             self.state_manager.set_knob(dbms_info["config"])
             self.state_manager.fetch_execution_time()
