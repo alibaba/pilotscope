@@ -12,3 +12,6 @@ dev_data/
 *.lck
 *.properties
 *.ctrl
+*.egg-info
+build/**
+dist/**
