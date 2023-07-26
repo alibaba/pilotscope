@@ -1,7 +1,7 @@
 import os
 from abc import ABC
 
-from sqlalchemy import Table, Column, select, func, text, inspect
+from sqlalchemy import Table, Column, text, inspect
 from sqlalchemy.exc import OperationalError
 from typing_extensions import deprecated
 
@@ -23,35 +23,6 @@ class PostgreSQLController(BaseDBController):
     def __del__(self):
         self.disconnect()
         type(self).instances.remove(self)
-
-    PG_NUM_METRICS = 60
-    PG_STAT_VIEWS = [
-        "pg_stat_archiver", "pg_stat_bgwriter",  # global
-        "pg_stat_database", "pg_stat_database_conflicts",  # local
-        "pg_stat_user_tables", "pg_statio_user_tables",  # local
-        "pg_stat_user_indexes", "pg_statio_user_indexes"  # local
-    ]
-    PG_STAT_VIEWS_LOCAL_DATABASE = ["pg_stat_database", "pg_stat_database_conflicts"]
-    PG_STAT_VIEWS_LOCAL_TABLE = ["pg_stat_user_tables", "pg_statio_user_tables"]
-    PG_STAT_VIEWS_LOCAL_INDEX = ["pg_stat_user_indexes", "pg_statio_user_indexes"]
-    NUMERIC_METRICS = [  # counter
-        # global
-        'buffers_alloc', 'buffers_backend', 'buffers_backend_fsync', 'buffers_checkpoint', 'buffers_clean',
-        'checkpoints_req', 'checkpoints_timed', 'checkpoint_sync_time', 'checkpoint_write_time', 'maxwritten_clean',
-        'archived_count', 'failed_count',
-        # db
-        'blk_read_time', 'blks_hit', 'blks_read', 'blk_write_time', 'conflicts', 'deadlocks', 'temp_bytes',
-        'temp_files', 'tup_deleted', 'tup_fetched', 'tup_inserted', 'tup_returned', 'tup_updated', 'xact_commit',
-        'xact_rollback', 'confl_tablespace', 'confl_lock', 'confl_snapshot', 'confl_bufferpin', 'confl_deadlock',
-        # table
-        'analyze_count', 'autoanalyze_count', 'autovacuum_count', 'heap_blks_hit', 'heap_blks_read', 'idx_blks_hit',
-        'idx_blks_read', 'idx_scan', 'idx_tup_fetch', 'n_dead_tup', 'n_live_tup', 'n_tup_del', 'n_tup_hot_upd',
-        'n_tup_ins', 'n_tup_upd', 'n_mod_since_analyze', 'seq_scan', 'seq_tup_read', 'tidx_blks_hit',
-        'tidx_blks_read',
-        'toast_blks_hit', 'toast_blks_read', 'vacuum_count',
-        # index
-        'idx_blks_hit', 'idx_blks_read', 'idx_scan', 'idx_tup_fetch', 'idx_tup_read'
-    ]
 
     def __init__(self, config, echo=False, allow_to_create_db=False, enable_simulate_index=False):
         super().__init__(config, echo, allow_to_create_db)
@@ -87,7 +58,7 @@ class PostgreSQLController(BaseDBController):
         # postgresql://postgres@localhost/stats
         return "{}://{}@{}/{}".format("postgresql", self.config.user, self.config.host, self.config.db)
 
-    def execute(self, sql, fetch=False):
+    def execute(self, sql, fetch=False, fetch_column_name=False):
         row = None
         try:
             self.connect_if_loss()
@@ -95,6 +66,8 @@ class PostgreSQLController(BaseDBController):
             result = conn.execute(text(sql) if isinstance(sql, str) else sql)
             if fetch:
                 row = result.all()
+                if fetch_column_name:
+                    row = [tuple(result.keys()), *row]
         except OperationalError as e:
             if "canceling statement due to statement timeout" in str(e):
                 raise DBStatementTimeoutException(str(e))
@@ -190,11 +163,6 @@ class PostgreSQLController(BaseDBController):
             return True
         return False
 
-    def get_table_row_count(self, table_name):
-        stmt = select(func.count()).select_from(self.name_2_table[table_name])
-        result = self.execute(stmt, fetch=True)
-        return result[0][0]
-
     def modify_sql_for_ignore_records(self, sql, is_execute):
         return self.get_explain_sql(sql, is_execute)
 
@@ -273,73 +241,16 @@ class PostgreSQLController(BaseDBController):
         with open(self.config.db_config_path, "w") as f:
             f.write(db_config_file)
 
-    # NOTE: modified from DBTune (MIT liscense)
-    def get_internal_metrics(self):
-        def parse_helper(valid_variables, view_variables):
-            for view_name, variables in list(view_variables.items()):
-                for var_name, var_value in list(variables.items()):
-                    full_name = '{}.{}'.format(view_name, var_name)
-                    if full_name not in valid_variables:
-                        valid_variables[full_name] = []
-                    valid_variables[full_name].append(var_value)
-            return valid_variables
+    def get_table_column_name(self, table_name):
+        if table_name in self.name_2_table:
+            return super().get_table_column_name(table_name)
+        else:
+            sql = "SELECT column_name FROM information_schema.columns WHERE table_name = '{}';".format(table_name)
+            return [x[0] for x in self.execute(sql, fetch = True)]
 
-        try:
-            metrics_dict = {
-                'global': {},
-                'local': {
-                    'db': {},
-                    'table': {},
-                    'index': {}
-                }
-            }
-
-            for view in self.PG_STAT_VIEWS:
-                sql = 'SELECT * from {}'.format(view)
-                cur = self.get_connection().connection.cursor()
-                cur.execute(sql)
-                results = cur.fetchall()
-                columns = [col[0] for col in cur.description]
-                results = [dict(zip(columns, row)) for row in results]
-                if view in ["pg_stat_archiver", "pg_stat_bgwriter"]:
-                    metrics_dict['global'][view] = results[0]
-                else:
-                    if view in self.PG_STAT_VIEWS_LOCAL_DATABASE:
-                        type = 'db'
-                        type_key = 'datname'
-                    elif view in self.PG_STAT_VIEWS_LOCAL_TABLE:
-                        type = 'table'
-                        type_key = 'relname'
-                    elif view in self.PG_STAT_VIEWS_LOCAL_INDEX:
-                        type = 'index'
-                        type_key = 'relname'
-                    metrics_dict['local'][type][view] = {}
-                    for res in results:
-                        type_name = res[type_key]
-                        metrics_dict['local'][type][view][type_name] = res
-
-            metrics = {}
-            for scope, sub_vars in list(metrics_dict.items()):
-                if scope == 'global':
-                    metrics.update(parse_helper(metrics, sub_vars))
-                elif scope == 'local':
-                    for _, viewnames in list(sub_vars.items()):
-                        for viewname, objnames in list(viewnames.items()):
-                            for _, view_vars in list(objnames.items()):
-                                metrics.update(parse_helper(metrics, {viewname: view_vars}))
-
-            # Combine values
-            valid_metrics = {}
-            for name, values in list(metrics.items()):
-                if name.split('.')[-1] in self.NUMERIC_METRICS:
-                    values = [float(v) for v in values if v is not None]
-                    if len(values) == 0:
-                        valid_metrics[name] = 0
-                    else:
-                        valid_metrics[name] = sum(values)
-        except Exception as ex:
-            print(ex)
-        return valid_metrics
+    def get_relation_content(self, relation_names, fetch_column_name = False):
+        sql = 'SELECT * from {}'.format(relation_names)
+        return self.execute(sql, fetch = True, fetch_column_name = fetch_column_name)
 
 
 class SimulateIndexVisitor:

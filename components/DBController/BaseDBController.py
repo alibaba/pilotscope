@@ -2,7 +2,7 @@ import threading
 from abc import ABC, abstractmethod
 
 from pandas import DataFrame
-from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table, inspect
+from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table, inspect, select, func
 from sqlalchemy_utils import database_exists, create_database
 
 from PilotConfig import PilotConfig
@@ -135,6 +135,24 @@ class BaseDBController(ABC):
     def _create_inspect(self):
         return inspect(self.engine)
 
+    def get_table_column_name(self, table_name):
+        return [c.key for c in self.name_2_table[table_name].c]
+    
+    def get_table_row_count(self, table_name):
+        stmt = select(func.count()).select_from(self.name_2_table[table_name])
+        result = self.execute(stmt, fetch=True)
+        return result[0][0]
+    
+    def get_column_max(self, table_name, column_name):
+        stmt = select(func.max(self.name_2_table[table_name].c[column_name])).select_from(self.name_2_table[table_name])
+        result = self.execute(stmt, fetch=True)
+        return result[0][0]
+
+    def get_column_min(self, table_name, column_name):
+        stmt = select(func.min(self.name_2_table[table_name].c[column_name])).select_from(self.name_2_table[table_name])
+        result = self.execute(stmt, fetch=True)
+        return result[0][0]
+    
     def get_index_number(self, table):
         inspector = self._create_inspect()
         n = len(inspector.get_indexes(table))
