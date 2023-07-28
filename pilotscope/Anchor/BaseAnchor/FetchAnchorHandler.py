@@ -1,10 +1,10 @@
 import json
 
-from Anchor.AnchorEnum import AnchorEnum
-from Anchor.AnchorTransData import AnchorTransData
-from Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
-from PilotEnum import FetchMethod
-from PilotTransData import PilotTransData
+from pilotscope.Anchor.AnchorEnum import AnchorEnum
+from pilotscope.Anchor.AnchorTransData import AnchorTransData
+from pilotscope.Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
+from pilotscope.PilotEnum import FetchMethod
+from pilotscope.PilotTransData import PilotTransData
 
 name_2_priority = {
     AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR.name: 0,

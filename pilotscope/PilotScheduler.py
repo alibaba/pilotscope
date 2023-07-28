@@ -1,11 +1,11 @@
-from Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
-from Anchor.BaseAnchor.FetchAnchorHandler import RecordFetchAnchorHandler
-from DataFetcher.PilotStateManager import PilotStateManager
-from PilotEnum import *
-from PilotEvent import *
-from PilotTransData import PilotTransData
-from common.TimeStatistic import TimeStatistic
-from common.Util import extract_table_data_from_anchor, extract_handlers
+from pilotscope.Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
+from pilotscope.Anchor.BaseAnchor.FetchAnchorHandler import RecordFetchAnchorHandler
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.PilotEnum import *
+from pilotscope.PilotEvent import *
+from pilotscope.PilotTransData import PilotTransData
+from pilotscope.common.TimeStatistic import TimeStatistic
+from pilotscope.common.Util import extract_table_data_from_anchor, extract_handlers
 
 
 class PilotScheduler:

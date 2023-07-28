@@ -1,11 +1,11 @@
 from typing import List
 
-from Anchor.AnchorEnum import AnchorEnum
-from Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
-from DBController.BaseDBController import BaseDBController
-from PilotEnum import ReplaceAnchorTriggerEnum, ExperimentTimeEnum
-from common.Index import Index
-from common.TimeStatistic import TimeStatistic
+from pilotscope.Anchor.AnchorEnum import AnchorEnum
+from pilotscope.Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
+from pilotscope.DBController.BaseDBController import BaseDBController
+from pilotscope.PilotEnum import ReplaceAnchorTriggerEnum, ExperimentTimeEnum
+from pilotscope.common.Index import Index
+from pilotscope.common.TimeStatistic import TimeStatistic
 
 
 class ReplaceAnchorHandler(BaseAnchorHandler):

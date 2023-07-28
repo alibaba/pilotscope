@@ -3,10 +3,10 @@ from copy import deepcopy
 from pandas import DataFrame
 from sqlalchemy import Table, select, update, insert
 
-from Factory.DBControllerFectory import DBControllerFactory
-from PilotConfig import PilotConfig
-from PilotSysConfig import PilotSysConfig
-from common.Util import singleton
+from pilotscope.Factory.DBControllerFectory import DBControllerFactory
+from pilotscope.PilotConfig import PilotConfig
+from pilotscope.PilotSysConfig import PilotSysConfig
+from pilotscope.common.Util import singleton
 
 
 @singleton

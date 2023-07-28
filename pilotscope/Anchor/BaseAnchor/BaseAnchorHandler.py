@@ -1,6 +1,6 @@
 from abc import ABC
 
-from Anchor.AnchorEnum import AnchorEnum
+from pilotscope.Anchor.AnchorEnum import AnchorEnum
 
 
 class BaseAnchorHandler(ABC):

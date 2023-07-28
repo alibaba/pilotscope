@@ -1,7 +1,7 @@
 import json
 from concurrent.futures import Future
 
-from Anchor.BaseAnchor.replaceAnchorHandler import ReplaceAnchorHandler
+from pilotscope.Anchor.BaseAnchor.replaceAnchorHandler import ReplaceAnchorHandler
 
 all_https = []
 

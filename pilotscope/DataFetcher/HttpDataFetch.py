@@ -1,12 +1,12 @@
 import threading
 from abc import ABC, abstractmethod
 import socket
-from DataFetcher.BaseDataFetcher import DataFetcher
-from PilotConfig import PilotConfig
+from pilotscope.DataFetcher.BaseDataFetcher import DataFetcher
+from pilotscope.PilotConfig import PilotConfig
 
-from Server.Server import ServerManager
-from common.Thread import ValueThread
-from common.Util import singleton
+from pilotscope.Server.Server import ServerManager
+from pilotscope.common.Thread import ValueThread
+from pilotscope.common.Util import singleton
 
 
 @singleton

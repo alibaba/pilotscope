@@ -4,20 +4,20 @@ from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from typing import Optional, List
 
-from Anchor.BaseAnchor.FetchAnchorHandler import *
-from Anchor.BaseAnchor.replaceAnchorHandler import *
-from DataFetcher.BaseDataFetcher import DataFetcher
-from DataFetcher.PilotCommentCreator import PilotCommentCreator
-from Exception.Exception import DBStatementTimeoutException, HttpReceiveTimeoutException
-from Factory.AnchorHandlerFactory import AnchorHandlerFactory
-from Factory.DBControllerFectory import DBControllerFactory
-from Factory.DataFetchFactory import DataFetchFactory
-from PilotConfig import PilotConfig
-from PilotEnum import FetchMethod, ExperimentTimeEnum, DatabaseEnum
-from PilotTransData import PilotTransData
-from common.Thread import ValueThread
-from common.TimeStatistic import TimeStatistic
-from common.Util import pilotscope_exit, extract_anchor_handlers, extract_handlers, wait_futures_results
+from pilotscope.Anchor.BaseAnchor.FetchAnchorHandler import *
+from pilotscope.Anchor.BaseAnchor.replaceAnchorHandler import *
+from pilotscope.DataFetcher.BaseDataFetcher import DataFetcher
+from pilotscope.DataFetcher.PilotCommentCreator import PilotCommentCreator
+from pilotscope.Exception.Exception import DBStatementTimeoutException, HttpReceiveTimeoutException
+from pilotscope.Factory.AnchorHandlerFactory import AnchorHandlerFactory
+from pilotscope.Factory.DBControllerFectory import DBControllerFactory
+from pilotscope.Factory.DataFetchFactory import DataFetchFactory
+from pilotscope.PilotConfig import PilotConfig
+from pilotscope.PilotEnum import FetchMethod, ExperimentTimeEnum, DatabaseEnum
+from pilotscope.PilotTransData import PilotTransData
+from pilotscope.common.Thread import ValueThread
+from pilotscope.common.TimeStatistic import TimeStatistic
+from pilotscope.common.Util import pilotscope_exit, extract_anchor_handlers, extract_handlers, wait_futures_results
 
 
 class PilotStateManager:

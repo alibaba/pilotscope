@@ -5,11 +5,11 @@ from sqlalchemy import Table, Column, text, inspect
 from sqlalchemy.exc import OperationalError
 from typing_extensions import deprecated
 
-from PilotConfig import PostgreSQLConfig
-from common.Util import pilotscope_exit
-from DBController.BaseDBController import BaseDBController
-from Exception.Exception import DBStatementTimeoutException, DatabaseCrashException, DatabaseStartException
-from common.Index import Index
+from pilotscope.PilotConfig import PostgreSQLConfig
+from pilotscope.common.Util import pilotscope_exit
+from pilotscope.DBController.BaseDBController import BaseDBController
+from pilotscope.Exception.Exception import DBStatementTimeoutException, DatabaseCrashException, DatabaseStartException
+from pilotscope.common.Index import Index
 
 
 class PostgreSQLController(BaseDBController):

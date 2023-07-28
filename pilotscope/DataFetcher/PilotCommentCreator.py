@@ -1,7 +1,7 @@
 import json
 import threading
 
-from PilotSysConfig import PilotSysConfig
+from pilotscope.PilotSysConfig import PilotSysConfig
 
 
 class PilotCommentCreator:

@@ -1,12 +1,12 @@
 import os
 import logging
 from typing_extensions import deprecated
-from common.Util import pilotscope_exit
-from DBController.BaseDBController import BaseDBController
-from Exception.Exception import DBStatementTimeoutException
-from components.PilotConfig import PilotConfig, SparkConfig
-from components.PilotEnum import PilotEnum
-from PilotEnum import DataFetchMethodEnum, DatabaseEnum, TrainSwitchMode
+from pilotscope.common.Util import pilotscope_exit
+from pilotscope.DBController.BaseDBController import BaseDBController
+from pilotscope.Exception.Exception import DBStatementTimeoutException
+from pilotscope.PilotConfig import PilotConfig, SparkConfig
+from pilotscope.PilotEnum import PilotEnum
+from pilotscope.PilotEnum import DataFetchMethodEnum, DatabaseEnum, TrainSwitchMode
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql import DataFrame

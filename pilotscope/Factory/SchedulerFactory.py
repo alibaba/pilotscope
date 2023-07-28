@@ -1,4 +1,4 @@
-from PilotConfig import PilotConfig
+from pilotscope.PilotConfig import PilotConfig
 
 
 class SchedulerFactory:

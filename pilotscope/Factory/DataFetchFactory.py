@@ -1,6 +1,6 @@
-from DataFetcher.HttpDataFetch import HttpDataFetcher
-from PilotConfig import PilotConfig
-from PilotEnum import DataFetchMethodEnum
+from pilotscope.DataFetcher.HttpDataFetch import HttpDataFetcher
+from pilotscope.PilotConfig import PilotConfig
+from pilotscope.PilotEnum import DataFetchMethodEnum
 
 
 class DataFetchFactory:

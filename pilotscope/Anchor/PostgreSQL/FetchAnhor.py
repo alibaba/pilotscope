@@ -1,6 +1,6 @@
-from Anchor.BaseAnchor.FetchAnchorHandler import *
-from PilotEnum import ExperimentTimeEnum
-from common.TimeStatistic import TimeStatistic
+from pilotscope.Anchor.BaseAnchor.FetchAnchorHandler import *
+from pilotscope.PilotEnum import ExperimentTimeEnum
+from pilotscope.common.TimeStatistic import TimeStatistic
 
 
 class PostgreSQLAnchorMixin:

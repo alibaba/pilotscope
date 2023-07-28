@@ -2,12 +2,12 @@ from abc import ABC, abstractmethod
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from DBController.BaseDBController import BaseDBController
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from Factory.DBControllerFectory import DBControllerFactory
-from PilotConfig import PilotConfig
-from PilotModel import PilotModel
-from common.Thread import ValueThread
+from pilotscope.DBController.BaseDBController import BaseDBController
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.Factory.DBControllerFectory import DBControllerFactory
+from pilotscope.PilotConfig import PilotConfig
+from pilotscope.PilotModel import PilotModel
+from pilotscope.common.Thread import ValueThread
 
 
 class Event(ABC):

@@ -4,13 +4,13 @@ from copy import deepcopy
 from pandas import DataFrame
 from sqlalchemy import select, Table
 
-from DBController.BaseDBController import BaseDBController
-from Dao.PilotUserDataManager import PilotUserDataManager
-from Factory.DBControllerFectory import DBControllerFactory
-from PilotConfig import PilotConfig
-from PilotEnum import DatabaseEnum
-from PilotSysConfig import PilotSysConfig
-from common.Util import is_number
+from pilotscope.DBController.BaseDBController import BaseDBController
+from pilotscope.Dao.PilotUserDataManager import PilotUserDataManager
+from pilotscope.Factory.DBControllerFectory import DBControllerFactory
+from pilotscope.PilotConfig import PilotConfig
+from pilotscope.PilotEnum import DatabaseEnum
+from pilotscope.PilotSysConfig import PilotSysConfig
+from pilotscope.common.Util import is_number
 
 
 class PilotTrainDataManager:

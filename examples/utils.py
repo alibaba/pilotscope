@@ -1,10 +1,10 @@
 import json
 from copy import copy
 
-from DBController.BaseDBController import BaseDBController
-from common.Index import Index
-from common.TimeStatistic import TimeStatistic
-from common.Util import json_str_to_json_obj
+from pilotscope.DBController.BaseDBController import BaseDBController
+from pilotscope.common.Index import Index
+from pilotscope.common.TimeStatistic import TimeStatistic
+from pilotscope.common.Util import json_str_to_json_obj
 
 
 def load_training_sql(db):

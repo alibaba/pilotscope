@@ -1,8 +1,6 @@
-from Anchor.BaseAnchor.replaceAnchorHandler import *
-from Anchor.PostgreSQL.FetchAnhor import *
-from Anchor.Spark.FetchAnchor import *
-from PilotConfig import PilotConfig
-from PilotEnum import DatabaseEnum
+from pilotscope.Anchor.BaseAnchor.replaceAnchorHandler import *
+from pilotscope.PilotConfig import PilotConfig
+from pilotscope.PilotEnum import DatabaseEnum
 
 
 class AnchorHandlerFactory:
@@ -31,20 +29,28 @@ class AnchorHandlerFactory:
             return KonbAnchorHandler(config)
         # fetch
         elif anchor == AnchorEnum.RECORD_FETCH_ANCHOR:
+            from pilotscope.Anchor.Spark.FetchAnchor import SparkRecordFetchAnchorHandler
             return SparkRecordFetchAnchorHandler(config)
         elif anchor == AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR:
+            from pilotscope.Anchor.Spark.FetchAnchor import SparkExecutionTimeFetchAnchorHandler
             return SparkExecutionTimeFetchAnchorHandler(config)
         elif anchor == AnchorEnum.PHYSICAL_PLAN_FETCH_ANCHOR:
+            from pilotscope.Anchor.Spark.FetchAnchor import SparkPhysicalPlanFetchAnchorHandler
             return SparkPhysicalPlanFetchAnchorHandler(config)
         elif anchor == AnchorEnum.OPTIMIZED_SQL_FETCH_ANCHOR:
+            from pilotscope.Anchor.Spark.FetchAnchor import SparkOptimizedSqlFetchAnchorHandler
             return SparkOptimizedSqlFetchAnchorHandler(config)
         elif anchor == AnchorEnum.SUBQUERY_CARD_FETCH_ANCHOR:
+            from pilotscope.Anchor.Spark.FetchAnchor import SparkSubQueryCardFetchAnchorHandler
             return SparkSubQueryCardFetchAnchorHandler(config)
         elif anchor == AnchorEnum.LOGICAL_PLAN_FETCH_ANCHOR:
+            from pilotscope.Anchor.Spark.FetchAnchor import SparkLogicalPlanFetchAnchorHandler
             return SparkLogicalPlanFetchAnchorHandler(config)
         elif anchor == AnchorEnum.ESTIMATED_COST_FETCH_ANCHOR:
+            from pilotscope.Anchor.Spark.FetchAnchor import SparkEstimatedCostFetchAnchorHandler
             return SparkEstimatedCostFetchAnchorHandler(config)
         elif anchor == AnchorEnum.BUFFERCACHE_FETCH_ANCHOR:
+            from pilotscope.Anchor.Spark.FetchAnchor import SparkBuffercacheFetchAnchorHandler
             return SparkBuffercacheFetchAnchorHandler(config)
         else:
             raise RuntimeError()
@@ -54,7 +60,7 @@ class AnchorHandlerFactory:
         # replace
         if anchor == AnchorEnum.CARD_REPLACE_ANCHOR:
             return CardAnchorHandler(config)
-        elif anchor == AnchorEnum.HINT_REPLACE_ANCHOR:
+        elif anchor == AnchorEnum.HINT_REPLACE_ANCHOR: 
             return HintAnchorHandler(config)
         elif anchor == AnchorEnum.COST_REPLACE_ANCHOR:
             return CostAnchorHandler(config)
@@ -64,20 +70,28 @@ class AnchorHandlerFactory:
             return KonbAnchorHandler(config)
         # fetch
         elif anchor == AnchorEnum.RECORD_FETCH_ANCHOR:
+            from pilotscope.Anchor.PostgreSQL.FetchAnhor import PostgreSQLRecordFetchAnchorHandler
             return PostgreSQLRecordFetchAnchorHandler(config)
         elif anchor == AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR:
+            from pilotscope.Anchor.PostgreSQL.FetchAnhor import PostgreSQLExecutionTimeFetchAnchorHandler
             return PostgreSQLExecutionTimeFetchAnchorHandler(config)
         elif anchor == AnchorEnum.PHYSICAL_PLAN_FETCH_ANCHOR:
+            from pilotscope.Anchor.PostgreSQL.FetchAnhor import PostgreSQLPhysicalPlanFetchAnchorHandler
             return PostgreSQLPhysicalPlanFetchAnchorHandler(config)
         elif anchor == AnchorEnum.OPTIMIZED_SQL_FETCH_ANCHOR:
+            from pilotscope.Anchor.PostgreSQL.FetchAnhor import PostgreSQLOptimizedSqlFetchAnchorHandler
             return PostgreSQLOptimizedSqlFetchAnchorHandler(config)
         elif anchor == AnchorEnum.SUBQUERY_CARD_FETCH_ANCHOR:
+            from pilotscope.Anchor.PostgreSQL.FetchAnhor import PostgreSQLSubQueryCardFetchAnchorHandler
             return PostgreSQLSubQueryCardFetchAnchorHandler(config)
         elif anchor == AnchorEnum.LOGICAL_PLAN_FETCH_ANCHOR:
+            from pilotscope.Anchor.PostgreSQL.FetchAnhor import PostgreSQLLogicalPlanFetchAnchorHandler
             return PostgreSQLLogicalPlanFetchAnchorHandler(config)
         elif anchor == AnchorEnum.ESTIMATED_COST_FETCH_ANCHOR:
+            from pilotscope.Anchor.PostgreSQL.FetchAnhor import PostgreSQLEstimatedCostFetchAnchorHandler
             return PostgreSQLEstimatedCostFetchAnchorHandler(config)
         elif anchor == AnchorEnum.BUFFERCACHE_FETCH_ANCHOR:
+            from pilotscope.Anchor.PostgreSQL.FetchAnhor import PostgreSQLBuffercacheFetchAnchorHandler
             return PostgreSQLBuffercacheFetchAnchorHandler(config)
         else:
             raise RuntimeError()

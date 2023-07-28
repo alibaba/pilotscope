@@ -2,7 +2,7 @@ import os
 
 import joblib
 
-from PilotSysConfig import PilotSysConfig
+from pilotscope.PilotSysConfig import PilotSysConfig
 
 
 class Cache:

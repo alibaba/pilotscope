@@ -1,7 +1,7 @@
-from Anchor.PostgreSQL.FetchAnhor import *
-from DBController.SparkSQLController import SparkSQLController
-from PilotEnum import ExperimentTimeEnum
-from common.TimeStatistic import TimeStatistic
+from pilotscope.Anchor.PostgreSQL.FetchAnhor import *
+from pilotscope.DBController.SparkSQLController import SparkSQLController
+from pilotscope.PilotEnum import ExperimentTimeEnum
+from pilotscope.common.TimeStatistic import TimeStatistic
 
 
 class SparkAnchorMixin:

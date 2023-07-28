@@ -1,6 +1,6 @@
 from threading import Thread
 
-from common.Util import pilotscope_exit
+from pilotscope.common.Util import pilotscope_exit
 
 
 class ValueThread(Thread):

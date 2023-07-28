@@ -5,8 +5,8 @@ from pandas import DataFrame
 from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table, inspect, select, func
 from sqlalchemy_utils import database_exists, create_database
 
-from PilotConfig import PilotConfig
-from common.Index import Index
+from pilotscope.PilotConfig import PilotConfig
+from pilotscope.common.Index import Index
 
 
 class BaseDBController(ABC):

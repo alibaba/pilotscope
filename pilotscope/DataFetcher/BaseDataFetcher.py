@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from PilotConfig import PilotConfig
+from pilotscope.PilotConfig import PilotConfig
 
 from sqlalchemy import Table, Column, Integer, Float, String, MetaData, select
 

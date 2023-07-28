@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from common.Util import sum_list
+from pilotscope.common.Util import sum_list
 
 
 class Drawer:

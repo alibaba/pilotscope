@@ -1,6 +1,6 @@
 from copy import copy
 
-from common.Util import json_str_to_json_obj
+from pilotscope.common.Util import json_str_to_json_obj
 
 
 class DotDrawer:

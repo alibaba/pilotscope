@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from common.Cache import Cache
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.common.Cache import Cache
 
 
 class PilotModel(ABC):
