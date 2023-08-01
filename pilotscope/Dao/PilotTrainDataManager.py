@@ -38,6 +38,7 @@ class PilotTrainDataManager:
 
     def save_data(self, table_name, column_2_value):
         if len(column_2_value) > 0:
+            self.db_controller.connect_if_loss()
             column_2_value = self._convert_data_type(column_2_value)
             self._create_table_if_absence(table_name, column_2_value)
             self.db_controller.insert(table_name, column_2_value)

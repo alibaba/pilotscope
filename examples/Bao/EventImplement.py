@@ -2,14 +2,14 @@ import json
 
 from pandas import DataFrame
 
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from DataFetcher.PilotStateManager import PilotStateManager
-from PilotConfig import PilotConfig
-from PilotEvent import PeriodTrainingEvent, PretrainingModelEvent
-from PilotModel import PilotModel
-from PilotTransData import PilotTransData
-from common.Util import json_str_to_json_obj
-from common.dotDrawer import PlanDotDrawer
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.PilotConfig import PilotConfig
+from pilotscope.PilotEvent import PeriodTrainingEvent, PretrainingModelEvent
+from pilotscope.PilotModel import PilotModel
+from pilotscope.PilotTransData import PilotTransData
+from pilotscope.common.Util import json_str_to_json_obj
+from pilotscope.common.dotDrawer import PlanDotDrawer
 from examples.Bao.BaoParadigmHintAnchorHandler import BaoParadigmHintAnchorHandler, modify_sql_for_spark
 from examples.Bao.source.model import BaoRegression
 from examples.utils import load_training_sql

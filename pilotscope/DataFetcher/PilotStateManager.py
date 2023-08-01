@@ -214,7 +214,8 @@ class PilotStateManager:
             params = {}
             if isinstance(handle, ReplaceAnchorHandler):
                 handle.add_params_to_db_core(params)
-                anchor_params[handle.anchor_name] = params
+                if len(params) > 0:
+                    anchor_params[handle.anchor_name] = params
         return anchor_params
 
     def add_anchors(self, handlers):

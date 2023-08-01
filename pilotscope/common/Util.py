@@ -16,7 +16,7 @@ def is_number(value):
 
 def extract_anchor_handlers(anchor_2_handlers: dict, is_fetch_anchor=True):
     res = {}
-    from Anchor.BaseAnchor.FetchAnchorHandler import FetchAnchorHandler
+    from pilotscope.Anchor.BaseAnchor.FetchAnchorHandler import FetchAnchorHandler
 
     target = FetchAnchorHandler if is_fetch_anchor else ReplaceAnchorHandler
     for anchor, handler in anchor_2_handlers.items():
@@ -26,13 +26,13 @@ def extract_anchor_handlers(anchor_2_handlers: dict, is_fetch_anchor=True):
 
 
 def extract_handlers(handlers, is_fetch_anchor):
-    from Anchor.BaseAnchor.FetchAnchorHandler import FetchAnchorHandler
+    from pilotscope.Anchor.BaseAnchor.FetchAnchorHandler import FetchAnchorHandler
     target = FetchAnchorHandler if is_fetch_anchor else ReplaceAnchorHandler
     return list(filter(lambda anchor: isinstance(anchor, target), handlers))
 
 
 def extract_table_data_from_anchor(fetch_anchors, data):
-    from Anchor.BaseAnchor.FetchAnchorHandler import FetchAnchorHandler
+    from pilotscope.Anchor.BaseAnchor.FetchAnchorHandler import FetchAnchorHandler
     column_2_value = {}
     for anchor in fetch_anchors:
         if isinstance(anchor, FetchAnchorHandler):

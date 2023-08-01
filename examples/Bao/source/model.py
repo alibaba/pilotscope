@@ -9,7 +9,6 @@ from sklearn.pipeline import Pipeline
 
 from torch.utils.data import DataLoader
 import net as net
-from common.TimeStatistic import TimeStatistic
 from featurize import TreeFeaturizer
 
 CUDA = torch.cuda.is_available()

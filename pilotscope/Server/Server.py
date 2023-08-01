@@ -4,11 +4,11 @@ import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from time import sleep
 import time
-from Exception.Exception import HttpReceiveTimeoutException
-from PilotEnum import ExperimentTimeEnum
-from common.Thread import ValueThread
-from common.TimeStatistic import TimeStatistic
-from common.Util import all_https, singleton
+from pilotscope.Exception.Exception import HttpReceiveTimeoutException
+from pilotscope.PilotEnum import ExperimentTimeEnum
+from pilotscope.common.Thread import ValueThread
+from pilotscope.common.TimeStatistic import TimeStatistic
+from pilotscope.common.Util import all_https, singleton
 
 # class ServerManager:
 #     def __init__(self):

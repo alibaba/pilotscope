@@ -1,14 +1,14 @@
 from concurrent.futures.thread import ThreadPoolExecutor
 
-from Anchor.BaseAnchor.replaceAnchorHandler import HintAnchorHandler
-from DataFetcher.PilotStateManager import PilotStateManager
-from Factory.DBControllerFectory import DBControllerFactory
-from PilotConfig import PilotConfig
-from PilotEnum import DatabaseEnum, ExperimentTimeEnum
-from PilotModel import PilotModel
-from PilotTransData import PilotTransData
-from common.TimeStatistic import TimeStatistic
-from common.Util import wait_futures_results
+from pilotscope.Anchor.BaseAnchor.replaceAnchorHandler import HintAnchorHandler
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.Factory.DBControllerFectory import DBControllerFactory
+from pilotscope.PilotConfig import PilotConfig
+from pilotscope.PilotEnum import DatabaseEnum, ExperimentTimeEnum
+from pilotscope.PilotModel import PilotModel
+from pilotscope.PilotTransData import PilotTransData
+from pilotscope.common.TimeStatistic import TimeStatistic
+from pilotscope.common.Util import wait_futures_results
 
 
 def modify_sql_for_spark(config, sql: str):

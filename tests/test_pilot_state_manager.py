@@ -1,25 +1,25 @@
 import unittest
 from typing import List
 
-from DataFetcher.PilotStateManager import PilotStateManager
-from PilotConfig import PilotConfig
-from PilotEnum import DatabaseEnum
-from PilotTransData import PilotTransData
-from common.Index import Index
-from common.Util import _accumulate_cost
-from examples.utils import load_test_sql
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.PilotConfig import PostgreSQLConfig
+from pilotscope.PilotEnum import DatabaseEnum
+from pilotscope.PilotTransData import PilotTransData
+from pilotscope.common.Index import Index
+from pilotscope.common.Util import _accumulate_cost
+# from ..examples.utils import load_test_sql
 
 
 class MyTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.config = PilotConfig()
+        self.config = PostgreSQLConfig()
         self.config.db = "stats"
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.state_manager = PilotStateManager(self.config)
         self.table = "badges"
         self.indexable_column = "date"
-        self.sql = "select * from badges limit 1"
+        self.sql = "select * from badges limit 10" 
         self.index_sql = "select date from badges where date='2014-09-14 02:31:28'"
 
     def test_fetch_execution_time(self):
@@ -43,7 +43,7 @@ class MyTestCase(unittest.TestCase):
         result: PilotTransData = self.state_manager.execute(self.sql)
         self.assertFalse(result.estimated_cost is None)
         print(result)
-
+        
     def test_index_single(self):
         sql = self.index_sql
         index_name = "test_index"
@@ -78,12 +78,14 @@ class MyTestCase(unittest.TestCase):
         print("index_cost is {}, origin_cost is {}".format(index_cost, origin_cost))
         self.assertFalse(abs(origin_cost - index_cost) < 100)
 
-    def test_(self):
-        sqls = load_test_sql(self.config.db)[0:10]
-        self.state_manager.reset()
-        self.state_manager.fetch_estimated_cost()
-        datas = self.state_manager.execute_parallel(sqls, is_reset=True)
-        pass
+    def tearDown(self):
+        self.db_controller.drop_table_if_existence(self.test_table)
+    # def test_(self):
+    #     sqls = load_test_sql(self.config.db)[0:10]
+    #     self.state_manager.reset()
+    #     self.state_manager.fetch_estimated_cost()
+    #     datas = self.state_manager.execute_parallel(sqls, is_reset=True)
+    #     pass
 
 
 if __name__ == '__main__':

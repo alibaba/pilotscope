@@ -2,7 +2,7 @@ import unittest
 import time
 from http.server import HTTPServer
 
-from Server.Server import RequestHandler
+from pilotscope.Server.Server import RequestHandler
 from examples.utils import load_training_sql
 
 

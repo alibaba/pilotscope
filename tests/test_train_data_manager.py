@@ -1,10 +1,10 @@
 import unittest
 
-from DBController.PostgreSQLController import PostgreSQLController
-from Dao.PilotUserDataManager import PilotUserDataManager
-from components.PilotConfig import PilotConfig, PostgreSQLConfig
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from components.PilotEnum import DatabaseEnum
+from pilotscope.DBController.PostgreSQLController import PostgreSQLController
+from pilotscope.Dao.PilotUserDataManager import PilotUserDataManager
+from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.PilotEnum import DatabaseEnum
 
 
 class MyTestCase(unittest.TestCase):
@@ -13,6 +13,8 @@ class MyTestCase(unittest.TestCase):
         super().__init__(methodName)
         self.config = PostgreSQLConfig()
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
+        self.config.db = "PilotScopeMeta"
+        self.controller = PostgreSQLController(self.config, allow_to_create_db=True)
         self.train_data_manager = PilotTrainDataManager(self.config)
         self.table_name = "lero"
 
@@ -30,10 +32,6 @@ class MyTestCase(unittest.TestCase):
     def test_read_all(self):
         res = self.train_data_manager.read_all(self.table_name)
         print(res)
-
-    def test_create_db(self):
-        self.config.db = "PilotScopeMeta"
-        controller = PostgreSQLController(self.config, allow_to_create_db=True)
 
     def test_read_update(self):
         res = self.train_data_manager.read_update(self.table_name)

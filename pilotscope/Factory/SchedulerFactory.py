@@ -5,5 +5,5 @@ class SchedulerFactory:
 
     @staticmethod
     def get_pilot_scheduler(config: PilotConfig):
-        from PilotScheduler import PilotScheduler
+        from pilotscope.PilotScheduler import PilotScheduler
         return PilotScheduler(config)

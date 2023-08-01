@@ -97,6 +97,11 @@ class PostgreSQLController(BaseDBController):
             table = Table(table_name, metadata_obj, *columns)
             table.create(self.engine)
             self.name_2_table[table_name] = table
+    
+    def drop_table_if_existence(self, table_name):
+        if table_name in self.name_2_table:
+            self.name_2_table[table_name].drop(self.engine)
+            del self.name_2_table[table_name]
 
     def insert(self, table_name, column_2_value: dict):
         table = self.name_2_table[table_name]

@@ -1,23 +1,22 @@
 import sys
 import time
 
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from common.Drawer import Drawer
-from common.TimeStatistic import TimeStatistic
-from common.dotDrawer import PlanDotDrawer
+sys.path.append("../examples/Bao/source")
+sys.path.append("../")
+
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.common.Drawer import Drawer
+from pilotscope.common.TimeStatistic import TimeStatistic
+from pilotscope.common.dotDrawer import PlanDotDrawer
 from examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
 
-sys.path.append("../")
-sys.path.append("../components")
-sys.path.append("../examples/Bao/source")
-
 import unittest
-from Factory.SchedulerFactory import SchedulerFactory
-from common.Util import pilotscope_exit
-from components.DataFetcher.PilotStateManager import PilotStateManager
-from components.PilotConfig import PilotConfig, PostgreSQLConfig
-from components.PilotEnum import *
-from components.PilotScheduler import PilotScheduler
+from pilotscope.Factory.SchedulerFactory import SchedulerFactory
+from pilotscope.common.Util import pilotscope_exit
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
+from pilotscope.PilotEnum import *
+from pilotscope.PilotScheduler import PilotScheduler
 from examples.Bao.BaoParadigmHintAnchorHandler import BaoParadigmHintAnchorHandler
 from examples.Bao.BaoPilotModel import BaoPilotModel
 from examples.Bao.EventImplement import BaoPretrainingModelEvent
@@ -28,7 +27,7 @@ class BaoTest(unittest.TestCase):
     def setUp(self):
         self.config: PostgreSQLConfig = PostgreSQLConfig()
         # self.config.db = "imdbfull"
-        self.config.db = "statsfull"
+        self.config.db = "stats_tiny"
 
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
 
@@ -38,8 +37,8 @@ class BaoTest(unittest.TestCase):
         else:
             self.model_name = "bao_model"
 
-        self.test_data_table = "{}_{}_test_data_table2".format(self.model_name, self.config.db)
-        self.pg_test_data_table = "{}_{}_test_data_table2".format("pg", self.config.db)
+        self.test_data_table = "{}_{}_test_data_table".format(self.model_name, self.config.db)
+        self.pg_test_data_table = "{}_{}_test_data_table".format("pg", self.config.db)
         self.pretraining_data_table = ("bao_{}_pretraining_collect_data".format(self.config.db)
                                        if not self.used_cache
                                        else "bao_{}_pretraining_collect_data_wc".format(self.config.db))
@@ -48,7 +47,7 @@ class BaoTest(unittest.TestCase):
     def test_bao(self):
         try:
             config = self.config
-            config.once_request_timeout = config.sql_execution_timeout = 50000
+            config.once_request_timeout = config.sql_execution_timeout = 5
             config.print()
 
             bao_pilot_model: BaoPilotModel = BaoPilotModel(self.model_name, have_cache_data=self.used_cache)
@@ -75,7 +74,7 @@ class BaoTest(unittest.TestCase):
             # start
             scheduler.init()
             print("start to test sql")
-            sqls = load_test_sql(config.db)[0:1]
+            sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, total is {}".format(i, len(sqls)))
                 TimeStatistic.start(ExperimentTimeEnum.SQL_END_TO_END)
@@ -104,7 +103,7 @@ class BaoTest(unittest.TestCase):
             scheduler.init()
 
             print("start to test sql")
-            sqls = load_test_sql(config.db)[0:1]
+            sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, and it is {}".format(i, sql))
                 scheduler.simulate_db_console(sql)
