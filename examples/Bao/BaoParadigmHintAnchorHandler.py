@@ -7,8 +7,10 @@ from PilotConfig import PilotConfig
 from PilotEnum import DatabaseEnum, ExperimentTimeEnum
 from PilotModel import PilotModel
 from PilotTransData import PilotTransData
+from SparkPlanCompress import SparkPlanCompress
 from common.TimeStatistic import TimeStatistic
 from common.Util import wait_futures_results
+from examples.utils import to_tree_json
 
 
 def modify_sql_for_spark(config, sql: str):
@@ -64,13 +66,23 @@ class BaoParadigmHintAnchorHandler(HintAnchorHandler):
         sql = modify_sql_for_spark(self.config, sql)
         try:
             TimeStatistic.start(ExperimentTimeEnum.AI_TASK)
-            with ThreadPoolExecutor(max_workers=len(self.bao_hint.arms_hint2val)) as pool:
+            # with ThreadPoolExecutor(max_workers=len(self.bao_hint.arms_hint2val)) as pool:
+            with ThreadPoolExecutor(max_workers=1) as pool:
                 futures = []
                 for hint2val in self.bao_hint.arms_hint2val:
                     future = pool.submit(self._get_plan, sql, hint2val)
                     futures.append(future)
                 plans = wait_futures_results(futures)
                 pass
+
+            origin_plans = plans
+            plans = []
+            if self.config.db_type == DatabaseEnum.SPARK:
+                for plan in origin_plans:
+                    plan = to_tree_json(plan)
+                    compress = SparkPlanCompress()
+                    plan["Plan"] = compress.compress(plan["Plan"])
+                    plans.append(plan)
 
             TimeStatistic.start(ExperimentTimeEnum.PREDICT)
             est_exe_time = self.model.user_model.predict(plans)
@@ -80,7 +92,7 @@ class BaoParadigmHintAnchorHandler(HintAnchorHandler):
             idx = est_exe_time.argmin()
             pass
         except Exception as e:
-            raise e
+            idx = 0
         return self.bao_hint.arms_hint2val[idx]
 
     def _get_plan(self, sql, hint2val):

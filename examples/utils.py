@@ -19,7 +19,7 @@ def load_training_sql(db):
 
 
 def load_test_sql(db):
-    if "stats" in db:
+    if "stats" in db.lower():
         return load_sql("../examples/stats_test.txt")
     elif "imdb" in db:
         return load_sql("../examples/job_test.txt")
@@ -121,8 +121,10 @@ def to_pilot_index(index):
 
 def to_tree_json(spark_plan):
     plan = json_str_to_json_obj(spark_plan)
-    if isinstance(plan["Plan"], list):
+    if "Plan" in plan and isinstance(plan["Plan"], list):
         plan["Plan"], _ = _to_tree_json(plan["Plan"], 0)
+    else:
+        plan["Plan"], _ = _to_tree_json(plan["inputPlan"], 0)
     return plan
 
 
@@ -145,3 +147,13 @@ def _to_tree_json(targets, index=0):
         all_child_node_size += right_size
 
     return node, all_child_node_size + 1
+
+
+def get_spark_table_name_for_scan_node(node: dict):
+    node_type = node["class"]
+    if "org.apache.spark.sql.execution.columnar.InMemoryTableScanExec" == node_type:
+        table = node["relation"][0]["cacheBuilder"]["tableName"]
+        assert len(node["relation"])==1
+    else:
+        raise NotImplementedError
+    return table

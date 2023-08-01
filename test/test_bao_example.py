@@ -7,6 +7,9 @@ from common.TimeStatistic import TimeStatistic
 from common.dotDrawer import PlanDotDrawer
 from examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
 
+sys.path.append("/PilotScopeCore/")
+sys.path.append("/PilotScopeCore/components")
+sys.path.append("/PilotScopeCore/examples/Bao/source")
 sys.path.append("../")
 sys.path.append("../components")
 sys.path.append("../examples/Bao/source")
@@ -27,8 +30,8 @@ from examples.utils import load_test_sql
 class BaoTest(unittest.TestCase):
     def setUp(self):
         self.config: PostgreSQLConfig = PostgreSQLConfig()
-        # self.config.db = "imdbfull"
-        self.config.db = "statsfull"
+        self.config.db = "imdbfull"
+        # self.config.db = "statsfull"
 
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
 
@@ -70,7 +73,7 @@ class BaoTest(unittest.TestCase):
 
             pretraining_event = BaoPretrainingModelEvent(config, bao_pilot_model, self.pretraining_data_table,
                                                          enable_collection=False,
-                                                         enable_training=False)
+                                                         enable_training=True)
             scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
             # start
             scheduler.init()

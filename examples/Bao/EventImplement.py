@@ -5,14 +5,16 @@ from pandas import DataFrame
 from Dao.PilotTrainDataManager import PilotTrainDataManager
 from DataFetcher.PilotStateManager import PilotStateManager
 from PilotConfig import PilotConfig
+from PilotEnum import DatabaseEnum
 from PilotEvent import PeriodTrainingEvent, PretrainingModelEvent
 from PilotModel import PilotModel
 from PilotTransData import PilotTransData
+from SparkPlanCompress import SparkPlanCompress
 from common.Util import json_str_to_json_obj
 from common.dotDrawer import PlanDotDrawer
 from examples.Bao.BaoParadigmHintAnchorHandler import BaoParadigmHintAnchorHandler, modify_sql_for_spark
 from examples.Bao.source.model import BaoRegression
-from examples.utils import load_training_sql
+from examples.utils import load_training_sql, to_tree_json
 
 
 class BaoPretrainingModelEvent(PretrainingModelEvent):
@@ -26,7 +28,7 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
         self.cur_sql_idx = 0
 
     def load_sql(self):
-        return load_training_sql(self.config.db)  # only for development test
+        return load_training_sql(self.config.db)[0:10]  # only for development test
 
     def _custom_collect_data(self):
         self.load_sql()
@@ -57,7 +59,8 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
 
     def _custom_pretrain_model(self, train_data_manager: PilotTrainDataManager, existed_user_model):
         data: DataFrame = train_data_manager.read_all(self.save_table_name)
-        bao_model = BaoRegression(verbose=True, have_cache_data=self._model.have_cache_data)
+        bao_model = BaoRegression(verbose=True, have_cache_data=self._model.have_cache_data,
+                                  is_spark=self.config.db_type == DatabaseEnum.SPARK)
         new_plans, new_times = self.filter(data["plan"].values, data["time"].values)
         bao_model.fit(new_plans, new_times)
         return bao_model
@@ -67,8 +70,14 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
         new_times = []
 
         for i, plan in enumerate(plans):
-            if not self.contain_outlier_plan(plan):
-                new_plans.append(plans[i])
+            if self.config.db_type == DatabaseEnum.POSTGRESQL and not self.contain_outlier_plan(plan):
+                new_plans.append(plan)
+                new_times.append(times[i])
+            elif self.config.db_type == DatabaseEnum.SPARK:
+                plan = to_tree_json(plan)
+                compress = SparkPlanCompress()
+                plan["Plan"] = compress.compress(plan["Plan"])
+                new_plans.append(plan)
                 new_times.append(times[i])
         return new_plans, new_times
 

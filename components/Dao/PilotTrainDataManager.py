@@ -68,8 +68,9 @@ class PilotTrainDataManager:
         res = DataFrame(self.db_controller.execute(query, fetch=True))
 
         # update id
-        cur_id = self._extract_max_id(res)
-        self._update_table_last_id(table_name, cur_id)
+        if self.config.db_type != DatabaseEnum.SPARK:
+            cur_id = self._extract_max_id(res)
+            self._update_table_last_id(table_name, cur_id)
 
         return res
 

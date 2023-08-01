@@ -419,6 +419,7 @@ class SparkSQLController(BaseDBController):
     def execute(self, sql, fetch=False) -> Union[pandas.DataFrame, DataFrame]:
         row = None
         try:
+            self.connect_if_loss()
             df = self.get_connection().sql(sql)
             row = df.toPandas()
             if not fetch:

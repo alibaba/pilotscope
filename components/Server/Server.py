@@ -86,7 +86,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         content_length = int(self.headers.get('content-length'))
         data = self.rfile.read(content_length).decode('utf-8')
-
+        
         with data_lock:
             # receive data
             data = json.loads(data)

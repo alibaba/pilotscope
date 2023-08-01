@@ -12,3 +12,6 @@ dev_data/
 *.lck
 *.properties
 *.ctrl
+*.pdf
+*.xlsx
+*.png
