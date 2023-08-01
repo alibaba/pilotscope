@@ -87,7 +87,7 @@ class BaoParadigmHintAnchorHandler(HintAnchorHandler):
             TimeStatistic.start(ExperimentTimeEnum.PREDICT)
             est_exe_time = self.model.user_model.predict(plans)
             TimeStatistic.end(ExperimentTimeEnum.PREDICT)
-            print("BAO: ", est_exe_time)
+            print("BAO: ", est_exe_time, flush = True)
             TimeStatistic.end(ExperimentTimeEnum.AI_TASK)
             idx = est_exe_time.argmin()
             pass

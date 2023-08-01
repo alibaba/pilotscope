@@ -92,9 +92,10 @@ def evaluate_dbms_conf(spaces, executor, storage, columns, sample, state=None):
     )
     try:
         perf_stats, metrics = executor.evaluate_configuration(dbms_info, state.benchmark_info)
-    except:
+    except Exception as e:
         perf_stats = None
         metrics = np.random.rand(executor.num_dbms_metrics)
+    assert len(metrics) == executor.num_dbms_metrics
     logger.info(f'Performance Statistics:\n{perf_stats}')
 
     if state.default_perf_stats is None:

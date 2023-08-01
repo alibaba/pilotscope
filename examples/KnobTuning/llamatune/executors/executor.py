@@ -16,6 +16,7 @@ from scipy.spatial.distance import euclidean, cityblock
 from sklearn.preprocessing import StandardScaler
 
 from Exception.Exception import DatabaseCrashException
+from examples.utils import load_sql
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
@@ -201,21 +202,116 @@ sys.path.append("../")
 sys.path.append("../components")# TODO :after installing baihe_lib as a package, del it
 
 from components.DataFetcher.PilotStateManager import PilotStateManager
-from components.PilotConfig import PilotConfig
+from components.PilotConfig import PilotConfig, PostgreSQLConfig
 
 class SysmlExecutor(ExecutorInterface):
+    
+    PG_NUM_METRICS = 60
+    PG_STAT_VIEWS = [
+        "pg_stat_archiver", "pg_stat_bgwriter",  # global
+        "pg_stat_database", "pg_stat_database_conflicts",  # local
+        "pg_stat_user_tables", "pg_statio_user_tables",  # local
+        "pg_stat_user_indexes", "pg_statio_user_indexes"  # local
+    ]
+    PG_STAT_VIEWS_LOCAL_DATABASE = ["pg_stat_database", "pg_stat_database_conflicts"]
+    PG_STAT_VIEWS_LOCAL_TABLE = ["pg_stat_user_tables", "pg_statio_user_tables"]
+    PG_STAT_VIEWS_LOCAL_INDEX = ["pg_stat_user_indexes", "pg_statio_user_indexes"]
+    NUMERIC_METRICS = [  # counter
+        # global
+        'buffers_alloc', 'buffers_backend', 'buffers_backend_fsync', 'buffers_checkpoint', 'buffers_clean',
+        'checkpoints_req', 'checkpoints_timed', 'checkpoint_sync_time', 'checkpoint_write_time', 'maxwritten_clean',
+        'archived_count', 'failed_count',
+        # db
+        'blk_read_time', 'blks_hit', 'blks_read', 'blk_write_time', 'conflicts', 'deadlocks', 'temp_bytes',
+        'temp_files', 'tup_deleted', 'tup_fetched', 'tup_inserted', 'tup_returned', 'tup_updated', 'xact_commit',
+        'xact_rollback', 'confl_tablespace', 'confl_lock', 'confl_snapshot', 'confl_bufferpin', 'confl_deadlock',
+        # table
+        'analyze_count', 'autoanalyze_count', 'autovacuum_count', 'heap_blks_hit', 'heap_blks_read', 'idx_blks_hit',
+        'idx_blks_read', 'idx_scan', 'idx_tup_fetch', 'n_dead_tup', 'n_live_tup', 'n_tup_del', 'n_tup_hot_upd',
+        'n_tup_ins', 'n_tup_upd', 'n_mod_since_analyze', 'seq_scan', 'seq_tup_read', 'tidx_blks_hit',
+        'tidx_blks_read',
+        'toast_blks_hit', 'toast_blks_read', 'vacuum_count',
+        # index
+        'idx_blks_hit', 'idx_blks_read', 'idx_scan', 'idx_tup_fetch', 'idx_tup_read'
+    ]
     def __init__(self, spaces, storage, parse_metrics=False, num_dbms_metrics=None, **kwargs):
         self.parse_metrics = parse_metrics
         self.num_dbms_metrics = num_dbms_metrics
         # self.thread=int(kwargs["thread"])
         self.sqls_file_path=kwargs["sqls_file_path"]
         # self.timeout_per_sql=int(kwargs["timeout_per_sql"]) # ms
-        config = PilotConfig()
+        config = PostgreSQLConfig()
         config.once_request_timeout = 120
         config.sql_execution_timeout = 120
         self.state_manager = PilotStateManager(config)
         self.db_controller = self.state_manager.db_controller
-        
+
+    # NOTE: modified from DBTune (MIT liscense)
+    def get_internal_metrics(self):
+        def parse_helper(valid_variables, view_variables):
+            for view_name, variables in list(view_variables.items()):
+                for var_name, var_value in list(variables.items()):
+                    full_name = '{}.{}'.format(view_name, var_name)
+                    if full_name not in valid_variables:
+                        valid_variables[full_name] = []
+                    valid_variables[full_name].append(var_value)
+            return valid_variables
+
+        metrics_dict = {
+            'global': {},
+            'local': {
+                'db': {},
+                'table': {},
+                'index': {}
+            }
+        }
+        self.db_controller.connect_if_loss()
+        for view in self.PG_STAT_VIEWS:
+            columns, *results = self.db_controller.get_relation_content(view, fetch_column_name=True)
+            results = [dict(zip(columns, row)) for row in results]
+            if view in ["pg_stat_archiver", "pg_stat_bgwriter"]:
+                metrics_dict['global'][view] = results[0]
+            else:
+                if view in self.PG_STAT_VIEWS_LOCAL_DATABASE:
+                    type = 'db'
+                    type_key = 'datname'
+                elif view in self.PG_STAT_VIEWS_LOCAL_TABLE:
+                    type = 'table'
+                    type_key = 'relname'
+                elif view in self.PG_STAT_VIEWS_LOCAL_INDEX:
+                    type = 'index'
+                    type_key = 'relname'
+                metrics_dict['local'][type][view] = {}
+                for res in results:
+                    type_name = res[type_key]
+                    metrics_dict['local'][type][view][type_name] = res
+
+        metrics = {}
+        for scope, sub_vars in list(metrics_dict.items()):
+            if scope == 'global':
+                metrics.update(parse_helper(metrics, sub_vars))
+            elif scope == 'local':
+                for _, viewnames in list(sub_vars.items()):
+                    for viewname, objnames in list(viewnames.items()):
+                        for _, view_vars in list(objnames.items()):
+                            metrics.update(parse_helper(metrics, {viewname: view_vars}))
+
+        # Combine values
+        valid_metrics = {}
+        for name, values in list(metrics.items()):
+            if name.split('.')[-1] in self.NUMERIC_METRICS:
+                try:
+                    values = [float(v) for v in values if v is not None]
+                except Exception as e:
+                    print(metrics)
+                    print(name,values)
+                    raise e
+                if len(values) == 0:
+                    valid_metrics[name] = 0
+                else:
+                    valid_metrics[name] = sum(values)
+        return valid_metrics    
+
     def evaluate_configuration(self, dbms_info, benchmark_info):
         with open(self.sqls_file_path,"r") as f:
             sqls = f.readlines()
@@ -226,7 +322,7 @@ class SysmlExecutor(ExecutorInterface):
             accu_execution_time = 0
             execution_times = []
             data = self.state_manager.execute(sqls[0], is_reset=True)
-            if data.execution_time is None:
+            if data is None or data.execution_time is None:
                 raise TimeoutError
             else:
                 execution_times.append(data.execution_time)
@@ -235,7 +331,7 @@ class SysmlExecutor(ExecutorInterface):
             self.state_manager.fetch_execution_time()
             for i, sql in enumerate(sqls[1:]):
                 data = self.state_manager.execute(sql, is_reset=(i == len(sqls) - 1))
-                if data.execution_time is None:
+                if data is None or data.execution_time is None:
                     raise TimeoutError
                     execution_times.append(self.db_controller.config.once_request_timeout)
                     accu_execution_time += self.db_controller.config.once_request_timeout
@@ -245,22 +341,22 @@ class SysmlExecutor(ExecutorInterface):
             perf = {"latency":sorted(execution_times)[int(0.95*len(sqls))], "runtime":accu_execution_time, "throughput":len(sqls)/accu_execution_time}
             if not self.parse_metrics:
                 return perf
-            res = self.db_controller.get_internal_metrics()
-            metrics = np.array([v for _,v in res.items()])
+            res = self.get_internal_metrics()
+            metrics = np.array([v for _,v in sorted(res.items())])
+            return perf, metrics
+        except TimeoutError:
+            perf = None
+            if not self.parse_metrics:
+                return perf
+            res = self.get_internal_metrics()
+            metrics = np.array([v for _,v in sorted(res.items())])
             return perf, metrics
         except DatabaseCrashException as e:
             raise e
         except Exception as e:
-            
-            # raise e # to check bugs, uncomment here
-            print(e)
-            # perf = {"latency":self.state_manager.config.once_request_timeout,"runtime":self.state_manager.config.once_request_timeout*len(sqls),"throughput":1/self.state_manager.config.once_request_timeout}
-            perf = None
-            if not self.parse_metrics:
-                return perf
-            metrics = self.db_controller.get_internal_metrics()
-            metrics = np.array([v for _,v in res.items()])
-            return perf, metrics # this class can't raise any error when DB fail to start
+            import traceback
+            traceback.print_exc()
+            raise e
         finally:
             # recover config at last
             self.db_controller.recover_config()
@@ -313,8 +409,7 @@ class SparkExecutor(ExecutorInterface):
         self.db_controller = self.state_manager.db_controller
         
     def evaluate_configuration(self, dbms_info, benchmark_info):
-        with open(self.sqls_file_path,"r") as f:
-            sqls = f.readlines()
+        sqls = load_sql(self.sqls_file_path)
         try:
             self.state_manager.set_knob(dbms_info["config"])
             self.state_manager.fetch_execution_time()
@@ -322,7 +417,7 @@ class SparkExecutor(ExecutorInterface):
             accu_execution_time = 0
             execution_times = []
             data = self.state_manager.execute(sqls[0], is_reset=True)
-            if data.execution_time is None:
+            if data is None or data.execution_time is None:
                 raise TimeoutError
             else:
                 execution_times.append(data.execution_time)
@@ -331,7 +426,7 @@ class SparkExecutor(ExecutorInterface):
             self.state_manager.fetch_execution_time()
             for i, sql in enumerate(sqls[1:]):
                 data = self.state_manager.execute(sql, is_reset=(i == len(sqls) - 1))
-                if data.execution_time is None:
+                if data is None or data.execution_time is None:
                     raise TimeoutError
                     execution_times.append(self.db_controller.config.once_request_timeout)
                     accu_execution_time += self.db_controller.config.once_request_timeout
@@ -341,110 +436,30 @@ class SparkExecutor(ExecutorInterface):
             perf = {"latency":sorted(execution_times)[int(0.95*len(sqls))], "runtime":accu_execution_time, "throughput":len(sqls)/accu_execution_time}
             if not self.parse_metrics:
                 return perf
-            res = self.db_controller.get_internal_metrics()
+            res = self.get_internal_metrics()
             metrics = np.array([v for _,v in res.items()])
+            return perf, metrics
+        except TimeoutError:
+            perf = None
+            if not self.parse_metrics:
+                return perf
+            res = self.get_internal_metrics()
+            metrics = np.array([v for _,v in sorted(res.items())])
             return perf, metrics
         except DatabaseCrashException as e:
             raise e
         except Exception as e:
             import traceback
             traceback.print_exc()
-            raise e # to check bugs, uncomment here
-            print(e)
-            # perf = {"latency":self.state_manager.config.once_request_timeout,"runtime":self.state_manager.config.once_request_timeout*len(sqls),"throughput":1/self.state_manager.config.once_request_timeout}
-            perf = None
-            if not self.parse_metrics:
-                return perf
-            metrics = self.db_controller.get_internal_metrics()
-            metrics = np.array([v for _,v in res.items()])
-            return perf, metrics # this class can't raise any error when DB fail to start
-        finally:
-            # recover config at last
-            self.db_controller.recover_config()
-
-class TempSparkExecutor(ExecutorInterface):
-    def __init__(self, spaces, storage, parse_metrics=False, num_dbms_metrics=None, **kwargs):
-        self.parse_metrics = parse_metrics
-        self.num_dbms_metrics = num_dbms_metrics
-        # self.thread=int(kwargs["thread"])
-        self.sqls_file_path=kwargs["sqls_file_path"]
-        # self.timeout_per_sql=int(kwargs["timeout_per_sql"]) # ms
-        datasource_type = SparkSQLDataSourceEnum.POSTGRESQL
-        datasource_conn_info = {
-            'host': 'localhost',
-            'db': 'stats',
-            'user': 'postgres',
-            'pwd': 'postgres'
-        }
-        self.config = SparkConfig(
-            app_name="testApp",
-            master_url="local[*]"
-        )
-        self.config.set_datasource(
-            datasource_type, 
-            host = datasource_conn_info["host"], 
-            db = datasource_conn_info["db"], 
-            user = datasource_conn_info["user"], 
-            pwd = datasource_conn_info["pwd"]    
-        )
-        self.config.set_db_type(DatabaseEnum.SPARK)
-        self.table_name = "lero"
-        self.db_controller: SparkSQLController = DBControllerFactory.get_db_controller(self.config)
-        self.sql = "select * from badges;"
-        self.table = "badges"
-        self.column = "date"
-        self.db_controller.connect_if_loss()
-        
-        self.config.once_request_timeout = 120
-        self.config.sql_execution_timeout = 120
-        
-    def evaluate_configuration(self, dbms_info, benchmark_info):
-        import time
-        with open(self.sqls_file_path,"r") as f:
-            sqls_pg = f.readlines()
-            import sqlglot
-            sqls=[sqlglot.transpile(sql,read="postgres",write="spark")[0] for sql in sqls_pg]          
-        try:
-            execution_times=[]
-            accu_execution_time = 0
-            self.db_controller.write_knob_to_file(dbms_info["config"])
-            for i, sql in enumerate(sqls):
-                t1 = time.perf_counter()
-                self.db_controller.execute(sql,fetch = True)
-                t2 = time.perf_counter() - t1
-                execution_times.append(t2)
-                accu_execution_time += t2
-            perf = {"latency":sorted(execution_times)[int(0.95*len(sqls))], "runtime":accu_execution_time, "throughput":len(sqls)/accu_execution_time}
-            if not self.parse_metrics:
-                return perf
-            res = self.db_controller.get_internal_metrics()
-            metrics = np.array([v for _,v in res.items()])
-            return perf, metrics
-        except DatabaseCrashException as e:
             raise e
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            # raise e # to check bugs, uncomment here
-            print(e)
-            # perf = {"latency":self.state_manager.config.once_request_timeout,"runtime":self.state_manager.config.once_request_timeout*len(sqls),"throughput":1/self.state_manager.config.once_request_timeout}
-            perf = None
-            if not self.parse_metrics:
-                return perf
-            metrics = self.db_controller.get_internal_metrics()
-            metrics = np.array([v for _,v in res.items()])
-            return perf, metrics # this class can't raise any error when DB fail to start
         finally:
             # recover config at last
             self.db_controller.recover_config()
-
-
-
+            
 class ExecutorFactory:
     concrete_classes = {
         'DummyExecutor': DummyExecutor,
         "SysmlExecutor": SysmlExecutor,
-        "TempSparkExecutor":TempSparkExecutor,
         "SparkExecutor":SparkExecutor
     }
 
