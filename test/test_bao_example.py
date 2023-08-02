@@ -69,7 +69,7 @@ class BaoTest(unittest.TestCase):
 
             pretraining_event = BaoPretrainingModelEvent(config, bao_pilot_model, self.pretraining_data_table,
                                                          enable_collection=False,
-                                                         enable_training=False)
+                                                         enable_training=True)
             scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
             # start
             scheduler.init()

@@ -1,11 +1,14 @@
 import numpy as np
 
+from examples.utils import get_spark_table_name_for_scan_node
+
 JOIN_TYPES = ["Nested Loop", "Hash Join", "Merge Join"]
 
 LEAF_TYPES = ["Seq Scan", "Index Scan", "Index Only Scan", "Bitmap Index Scan"]
 ALL_TYPES = JOIN_TYPES + LEAF_TYPES
 
-SPARK_LEAF_TYPES = ["org.apache.spark.sql.execution.FileSourceScanExec"]
+SPARK_LEAF_TYPES = ["org.apache.spark.sql.execution.FileSourceScanExec",
+                    "org.apache.spark.sql.execution.columnar.InMemoryTableScanExec"]
 SPARK_JOIN_TYPES = ["org.apache.spark.sql.execution.joins.BroadcastHashJoinExec",
                     "org.apache.spark.sql.execution.joins.SortMergeJoinExec",
                     "org.apache.spark.sql.execution.joins.BroadcastNestedLoopJoinExec"]
@@ -39,7 +42,8 @@ class TreeBuilder:
 
     def __relation_name(self, node):
         if self.is_spark:
-            return node["tableIdentifier"]["table"]
+            return get_spark_table_name_for_scan_node(node)
+            node["tableIdentifier"]["table"]
         else:
             if "Relation Name" in node:
                 return node["Relation Name"]
@@ -144,7 +148,8 @@ def get_plan_stats(data, is_spark=False):
     def recurse(n, buffers=None, is_spark=False):
         if is_spark:
             costs.append(0)
-            rows.append(n["rowCount"])
+            # rows.append(n["rowCount"])
+            rows.append(0)
         else:
             costs.append(n["Total Cost"])
             rows.append(n["Plan Rows"])
@@ -210,7 +215,7 @@ def get_all_relations_spark(data):
 
     def recurse(plan):
         if "tableIdentifier" in plan:
-            yield plan["tableIdentifier"]["table"]
+            yield get_spark_table_name_for_scan_node(plan)
 
         if "Plans" in plan:
             for child in plan["Plans"]:

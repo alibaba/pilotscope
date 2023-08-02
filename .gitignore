@@ -15,3 +15,6 @@ dev_data/
 *.egg-info
 build/**
 dist/**
+*.pdf
+*.xlsx
+*.png

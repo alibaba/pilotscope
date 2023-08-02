@@ -18,7 +18,7 @@ class SparkPlanCompress:
                 gran_children = self.get_children(child)
                 if len(gran_children) > 1:
                     raise RuntimeError("exhibit to ignore the node that has two and more input")
-                new_children.append(gran_children[0])
+                new_children.append(gran_children[0] if isinstance(gran_children, list) else gran_children)
             else:
                 new_children.append(child)
         if len(new_children) > 0:

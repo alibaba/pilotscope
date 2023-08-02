@@ -88,6 +88,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         content_length = int(self.headers.get('content-length'))
         data = self.rfile.read(content_length).decode('utf-8')
+
         data = json.loads(data)
         cur_time = time.time_ns() / 1000000000.0
         TimeStatistic.add_time(ExperimentTimeEnum.DB_HTTP, float(cur_time - float(data["http_time"])))

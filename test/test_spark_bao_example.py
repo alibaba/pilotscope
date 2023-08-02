@@ -23,7 +23,7 @@ from components.DataFetcher.PilotStateManager import PilotStateManager
 from components.PilotConfig import PilotConfig, PostgreSQLConfig, SparkConfig
 from components.PilotEnum import *
 from components.PilotScheduler import PilotScheduler
-from examples.Bao.BaoParadigmHintAnchorHandler import BaoParadigmHintAnchorHandler
+from examples.Bao.BaoParadigmHintAnchorHandler import BaoParadigmHintAnchorHandler, modify_sql_for_spark
 from examples.Bao.BaoPilotModel import BaoPilotModel
 from examples.Bao.EventImplement import BaoPretrainingModelEvent
 from examples.utils import load_test_sql, to_tree_json
@@ -32,6 +32,7 @@ from examples.utils import load_test_sql, to_tree_json
 class SparkBaoTest(unittest.TestCase):
     def setUp(self):
         db = "tpcds"
+        # db = "sparkStats"
         self.config: SparkConfig = SparkConfig(app_name="PiloScopeBao", master_url="local[*]")
         self.config.use_postgresql_datasource(SparkSQLDataSourceEnum.POSTGRESQL, host="localhost", db=db,
                                               user="postgres", pwd="postgres")
@@ -47,8 +48,8 @@ class SparkBaoTest(unittest.TestCase):
         else:
             self.model_name = "spark_bao_model"
 
-        self.test_data_table = "{}_{}_test_data_table2".format(self.model_name, self.config.db)
-        self.db_test_data_table = "{}_{}_test_data_table2".format("spark", self.config.db)
+        self.test_data_table = "{}_{}_test_data_table".format(self.model_name, self.config.db).lower()
+        self.db_test_data_table = "{}_{}_test_data_table".format("spark", self.config.db)
         self.pretraining_data_table = ("spark_bao_{}_pretraining_collect_data".format(self.config.db)
                                        if not self.used_cache
                                        else "spark_bao_{}_pretraining_collect_data_wc".format(self.config.db))
@@ -79,28 +80,26 @@ class SparkBaoTest(unittest.TestCase):
                                             state_manager=state_manager)
 
             pretraining_event = BaoPretrainingModelEvent(config, bao_pilot_model, self.pretraining_data_table,
-                                                         enable_collection=True,
+                                                         enable_collection=False,
                                                          enable_training=False)
             scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
             # start
             scheduler.init()
-
-            exit()
-
             print("start to test sql")
-            sqls = load_test_sql(config.db)[0:1]
+            sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):
+                sql = modify_sql_for_spark(config, sql)
                 print("current is the {}-th sql, total is {}".format(i, len(sqls)))
-            TimeStatistic.start(ExperimentTimeEnum.SQL_END_TO_END)
-            scheduler.simulate_db_console(sql)
-            TimeStatistic.end(ExperimentTimeEnum.SQL_END_TO_END)
-            TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo, config.db))
+                TimeStatistic.start(ExperimentTimeEnum.SQL_END_TO_END)
+                scheduler.simulate_db_console(sql)
+                TimeStatistic.end(ExperimentTimeEnum.SQL_END_TO_END)
+                TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo, config.db))
             self.draw_time_statistic()
             print("run ok")
         finally:
             pilotscope_exit()
 
-    def test_pg_plan(self):
+    def test_spark_plan(self):
         try:
             config = self.config
             config.once_request_timeout = config.sql_execution_timeout = 50000
@@ -117,7 +116,7 @@ class SparkBaoTest(unittest.TestCase):
             scheduler.init()
 
             print("start to test sql")
-            sqls = load_test_sql(config.db)[0:1]
+            sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, and it is {}".format(i, sql))
                 scheduler.simulate_db_console(sql)
@@ -143,35 +142,6 @@ class SparkBaoTest(unittest.TestCase):
             {"PostgreSQL": pg_results, "Bao": algo_results},
             file_name="bao_performance"
         )
-
-    def test_spark_plan(self):
-        plans, times = self.read_plans()
-        bao_model = BaoRegression(verbose=True, have_cache_data=False, is_spark=True)
-        bao_model.fit(plans, times)
-
-        test_plans, _ = self.read_plans()
-        predicts = bao_model.predict(plans)
-        print("times is {}".format(str(times)))
-        print("\n")
-        print("predicts is {}".format(str(predicts)))
-
-        pass
-
-    def read_plans(self):
-        all_plans = []
-        all_times = []
-        with open("../examples/tpcdsQuery5.txt") as f:
-            line = f.readline()
-            while line is not None and line != "":
-                plans = line.split("#####")[1:]
-                plans = [to_tree_json(plan) for plan in plans]
-                times = [plan["Execution Time"] for plan in plans]
-                all_plans += plans
-                all_times += times
-                line = f.readline()
-        compress = SparkPlanCompress()
-        all_plans = [compress.compress(p) for p in all_plans]
-        return all_plans, all_times
 
 
 if __name__ == '__main__':
