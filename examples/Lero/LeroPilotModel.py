@@ -1,7 +1,7 @@
 import os
 
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from PilotModel import PilotModel
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.PilotModel import PilotModel
 from model import LeroModelPairWise
 
 

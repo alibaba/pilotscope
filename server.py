@@ -52,3 +52,28 @@
 #     server = HTTPServer((host, port), handler)
 #     print("Starting server, listen at: %s:%d" % (host, port))
 #     server.serve_forever()
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import json
+
+class Resquest(BaseHTTPRequestHandler):
+    def __init__(self,*args) -> None:
+        BaseHTTPRequestHandler.__init__(self,*args)
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])
+        req_data = self.rfile.read(content_length)
+        print(req_data)
+        resp_data = "success"
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(resp_data).encode())
+
+if __name__ == "__main__":
+    def handler(*args):
+        Resquest(*args)
+    port = 60756
+    url = "localhost"
+    server = HTTPServer((url,port), handler)
+    print("Starting server, listen at: %s:%d" % (url, port))
+    server.serve_forever()  
+    

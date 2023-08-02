@@ -1,45 +1,25 @@
 import sys
-sys.path.append("..")
-sys.path.append("../components")
-
+sys.path.append("../")
 import unittest
-from common.TimeStatistic import TimeStatistic
+from pilotscope.common.TimeStatistic import TimeStatistic
 from examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from DataFetcher.PilotStateManager import PilotStateManager
-from Factory.DBControllerFectory import DBControllerFactory
-from Factory.SchedulerFactory import SchedulerFactory
-from common.Drawer import Drawer
-from common.Util import pilotscope_exit
-from components.PilotConfig import PilotConfig
-from components.PilotEnum import DatabaseEnum, EventEnum, ExperimentTimeEnum
-from components.PilotScheduler import PilotScheduler
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.Factory.DBControllerFectory import DBControllerFactory
+from pilotscope.Factory.SchedulerFactory import SchedulerFactory
+from pilotscope.common.Drawer import Drawer
+from pilotscope.common.Util import pilotscope_exit
+from pilotscope.PilotEnum import DatabaseEnum, EventEnum, ExperimentTimeEnum
+from pilotscope.PilotScheduler import PilotScheduler
 from examples.KnobTuning.EventImplement import KnobPeriodicDbControllerEvent
 from examples.utils import load_sql
 import unittest
-import json
 
-from DBController.SparkSQLController import SparkSQLController, SparkConfig, SUCCESS, FAILURE, SparkSQLDataSourceEnum
-from Factory.DBControllerFectory import DBControllerFactory
-from PilotConfig import PilotConfig
-from PilotEnum import DatabaseEnum
-from common.Index import Index
-from pyspark.sql import SparkSession
-import sqlglot
+from pilotscope.DBController.SparkSQLController import SparkSQLController, SparkConfig, SUCCESS, FAILURE, SparkSQLDataSourceEnum
+from pilotscope.Factory.DBControllerFectory import DBControllerFactory
+from pilotscope.PilotConfig import PilotConfig
 
-import unittest
-from common.TimeStatistic import TimeStatistic
-from examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from DataFetcher.PilotStateManager import PilotStateManager
-from Factory.DBControllerFectory import DBControllerFactory
-from Factory.SchedulerFactory import SchedulerFactory
-from common.Drawer import Drawer
-from common.Util import pilotscope_exit
-from components.PilotConfig import PilotConfig, SparkConfig, PostgreSQLConfig
-from components.PilotEnum import DatabaseEnum, EventEnum, ExperimentTimeEnum
-from components.PilotScheduler import PilotScheduler
-from examples.KnobTuning.EventImplement import KnobPeriodicDbControllerEvent
+from pilotscope.PilotConfig import PilotConfig, SparkConfig, PostgreSQLConfig
 from examples.utils import load_sql, load_test_sql
 
 
@@ -53,7 +33,7 @@ class KnobTest(unittest.TestCase):
         datasource_type = SparkSQLDataSourceEnum.POSTGRESQL
         datasource_conn_info = {
             'host': 'localhost',
-            'db': 'tpcds',
+            'db': 'stats_tiny',
             'user': 'postgres',
             'pwd': 'postgres'
         }
@@ -96,7 +76,7 @@ class KnobTest(unittest.TestCase):
 
         # start
         scheduler.init()
-        sqls = load_sql("../examples/tpcds_test_sql_full.txt")
+        sqls = load_test_sql(config.db)
         for i, sql in enumerate(sqls):
             print("current is the {}-th sql, and it is {}".format(i, sql))
             TimeStatistic.start(ExperimentTimeEnum.PIPE_END_TO_END)
@@ -122,7 +102,7 @@ class KnobTest(unittest.TestCase):
         scheduler.register_collect_data("default_knob_data_spark_4", state_manager)
         
         scheduler.init()
-        sqls = load_sql("../examples/tpcds_test_sql_full.txt")
+        sqls = load_test_sql(config.db)
         for i, sql in enumerate(sqls):
             print("current is the {}-th sql, and it is {}".format(i, sql))
             TimeStatistic.start(ExperimentTimeEnum.PIPE_END_TO_END)

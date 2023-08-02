@@ -1,14 +1,17 @@
+import sys
+sys.path.append("../")
+sys.path.append("../examples/Lero/source")
 import unittest
 
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from Factory.SchedulerFactory import SchedulerFactory
-from common.Drawer import Drawer
-from common.Util import pilotscope_exit
-from components.DataFetcher.PilotStateManager import PilotStateManager
-from components.PilotConfig import PilotConfig
-from components.PilotEnum import DatabaseEnum, EventEnum
-from components.PilotModel import PilotModel
-from components.PilotScheduler import PilotScheduler
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.Factory.SchedulerFactory import SchedulerFactory
+from pilotscope.common.Drawer import Drawer
+from pilotscope.common.Util import pilotscope_exit
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.PilotConfig import PilotConfig,PostgreSQLConfig
+from pilotscope.PilotEnum import DatabaseEnum, EventEnum
+from pilotscope.PilotModel import PilotModel
+from pilotscope.PilotScheduler import PilotScheduler
 from examples.ExampleConfig import pg_stats_test_result_table
 from examples.Lero.EventImplement import LeroPretrainingModelEvent
 from examples.Lero.LeroParadigmCardAnchorHandler import LeroParadigmCardAnchorHandler
@@ -18,14 +21,14 @@ from examples.utils import load_test_sql
 
 class LeroTest(unittest.TestCase):
     def setUp(self):
-        self.config: PilotConfig = PilotConfig()
-        self.config.db = "stats"
+        self.config: PilotConfig = PostgreSQLConfig()
+        self.config.db = "stats_tiny"
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.model_name = "lero_pair"
         self.test_data_table = "{}_test_data_table".format(self.model_name)
         self.pretraining_data_table = "lero_pretraining_collect_data"
 
-    def test_lero(self):
+    def test_0_lero(self):
         try:
             config = self.config
             # model_name = "leroDynamic"
@@ -51,6 +54,7 @@ class LeroTest(unittest.TestCase):
 
             # start
             scheduler.init()
+            exit()
             print("start to test sql")
             sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):

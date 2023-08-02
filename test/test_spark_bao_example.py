@@ -1,28 +1,21 @@
 import sys
-import time
-
-from Dao.PilotTrainDataManager import PilotTrainDataManager
+sys.path.append("../examples/Bao/source")
+sys.path.append("../")
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
 from SparkPlanCompress import SparkPlanCompress
-from common.Drawer import Drawer
-from common.TimeStatistic import TimeStatistic
-from common.dotDrawer import PlanDotDrawer
+from pilotscope.common.Drawer import Drawer
+from pilotscope.common.TimeStatistic import TimeStatistic
+from pilotscope.common.dotDrawer import PlanDotDrawer
 from examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
 from examples.Bao.source.model import BaoRegression
 
-sys.path.append("/PilotScopeCore/")
-sys.path.append("/PilotScopeCore/components")
-sys.path.append("/PilotScopeCore/examples/Bao/source")
-sys.path.append("../")
-sys.path.append("../components")
-sys.path.append("../examples/Bao/source")
-
 import unittest
-from Factory.SchedulerFactory import SchedulerFactory
-from common.Util import pilotscope_exit
-from components.DataFetcher.PilotStateManager import PilotStateManager
-from components.PilotConfig import PilotConfig, PostgreSQLConfig, SparkConfig
-from components.PilotEnum import *
-from components.PilotScheduler import PilotScheduler
+from pilotscope.Factory.SchedulerFactory import SchedulerFactory
+from pilotscope.common.Util import pilotscope_exit
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig, SparkConfig
+from pilotscope.PilotEnum import *
+from pilotscope.PilotScheduler import PilotScheduler
 from examples.Bao.BaoParadigmHintAnchorHandler import BaoParadigmHintAnchorHandler, modify_sql_for_spark
 from examples.Bao.BaoPilotModel import BaoPilotModel
 from examples.Bao.EventImplement import BaoPretrainingModelEvent
@@ -31,8 +24,7 @@ from examples.utils import load_test_sql, to_tree_json
 
 class SparkBaoTest(unittest.TestCase):
     def setUp(self):
-        db = "tpcds"
-        # db = "sparkStats"
+        db = "stats_tiny"
         self.config: SparkConfig = SparkConfig(app_name="PiloScopeBao", master_url="local[*]")
         self.config.use_postgresql_datasource(SparkSQLDataSourceEnum.POSTGRESQL, host="localhost", db=db,
                                               user="postgres", pwd="postgres")
@@ -48,14 +40,14 @@ class SparkBaoTest(unittest.TestCase):
         else:
             self.model_name = "spark_bao_model"
 
-        self.test_data_table = "{}_{}_test_data_table".format(self.model_name, self.config.db).lower()
-        self.db_test_data_table = "{}_{}_test_data_table".format("spark", self.config.db)
-        self.pretraining_data_table = ("spark_bao_{}_pretraining_collect_data".format(self.config.db)
+        self.test_data_table = "{}_{}_test_data_table5".format(self.model_name, self.config.db)
+        self.db_test_data_table = "{}_{}_test_data_table5".format("spark", self.config.db)
+        self.pretraining_data_table = ("spark_bao_{}_pretraining_collect_data6".format(self.config.db)
                                        if not self.used_cache
                                        else "spark_bao_{}_pretraining_collect_data_wc".format(self.config.db))
         self.algo = "spark_bao"
 
-    def test_bao(self):
+    def test_0_bao(self):
         try:
             config = self.config
             config.once_request_timeout = config.sql_execution_timeout = 50000
@@ -80,11 +72,12 @@ class SparkBaoTest(unittest.TestCase):
                                             state_manager=state_manager)
 
             pretraining_event = BaoPretrainingModelEvent(config, bao_pilot_model, self.pretraining_data_table,
-                                                         enable_collection=False,
-                                                         enable_training=False)
+                                                         enable_collection=True,
+                                                         enable_training=True)
             scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
             # start
             scheduler.init()
+
             print("start to test sql")
             sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):

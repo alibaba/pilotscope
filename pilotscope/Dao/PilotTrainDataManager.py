@@ -66,6 +66,7 @@ class PilotTrainDataManager:
 
     def read_all(self, table_name):
         query = "select * from {}".format(table_name)
+        self.db_controller.connect_if_loss() # 
         res = DataFrame(self.db_controller.execute(query, fetch=True))
 
         # update id

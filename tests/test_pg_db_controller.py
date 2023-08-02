@@ -35,6 +35,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_get_existed_index(self):
         res = self.db_controller.get_existed_index("badges")
+        print(res)
         self.assertTrue("badges: userid" in str(res))
         print(res)
 

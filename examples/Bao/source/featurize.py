@@ -8,7 +8,8 @@ LEAF_TYPES = ["Seq Scan", "Index Scan", "Index Only Scan", "Bitmap Index Scan"]
 ALL_TYPES = JOIN_TYPES + LEAF_TYPES
 
 SPARK_LEAF_TYPES = ["org.apache.spark.sql.execution.FileSourceScanExec",
-                    "org.apache.spark.sql.execution.columnar.InMemoryTableScanExec"]
+                    "org.apache.spark.sql.execution.columnar.InMemoryTableScanExec",
+                    "org.apache.spark.sql.execution.RowDataSourceScanExec"]
 SPARK_JOIN_TYPES = ["org.apache.spark.sql.execution.joins.BroadcastHashJoinExec",
                     "org.apache.spark.sql.execution.joins.SortMergeJoinExec",
                     "org.apache.spark.sql.execution.joins.BroadcastNestedLoopJoinExec"]

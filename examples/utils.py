@@ -158,6 +158,9 @@ def get_spark_table_name_for_scan_node(node: dict):
     if "org.apache.spark.sql.execution.columnar.InMemoryTableScanExec" == node_type:
         table = node["relation"][0]["cacheBuilder"]["tableName"]
         assert len(node["relation"])==1
+    elif "org.apache.spark.sql.execution.RowDataSourceScanExec" == node_type:
+        table = node["output"][0][0]["name"]
+        assert len(node["output"][0])==1
     else:
         raise NotImplementedError
     return table

@@ -15,7 +15,7 @@ from scipy.spatial.distance import euclidean, cityblock
 
 from sklearn.preprocessing import StandardScaler
 
-from Exception.Exception import DatabaseCrashException
+from pilotscope.Exception.Exception import DatabaseCrashException
 from examples.utils import load_sql
 
 logging.basicConfig(level=logging.INFO)
@@ -197,12 +197,8 @@ class DummyExecutor(ExecutorInterface):
         metrics = np.random.rand(self.num_dbms_metrics)
         return perf, metrics
 
-import sys
-sys.path.append("../")
-sys.path.append("../components")# TODO :after installing baihe_lib as a package, del it
-
-from components.DataFetcher.PilotStateManager import PilotStateManager
-from components.PilotConfig import PilotConfig, PostgreSQLConfig
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
 
 class SysmlExecutor(ExecutorInterface):
     
@@ -241,6 +237,7 @@ class SysmlExecutor(ExecutorInterface):
         self.sqls_file_path=kwargs["sqls_file_path"]
         # self.timeout_per_sql=int(kwargs["timeout_per_sql"]) # ms
         config = PostgreSQLConfig()
+        config.db = kwargs["db_name"]
         config.once_request_timeout = 120
         config.sql_execution_timeout = 120
         self.state_manager = PilotStateManager(config)
@@ -362,12 +359,10 @@ class SysmlExecutor(ExecutorInterface):
             self.db_controller.recover_config()
 
 
-from DBController.SparkSQLController import SparkSQLController, SparkConfig, SUCCESS, FAILURE, SparkSQLDataSourceEnum
-from Factory.DBControllerFectory import DBControllerFactory
-from PilotConfig import PilotConfig
-from PilotEnum import DatabaseEnum
-from common.Index import Index
-from pyspark.sql import SparkSession
+from pilotscope.DBController.SparkSQLController import SparkSQLController, SparkConfig, SUCCESS, FAILURE, SparkSQLDataSourceEnum
+from pilotscope.Factory.DBControllerFectory import DBControllerFactory
+from pilotscope.PilotConfig import PilotConfig
+from pilotscope.PilotEnum import DatabaseEnum
 
 class SparkExecutor(ExecutorInterface):
     def __init__(self, spaces, storage, parse_metrics=False, num_dbms_metrics=None, **kwargs):
@@ -380,7 +375,7 @@ class SparkExecutor(ExecutorInterface):
         datasource_type = SparkSQLDataSourceEnum.POSTGRESQL
         datasource_conn_info = {
             'host': 'localhost',
-            'db': 'tpcds',
+            'db': kwargs["db_name"],
             'user': 'postgres',
             'pwd': 'postgres'
         }

@@ -1,28 +1,26 @@
 import sys
-
-sys.path.append("..")
-sys.path.append("../components")
-
+sys.path.append("../")
+sys.path.append("../examples/Lero/source")
 import unittest
-from common.TimeStatistic import TimeStatistic
+from pilotscope.common.TimeStatistic import TimeStatistic
 from examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from DataFetcher.PilotStateManager import PilotStateManager
-from Factory.DBControllerFectory import DBControllerFactory
-from Factory.SchedulerFactory import SchedulerFactory
-from common.Drawer import Drawer
-from common.Util import pilotscope_exit
-from components.PilotConfig import PilotConfig, PostgreSQLConfig
-from components.PilotEnum import DatabaseEnum, EventEnum, ExperimentTimeEnum
-from components.PilotScheduler import PilotScheduler
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.Factory.DBControllerFectory import DBControllerFactory
+from pilotscope.Factory.SchedulerFactory import SchedulerFactory
+from pilotscope.common.Drawer import Drawer
+from pilotscope.common.Util import pilotscope_exit
+from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
+from pilotscope.PilotEnum import DatabaseEnum, EventEnum, ExperimentTimeEnum
+from pilotscope.PilotScheduler import PilotScheduler
 from examples.KnobTuning.EventImplement import KnobPeriodicDbControllerEvent
-from examples.utils import load_sql
+from examples.utils import load_test_sql
 
 
 class KnobTest(unittest.TestCase):
     def setUp(self):
         self.config: PilotConfig = PostgreSQLConfig()
-        self.config.db = "stats"
+        self.config.db = "stats_tiny"
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.config.sql_execution_timeout = 300000
         self.config.once_request_timeout = 300000
@@ -46,7 +44,7 @@ class KnobTest(unittest.TestCase):
         # start
         scheduler.init()
         print("start to test sql")
-        sqls = load_sql("../examples/stats_test.txt")
+        sqls = load_test_sql(config.db)
         for i, sql in enumerate(sqls):
             print("current is the {}-th sql, and it is {}".format(i, sql))
             TimeStatistic.start(ExperimentTimeEnum.PIPE_END_TO_END)

@@ -133,7 +133,7 @@ class MyTestCase(unittest.TestCase):
         self.db_controller.load_table_if_exists_in_datasource("posts")
         # self.db_controller.connect_if_loss()
         res = self.db_controller.execute(
-            '/*pilotscope {"anchor": {"EXECUTION_TIME_FETCH_ANCHOR": {"enable": true, "name": "EXECUTION_TIME_FETCH_ANCHOR"}}, "enableTerminate": true, "enableReceiveData": true, "port": 57205, "url": "localhost", "tid": "140335169763072"} pilotscope*/ select  count(*) from badges as b,     posts as p where b.userid = p.owneruserid  AND p.posttypeid=2  AND p.score>=0  AND p.score<=20  AND p.commentcount<=12;',
+            '/*pilotscope {"anchor": {"EXECUTION_TIME_FETCH_ANCHOR": {"enable": true, "name": "EXECUTION_TIME_FETCH_ANCHOR"}}, "enableTerminate": true, "enableReceiveData": false, "port": 57205, "url": "localhost", "tid": "140335169763072"} pilotscope*/ select  count(*) from badges as b,     posts as p where b.userid = p.owneruserid  AND p.posttypeid=2  AND p.score>=0  AND p.score<=20  AND p.commentcount<=12;',
             True
         )
         print("res: ", res)

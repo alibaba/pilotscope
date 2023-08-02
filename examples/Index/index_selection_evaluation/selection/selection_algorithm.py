@@ -1,6 +1,5 @@
 import logging
 
-from DBController.BaseDBController import BaseDBController
 from selection.cost_evaluation import CostEvaluation
 
 # If not specified by the user, algorithms should use these default parameter values to

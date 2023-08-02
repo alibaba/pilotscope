@@ -1,23 +1,21 @@
 import sys
-
 sys.path.append("../")
-sys.path.append("../components")
 sys.path.append("../examples/Bao/source")
 
 import time
 
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from common.Drawer import Drawer
-from common.TimeStatistic import TimeStatistic
-from common.dotDrawer import PlanDotDrawer
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.common.Drawer import Drawer
+from pilotscope.common.TimeStatistic import TimeStatistic
+from pilotscope.common.dotDrawer import PlanDotDrawer
 from examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
 import unittest
-from Factory.SchedulerFactory import SchedulerFactory
-from common.Util import pilotscope_exit
-from components.DataFetcher.PilotStateManager import PilotStateManager
-from components.PilotConfig import PilotConfig, PostgreSQLConfig
-from components.PilotEnum import *
-from components.PilotScheduler import PilotScheduler
+from pilotscope.Factory.SchedulerFactory import SchedulerFactory
+from pilotscope.common.Util import pilotscope_exit
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
+from pilotscope.PilotEnum import *
+from pilotscope.PilotScheduler import PilotScheduler
 from examples.Bao.BaoParadigmHintAnchorHandler import BaoParadigmHintAnchorHandler
 from examples.Bao.BaoPilotModel import BaoPilotModel
 from examples.Bao.EventImplement import BaoPretrainingModelEvent
@@ -29,7 +27,7 @@ class BaoTest(unittest.TestCase):
     def setUp(self):
         self.config: PostgreSQLConfig = PostgreSQLConfig()
         # self.config.db = "imdbfull"
-        self.config.db = "stats"
+        self.config.db = "stats_tiny"
 
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
 
@@ -44,7 +42,7 @@ class BaoTest(unittest.TestCase):
         self.pretraining_data_table = ("bao_{}_pretraining_collect_data".format(self.config.db)
                                        if not self.used_cache
                                        else "bao_{}_pretraining_collect_data_wc".format(self.config.db))
-        self.algo = "bao"
+        self.algo = "bao_knob"
 
     def test_bao_knob(self):
         try:
@@ -70,8 +68,8 @@ class BaoTest(unittest.TestCase):
                                             state_manager=state_manager)
 
             pretraining_event = BaoPretrainingModelEvent(config, bao_pilot_model, self.pretraining_data_table,
-                                                         enable_collection=False,
-                                                         enable_training=False)
+                                                         enable_collection=True,
+                                                         enable_training=True)
             scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
             periodic_db_controller_event = KnobPeriodicDbControllerEvent(config, 200, llamatune_config_file = "../examples/KnobTuning/llamatune/configs/llama_config.ini", exec_in_init = True, optimizer_type = "smac") # optimizer_type could be "smac" or "ddpg"
             scheduler.register_event(EventEnum.PERIODIC_DB_CONTROLLER_EVENT, periodic_db_controller_event)

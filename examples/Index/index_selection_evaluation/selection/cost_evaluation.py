@@ -2,10 +2,10 @@ import logging
 
 from sqlalchemy.exc import OperationalError
 
-from DataFetcher.PilotStateManager import PilotStateManager
-from PilotConfig import PilotConfig
-from PilotTransData import PilotTransData
-from common.Index import Index as pilotIndex
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.PilotConfig import PilotConfig
+from pilotscope.PilotTransData import PilotTransData
+from pilotscope.common.Index import Index as pilotIndex
 from examples.utils import to_pilot_index
 from selection.index import Index
 from selection.what_if_index_creation import WhatIfIndexCreation

@@ -2,12 +2,12 @@ import json
 
 from pandas import DataFrame
 
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from DataFetcher.PilotStateManager import PilotStateManager
-from PilotConfig import PilotConfig
-from PilotEvent import PeriodTrainingEvent, PretrainingModelEvent, PeriodPerCountCollectionDataEvent
-from PilotModel import PilotModel
-from PilotTransData import PilotTransData
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.PilotConfig import PilotConfig
+from pilotscope.PilotEvent import PeriodTrainingEvent, PretrainingModelEvent, PeriodPerCountCollectionDataEvent
+from pilotscope.PilotModel import PilotModel
+from pilotscope.PilotTransData import PilotTransData
 from examples.Lero.LeroParadigmCardAnchorHandler import scale_card
 from examples.Lero.source.train import training_pairwise_pilot_score, get_training_pair
 from examples.utils import load_training_sql
@@ -47,7 +47,7 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
         self.pilot_state_manager = PilotStateManager(self.config)
 
     def load_sql(self):
-        self.sqls = load_training_sql(self.config.db)[0:200]
+        self.sqls = load_training_sql(self.config.db)[0:100]
 
     def _custom_collect_data(self):
         print("start to collect data fro pretraining")

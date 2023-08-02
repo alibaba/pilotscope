@@ -1,14 +1,14 @@
 import unittest
 
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from Factory.SchedulerFactory import SchedulerFactory
-from common.Drawer import Drawer
-from common.Util import pilotscope_exit
-from components.DataFetcher.PilotStateManager import PilotStateManager
-from components.PilotConfig import PilotConfig
-from components.PilotEnum import DatabaseEnum, EventEnum
-from components.PilotModel import PilotModel
-from components.PilotScheduler import PilotScheduler
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.Factory.SchedulerFactory import SchedulerFactory
+from pilotscope.common.Drawer import Drawer
+from pilotscope.common.Util import pilotscope_exit
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.PilotConfig import PilotConfig
+from pilotscope.PilotEnum import DatabaseEnum, EventEnum
+from pilotscope.PilotModel import PilotModel
+from pilotscope.PilotScheduler import PilotScheduler
 from examples.Lero.EventImplement import LeroPeriodTrainingEvent, \
     LeroDynamicCollectEventPeriod
 from examples.Lero.LeroParadigmCardAnchorHandler import LeroParadigmCardAnchorHandler

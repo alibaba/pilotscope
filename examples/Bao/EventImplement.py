@@ -1,6 +1,7 @@
 import json
 
 from pandas import DataFrame
+from examples.Bao.source.SparkPlanCompress import SparkPlanCompress
 
 from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
 from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
@@ -13,6 +14,7 @@ from pilotscope.common.dotDrawer import PlanDotDrawer
 from examples.Bao.BaoParadigmHintAnchorHandler import BaoParadigmHintAnchorHandler, modify_sql_for_spark
 from examples.Bao.source.model import BaoRegression
 from examples.utils import load_training_sql, to_tree_json
+from pilotscope.PilotEnum import DatabaseEnum
 
 
 class BaoPretrainingModelEvent(PretrainingModelEvent):
@@ -29,7 +31,7 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
         return load_training_sql(self.config.db)[0:10]  # only for development test
 
     def _custom_collect_data(self):
-        self.load_sql()
+        # self.load_sql()
         column_2_value_list = []
 
         sql = self.sqls[self.cur_sql_idx]

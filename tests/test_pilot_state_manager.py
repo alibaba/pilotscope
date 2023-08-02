@@ -14,13 +14,13 @@ class MyTestCase(unittest.TestCase):
 
     def setUp(self):
         self.config = PostgreSQLConfig()
-        self.config.db = "stats"
+        self.config.db = "stats_tiny"
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.state_manager = PilotStateManager(self.config)
         self.table = "badges"
         self.indexable_column = "date"
         self.sql = "select * from badges limit 10" 
-        self.index_sql = "select date from badges where date='2014-09-14 02:31:28'"
+        self.index_sql = "select date from badges where date=1406838696"
 
     def test_fetch_execution_time(self):
         self.state_manager.fetch_execution_time()
@@ -61,9 +61,9 @@ class MyTestCase(unittest.TestCase):
         self.assertFalse(abs(origin_cost - index_cost) < 100)
 
     def test_index_batch(self):
-        sqls = ["select date from badges where date='2014-09-14 02:31:28'",
-                "select date from badges where date='2014-09-14 02:31:28'",
-                "select date from badges where date='2014-09-14 02:31:28'"]
+        sqls = ["select date from badges where date=1406838696",
+                "select date from badges where date=1406838696",
+                "select date from badges where date=1406838696"]
         index_name = "test_index_batch"
 
         index = Index([self.indexable_column], self.table, index_name=index_name)
@@ -79,7 +79,8 @@ class MyTestCase(unittest.TestCase):
         self.assertFalse(abs(origin_cost - index_cost) < 100)
 
     def tearDown(self):
-        self.db_controller.drop_table_if_existence(self.test_table)
+        pass
+        # self.db_controller.drop_table_if_existence(self.test_table)
     # def test_(self):
     #     sqls = load_test_sql(self.config.db)[0:10]
     #     self.state_manager.reset()

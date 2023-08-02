@@ -1,15 +1,17 @@
 import unittest
-
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from DataFetcher.PilotStateManager import PilotStateManager
-from Factory.DBControllerFectory import DBControllerFactory
-from Factory.SchedulerFactory import SchedulerFactory
-from common.Drawer import Drawer
-from common.TimeStatistic import TimeStatistic
-from common.Util import pilotscope_exit
-from components.PilotConfig import PilotConfig, PostgreSQLConfig
-from components.PilotEnum import DatabaseEnum, ExperimentTimeEnum, EventEnum
-from components.PilotScheduler import PilotScheduler
+import sys
+sys.path.append("../")
+sys.path.append("../examples/Index/index_selection_evaluation")
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.Factory.DBControllerFectory import DBControllerFactory
+from pilotscope.Factory.SchedulerFactory import SchedulerFactory
+from pilotscope.common.Drawer import Drawer
+from pilotscope.common.TimeStatistic import TimeStatistic
+from pilotscope.common.Util import pilotscope_exit
+from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
+from pilotscope.PilotEnum import DatabaseEnum, ExperimentTimeEnum, EventEnum
+from pilotscope.PilotScheduler import PilotScheduler
 from examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
 from examples.Index.EventImplement import IndexPeriodicDbControllerEvent
 from examples.utils import load_test_sql
@@ -18,8 +20,8 @@ from examples.utils import load_test_sql
 class IndexTest(unittest.TestCase):
     def setUp(self):
         self.config: PilotConfig = PostgreSQLConfig()
-        self.config.db = "imdb"
-        # self.config.db = "stats"
+        # self.config.db = "imdb"
+        self.config.db = "stats_tiny"
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.algo = "extend"
 
@@ -40,7 +42,7 @@ class IndexTest(unittest.TestCase):
 
             # allow to pretrain model
             periodic_db_controller_event = IndexPeriodicDbControllerEvent(config, 200, exec_in_init=True)
-            # scheduler.register_event(EventEnum.PERIODIC_DB_CONTROLLER_EVENT, periodic_db_controller_event)
+            scheduler.register_event(EventEnum.PERIODIC_DB_CONTROLLER_EVENT, periodic_db_controller_event)
             scheduler.register_collect_data(self.test_data_table, state_manager)
 
             # start

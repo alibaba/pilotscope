@@ -3,7 +3,7 @@ import math
 
 from pandas import DataFrame
 
-from Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
 from feature import *
 from model import LeroModel, LeroModelPairWise
 

@@ -1,9 +1,9 @@
-from Anchor.BaseAnchor.replaceAnchorHandler import CardAnchorHandler
-from Factory.DBControllerFectory import DBControllerFactory
-from PilotConfig import PilotConfig
-from DataFetcher.PilotStateManager import PilotStateManager
-from PilotModel import PilotModel
-from PilotTransData import PilotTransData
+from pilotscope.Anchor.BaseAnchor.replaceAnchorHandler import CardAnchorHandler
+from pilotscope.Factory.DBControllerFectory import DBControllerFactory
+from pilotscope.PilotConfig import PilotConfig
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.PilotModel import PilotModel
+from pilotscope.PilotTransData import PilotTransData
 from examples.utils import scale_card
 from model import LeroModelPairWise
 

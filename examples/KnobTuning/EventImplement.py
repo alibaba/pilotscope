@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pandas as pd
 
-from DBController.BaseDBController import BaseDBController
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from PilotEnum import ExperimentTimeEnum
-from PilotEvent import PeriodicDbControllerEvent
-from common.TimeStatistic import TimeStatistic
+from pilotscope.DBController.BaseDBController import BaseDBController
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.PilotEnum import ExperimentTimeEnum
+from pilotscope.PilotEvent import PeriodicDbControllerEvent
+from pilotscope.common.TimeStatistic import TimeStatistic
 from examples.utils import load_training_sql
 
 pd.set_option('display.max_columns', None)

@@ -1,13 +1,13 @@
 import random
 
-from DBController.BaseDBController import BaseDBController
-from Dao.PilotTrainDataManager import PilotTrainDataManager
-from DataFetcher.PilotStateManager import PilotStateManager
-from Factory.DBControllerFectory import DBControllerFactory
-from PilotEnum import ExperimentTimeEnum
-from PilotEvent import PeriodicDbControllerEvent
-from common.Index import Index as PilotIndex
-from common.TimeStatistic import TimeStatistic
+from pilotscope.DBController.BaseDBController import BaseDBController
+from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.Factory.DBControllerFectory import DBControllerFactory
+from pilotscope.PilotEnum import ExperimentTimeEnum
+from pilotscope.PilotEvent import PeriodicDbControllerEvent
+from pilotscope.common.Index import Index as PilotIndex
+from pilotscope.common.TimeStatistic import TimeStatistic
 from examples.utils import load_training_sql, to_pilot_index, load_test_sql
 from selection.algorithms.extend_algorithm import ExtendAlgorithm
 from selection.index_selection_evaluation import to_workload
