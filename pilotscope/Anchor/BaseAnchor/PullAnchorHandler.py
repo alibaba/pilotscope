@@ -7,13 +7,13 @@ from pilotscope.PilotEnum import FetchMethod
 from pilotscope.PilotTransData import PilotTransData
 
 name_2_priority = {
-    AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR.name: 0,
-    AnchorEnum.PHYSICAL_PLAN_FETCH_ANCHOR.name: 1,
+    AnchorEnum.EXECUTION_TIME_PULL_ANCHOR.name: 0,
+    AnchorEnum.PHYSICAL_PLAN_PULL_ANCHOR.name: 1,
     "OTHER": 9
 }
 
 
-class FetchAnchorHandler(BaseAnchorHandler):
+class PullAnchorHandler(BaseAnchorHandler):
     def __init__(self, config):
         super().__init__(config)
         self.anchor_name: str = None
@@ -38,20 +38,20 @@ class FetchAnchorHandler(BaseAnchorHandler):
         pass
 
 
-class RecordFetchAnchorHandler(FetchAnchorHandler):
+class RecordPullAnchorHandler(PullAnchorHandler):
 
     def __init__(self, config) -> None:
         super().__init__(config)
         self.fetch_method = FetchMethod.INNER
-        self.anchor_name = AnchorEnum.RECORD_FETCH_ANCHOR.name
+        self.anchor_name = AnchorEnum.RECORD_PULL_ANCHOR.name
 
 
-class LogicalPlanFetchAnchorHandler(FetchAnchorHandler):
+class LogicalPlanPullAnchorHandler(PullAnchorHandler):
 
     def __init__(self, config) -> None:
         super().__init__(config)
         self.fetch_method = FetchMethod.OUTER
-        self.anchor_name = AnchorEnum.LOGICAL_PLAN_FETCH_ANCHOR.name
+        self.anchor_name = AnchorEnum.LOGICAL_PLAN_PULL_ANCHOR.name
 
     def add_params_to_db_core(self, params: dict):
         super().add_params_to_db_core(params)
@@ -61,12 +61,12 @@ class LogicalPlanFetchAnchorHandler(FetchAnchorHandler):
             column_2_value["logical_plan"] = json.dumps(data.logical_plan)
 
 
-class PhysicalPlanFetchAnchorHandler(FetchAnchorHandler):
+class PhysicalPlanPullAnchorHandler(PullAnchorHandler):
 
     def __init__(self, config) -> None:
         super().__init__(config)
         self.fetch_method = FetchMethod.OUTER
-        self.anchor_name = AnchorEnum.PHYSICAL_PLAN_FETCH_ANCHOR.name
+        self.anchor_name = AnchorEnum.PHYSICAL_PLAN_PULL_ANCHOR.name
 
     def add_params_to_db_core(self, params: dict):
         super().add_params_to_db_core(params)
@@ -76,12 +76,12 @@ class PhysicalPlanFetchAnchorHandler(FetchAnchorHandler):
             column_2_value["physical_plan"] = json.dumps(data.physical_plan)
 
 
-class BuffercacheFetchAnchorHandler(FetchAnchorHandler):
+class BuffercachePullAnchorHandler(PullAnchorHandler):
 
     def __init__(self, config) -> None:
         super().__init__(config)
         self.fetch_method = FetchMethod.OUTER
-        self.anchor_name = AnchorEnum.BUFFERCACHE_FETCH_ANCHOR.name
+        self.anchor_name = AnchorEnum.BUFFERCACHE_PULL_ANCHOR.name
 
     def add_params_to_db_core(self, params: dict):
         super().add_params_to_db_core(params)
@@ -91,12 +91,12 @@ class BuffercacheFetchAnchorHandler(FetchAnchorHandler):
             column_2_value["buffercache"] = json.dumps(data.buffercache)
 
 
-class EstimatedCostFetchAnchorHandler(FetchAnchorHandler):
+class EstimatedCostPullAnchorHandler(PullAnchorHandler):
 
     def __init__(self, config) -> None:
         super().__init__(config)
         self.fetch_method = FetchMethod.OUTER
-        self.anchor_name = AnchorEnum.ESTIMATED_COST_FETCH_ANCHOR.name
+        self.anchor_name = AnchorEnum.ESTIMATED_COST_PULL_ANCHOR.name
 
     def add_params_to_db_core(self, params: dict):
         super().add_params_to_db_core(params)
@@ -106,29 +106,29 @@ class EstimatedCostFetchAnchorHandler(FetchAnchorHandler):
             column_2_value["estimated_cost"] = data.estimated_cost
 
 
-class ExecutionTimeFetchAnchorHandler(FetchAnchorHandler):
+class ExecutionTimePullAnchorHandler(PullAnchorHandler):
 
     def __init__(self, config) -> None:
         super().__init__(config)
         self.fetch_method = FetchMethod.INNER
-        self.anchor_name = AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR.name
+        self.anchor_name = AnchorEnum.EXECUTION_TIME_PULL_ANCHOR.name
 
     def add_data_to_table(self, column_2_value, data: PilotTransData):
         if data.execution_time is not None:
             column_2_value["execution_time"] = data.execution_time
 
 
-class OptimizedSqlFetchAnchorHandler(FetchAnchorHandler):
+class OptimizedSqlPullAnchorHandler(PullAnchorHandler):
 
     def __init__(self, config) -> None:
         super().__init__(config)
         self.fetch_method = FetchMethod.INNER
-        self.anchor_name = AnchorEnum.OPTIMIZED_SQL_FETCH_ANCHOR.name
+        self.anchor_name = AnchorEnum.OPTIMIZED_SQL_PULL_ANCHOR.name
 
 
-class SubQueryCardFetchAnchorHandler(FetchAnchorHandler):
+class SubQueryCardPullAnchorHandler(PullAnchorHandler):
 
     def __init__(self, config) -> None:
         super().__init__(config)
         self.fetch_method = FetchMethod.INNER
-        self.anchor_name = AnchorEnum.SUBQUERY_CARD_FETCH_ANCHOR.name
+        self.anchor_name = AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR.name

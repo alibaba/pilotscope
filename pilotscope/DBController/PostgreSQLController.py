@@ -63,6 +63,9 @@ class PostgreSQLController(BaseDBController):
         try:
             self.connect_if_loss()
             conn = self.get_connection()
+            # res = conn.execute(text("select pg_backend_pid();")).all()[0][0]
+            # with open(str(res)+".txt", "a") as f:
+            #     f.write(str(sql))
             result = conn.execute(text(sql) if isinstance(sql, str) else sql)
             if fetch:
                 row = result.all()
@@ -78,7 +81,7 @@ class PostgreSQLController(BaseDBController):
                 raise e
         return row
 
-    def set_hint(self, key, value):
+    def push_hint(self, key, value):
         sql = "SET {} TO {}".format(key, value)
         self.execute(sql)
 

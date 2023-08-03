@@ -3,8 +3,8 @@ import json
 from pandas import DataFrame
 from examples.Bao.source.SparkPlanCompress import SparkPlanCompress
 
-from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
-from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotEvent import PeriodTrainingEvent, PretrainingModelEvent
 from pilotscope.PilotModel import PilotModel
@@ -22,7 +22,7 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
     def __init__(self, config: PilotConfig, bind_model: PilotModel, save_table_name, enable_collection=True,
                  enable_training=True):
         super().__init__(config, bind_model, save_table_name, enable_collection, enable_training)
-        self.pilot_state_manager = PilotStateManager(self.config)
+        self.pilot_state_manager = PilotDataInteractor(self.config)
         self.bao_hint = BaoParadigmHintAnchorHandler.HintForBao(config.db_type)
         self.sqls = self.load_sql()
         self.cur_sql_idx = 0
@@ -40,11 +40,11 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
         print("current  is {}-th sql, and total sqls is {}".format(self.cur_sql_idx, len(self.sqls)))
         for hint2val in self.bao_hint.arms_hint2val:
             column_2_value = {}
-            self.pilot_state_manager.set_hint(hint2val)
-            self.pilot_state_manager.fetch_physical_plan()
-            self.pilot_state_manager.fetch_execution_time()
+            self.pilot_state_manager.push_hint(hint2val)
+            self.pilot_state_manager.pull_physical_plan()
+            self.pilot_state_manager.pull_execution_time()
             if self._model.have_cache_data:
-                self.pilot_state_manager.fetch_buffercache()
+                self.pilot_state_manager.pull_buffercache()
             data: PilotTransData = self.pilot_state_manager.execute(sql)
             if data is not None and data.execution_time is not None:
                 column_2_value["plan"] = data.physical_plan

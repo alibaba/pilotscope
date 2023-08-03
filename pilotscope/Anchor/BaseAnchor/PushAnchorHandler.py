@@ -38,7 +38,7 @@ class CardAnchorHandler(ReplaceAnchorHandler):
 
     def __init__(self, config, subquery_2_card: dict = None) -> None:
         super().__init__(config)
-        self.anchor_name = AnchorEnum.CARD_REPLACE_ANCHOR.name
+        self.anchor_name = AnchorEnum.CARD_PUSH_ANCHOR.name
         self.subquery_2_card = subquery_2_card
 
     def apply_replace_data(self, sql):
@@ -52,7 +52,7 @@ class KonbAnchorHandler(ReplaceAnchorHandler):
 
     def __init__(self, config, key_2_value_for_knob: dict = None) -> None:
         super().__init__(config)
-        self.anchor_name = AnchorEnum.KNOB_REPLACE_ANCHOR.name
+        self.anchor_name = AnchorEnum.KNOB_PUSH_ANCHOR.name
         self.key_2_value_for_knob = key_2_value_for_knob
 
     def apply_replace_data(self, sql):
@@ -71,7 +71,7 @@ class CostAnchorHandler(ReplaceAnchorHandler):
 
     def __init__(self, config, subplan_2_cost: dict = None) -> None:
         super().__init__(config)
-        self.anchor_name = AnchorEnum.COST_REPLACE_ANCHOR.name
+        self.anchor_name = AnchorEnum.COST_PUSH_ANCHOR.name
         self.subplan_2_cost = subplan_2_cost
 
     def apply_replace_data(self, sql):
@@ -86,7 +86,7 @@ class HintAnchorHandler(ReplaceAnchorHandler):
 
     def __init__(self, config, key_2_value_for_hint: dict = None) -> None:
         super().__init__(config)
-        self.anchor_name = AnchorEnum.HINT_REPLACE_ANCHOR.name
+        self.anchor_name = AnchorEnum.HINT_PUSH_ANCHOR.name
         self.key_2_value_for_hint = key_2_value_for_hint
 
     def apply_replace_data(self, sql):
@@ -95,7 +95,7 @@ class HintAnchorHandler(ReplaceAnchorHandler):
     def execute_before_comment_sql(self, db_controller: BaseDBController):
         TimeStatistic.start(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
         for hint, value in self.key_2_value_for_hint.items():
-            db_controller.set_hint(hint, value)
+            db_controller.push_hint(hint, value)
         TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
     def add_params_to_db_core(self, params: dict):
@@ -106,7 +106,7 @@ class IndexAnchorHandler(ReplaceAnchorHandler):
 
     def __init__(self, config, indexes: List[Index] = None, drop_other=True) -> None:
         super().__init__(config)
-        self.anchor_name = AnchorEnum.INDEX_REPLACE_ANCHOR.name
+        self.anchor_name = AnchorEnum.INDEX_PUSH_ANCHOR.name
         self.indexes = indexes
         self.drop_other = drop_other
         self.trigger_type = ReplaceAnchorTriggerEnum.WORKLOAD

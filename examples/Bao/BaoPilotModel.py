@@ -1,6 +1,6 @@
 import os
 
-from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
 from pilotscope.PilotModel import PilotModel
 from examples.Bao.source.model import BaoRegression
 

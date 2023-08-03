@@ -4,8 +4,8 @@ from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from typing import Optional, List
 
-from pilotscope.Anchor.BaseAnchor.FetchAnchorHandler import *
-from pilotscope.Anchor.BaseAnchor.replaceAnchorHandler import *
+from pilotscope.Anchor.BaseAnchor.PullAnchorHandler import *
+from pilotscope.Anchor.BaseAnchor.PushAnchorHandler import *
 from pilotscope.DataFetcher.BaseDataFetcher import DataFetcher
 from pilotscope.DataFetcher.PilotCommentCreator import PilotCommentCreator
 from pilotscope.Exception.Exception import DBStatementTimeoutException, HttpReceiveTimeoutException
@@ -20,7 +20,7 @@ from pilotscope.common.TimeStatistic import TimeStatistic
 from pilotscope.common.Util import pilotscope_exit, extract_anchor_handlers, extract_handlers, wait_futures_results
 
 
-class PilotStateManager:
+class PilotDataInteractor:
     def __init__(self, config: PilotConfig, db_controller: BaseDBController = None) -> None:
         self.db_controller = DBControllerFactory.get_db_controller(config) if db_controller is None else db_controller
         self.anchor_to_handlers = {}
@@ -68,7 +68,7 @@ class PilotStateManager:
             comment_creator = PilotCommentCreator(enable_receive_pilot_data=enable_receive_pilot_data)
             comment_creator.add_params(self.data_fetcher.get_additional_info())
             comment_creator.enable_terminate(
-                False if AnchorEnum.RECORD_FETCH_ANCHOR in self.anchor_to_handlers else True)
+                False if AnchorEnum.RECORD_PULL_ANCHOR in self.anchor_to_handlers else True)
             comment_creator.add_anchor_params(self._get_anchor_params_as_comment())
             comment_sql = comment_creator.create_comment_sql(sql)
 
@@ -112,7 +112,7 @@ class PilotStateManager:
             raise e
 
     def _add_execution_time_from_python(self, data: PilotTransData, python_sql_execution_time):
-        if AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR in self.anchor_to_handlers:
+        if AnchorEnum.EXECUTION_TIME_PULL_ANCHOR in self.anchor_to_handlers:
             data.execution_time = python_sql_execution_time
 
     def _add_detailed_time_for_experiment(self, data: PilotTransData):
@@ -132,14 +132,14 @@ class PilotStateManager:
     def is_need_to_receive_data(self, anchor_2_handlers):
         filter_anchor_2_handlers = self._remove_outer_fetch_anchor(
             extract_anchor_handlers(anchor_2_handlers, is_fetch_anchor=True))
-        if AnchorEnum.RECORD_FETCH_ANCHOR in filter_anchor_2_handlers:
-            filter_anchor_2_handlers.pop(AnchorEnum.RECORD_FETCH_ANCHOR)
+        if AnchorEnum.RECORD_PULL_ANCHOR in filter_anchor_2_handlers:
+            filter_anchor_2_handlers.pop(AnchorEnum.RECORD_PULL_ANCHOR)
 
         # for experiment need, Pilotscope_SparkSQL will send http_time and parser_time via http, so we comment this
         # the execution time is not needed to be received for spark
         # if self.config.db_type == DatabaseEnum.SPARK:
-        #     if AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR in filter_anchor_2_handlers:
-        #         filter_anchor_2_handlers.pop(AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR)
+        #     if AnchorEnum.EXECUTION_TIME_PULL_ANCHOR in filter_anchor_2_handlers:
+        #         filter_anchor_2_handlers.pop(AnchorEnum.EXECUTION_TIME_PULL_ANCHOR)
 
         return len(filter_anchor_2_handlers) > 0
 
@@ -184,7 +184,7 @@ class PilotStateManager:
             params = {}
             if isinstance(handle, ReplaceAnchorHandler):
                 handle.add_params_to_db_core(params)
-            elif isinstance(handle, FetchAnchorHandler) and handle.fetch_method == FetchMethod.INNER:
+            elif isinstance(handle, PullAnchorHandler) and handle.fetch_method == FetchMethod.INNER:
                 handle.add_params_to_db_core(params)
             if len(params) > 0:
                 anchor_params[anchor.name] = params
@@ -193,7 +193,7 @@ class PilotStateManager:
     def _remove_outer_fetch_anchor(self, anchor_to_handlers):
         result = {}
         for anchor, handle in anchor_to_handlers.items():
-            if isinstance(handle, FetchAnchorHandler) and handle.fetch_method == FetchMethod.OUTER:
+            if isinstance(handle, PullAnchorHandler) and handle.fetch_method == FetchMethod.OUTER:
                 continue
             result[anchor] = handle
         return result
@@ -203,7 +203,7 @@ class PilotStateManager:
         anchor_data = AnchorTransData()
         handles = self.anchor_to_handlers.values()
         for handle in handles:
-            if isinstance(handle, FetchAnchorHandler) and handle.fetch_method == FetchMethod.OUTER:
+            if isinstance(handle, PullAnchorHandler) and handle.fetch_method == FetchMethod.OUTER:
                 comment_creator = PilotCommentCreator(anchor_params=replace_anchor_params, enable_terminate_flag=False)
                 comment = comment_creator.create_comment()
                 handle.fetch_from_outer(self.db_controller, sql, comment, anchor_data, data)
@@ -227,75 +227,75 @@ class PilotStateManager:
             anchor = AnchorEnum.to_anchor_enum(anchor)
         self.anchor_to_handlers[anchor] = handler
 
-    def set_hint(self, key_2_value_for_hint: dict):
-        anchor: HintAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.HINT_REPLACE_ANCHOR)
+    def push_hint(self, key_2_value_for_hint: dict):
+        anchor: HintAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.HINT_PUSH_ANCHOR)
         anchor.key_2_value_for_hint = key_2_value_for_hint
-        self.anchor_to_handlers[AnchorEnum.HINT_REPLACE_ANCHOR] = anchor
+        self.anchor_to_handlers[AnchorEnum.HINT_PUSH_ANCHOR] = anchor
 
-    def set_card(self, subquery_2_value: dict):
-        anchor: CardAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.CARD_REPLACE_ANCHOR)
+    def push_card(self, subquery_2_value: dict):
+        anchor: CardAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.CARD_PUSH_ANCHOR)
         anchor.subquery_2_card = subquery_2_value
-        self.anchor_to_handlers[AnchorEnum.CARD_REPLACE_ANCHOR] = anchor
+        self.anchor_to_handlers[AnchorEnum.CARD_PUSH_ANCHOR] = anchor
 
-    def set_knob(self, key_2_value_for_knob: dict):
-        anchor: KonbAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.KNOB_REPLACE_ANCHOR)
+    def push_knob(self, key_2_value_for_knob: dict):
+        anchor: KonbAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.KNOB_PUSH_ANCHOR)
         anchor.key_2_value_for_knob = key_2_value_for_knob
-        self.anchor_to_handlers[AnchorEnum.KNOB_REPLACE_ANCHOR] = anchor
+        self.anchor_to_handlers[AnchorEnum.KNOB_PUSH_ANCHOR] = anchor
 
-    def set_cost(self, subplan_2_cost: dict):
-        anchor: CostAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.COST_REPLACE_ANCHOR)
+    def push_cost(self, subplan_2_cost: dict):
+        anchor: CostAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.COST_PUSH_ANCHOR)
         anchor.subplan_2_cost = subplan_2_cost
-        self.anchor_to_handlers[AnchorEnum.COST_REPLACE_ANCHOR] = anchor
+        self.anchor_to_handlers[AnchorEnum.COST_PUSH_ANCHOR] = anchor
 
-    def set_rule(self):
+    def push_rule(self):
         pass
 
-    def set_index(self, indexes: List[Index], drop_other=True):
+    def push_index(self, indexes: List[Index], drop_other=True):
         anchor: IndexAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
-                                                                             AnchorEnum.INDEX_REPLACE_ANCHOR)
+                                                                             AnchorEnum.INDEX_PUSH_ANCHOR)
         anchor.indexes = indexes
         anchor.drop_other = drop_other
-        self.anchor_to_handlers[AnchorEnum.INDEX_REPLACE_ANCHOR] = anchor
+        self.anchor_to_handlers[AnchorEnum.INDEX_PUSH_ANCHOR] = anchor
         pass
 
-    def fetch_hint(self):
+    def pull_hint(self):
         pass
 
-    def fetch_subquery_card(self):
-        anchor: SubQueryCardFetchAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
-                                                                                         AnchorEnum.SUBQUERY_CARD_FETCH_ANCHOR)
-        self.anchor_to_handlers[AnchorEnum.SUBQUERY_CARD_FETCH_ANCHOR] = anchor
+    def pull_subquery_card(self):
+        anchor: SubQueryCardPullAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
+                                                                                         AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR)
+        self.anchor_to_handlers[AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR] = anchor
 
-    def fetch_rewrite_sql(self):
+    def pull_rewrite_sql(self):
         pass
 
-    def fetch_logical_plan(self):
+    def pull_logical_plan(self):
         pass
 
-    def fetch_physical_plan(self):
-        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.PHYSICAL_PLAN_FETCH_ANCHOR)
-        self.anchor_to_handlers[AnchorEnum.PHYSICAL_PLAN_FETCH_ANCHOR] = anchor
+    def pull_physical_plan(self):
+        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.PHYSICAL_PLAN_PULL_ANCHOR)
+        self.anchor_to_handlers[AnchorEnum.PHYSICAL_PLAN_PULL_ANCHOR] = anchor
 
-    def fetch_execution_time(self):
-        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR)
-        self.anchor_to_handlers[AnchorEnum.EXECUTION_TIME_FETCH_ANCHOR] = anchor
+    def pull_execution_time(self):
+        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.EXECUTION_TIME_PULL_ANCHOR)
+        self.anchor_to_handlers[AnchorEnum.EXECUTION_TIME_PULL_ANCHOR] = anchor
 
-    def fetch_record(self):
-        anchor: RecordFetchAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
-                                                                                   AnchorEnum.RECORD_FETCH_ANCHOR)
-        self.anchor_to_handlers[AnchorEnum.RECORD_FETCH_ANCHOR] = anchor
+    def pull_record(self):
+        anchor: RecordPullAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
+                                                                                   AnchorEnum.RECORD_PULL_ANCHOR)
+        self.anchor_to_handlers[AnchorEnum.RECORD_PULL_ANCHOR] = anchor
 
-    def fetch_buffercache(self):
-        anchor: BuffercacheFetchAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
-                                                                                        AnchorEnum.BUFFERCACHE_FETCH_ANCHOR)
-        self.anchor_to_handlers[AnchorEnum.BUFFERCACHE_FETCH_ANCHOR] = anchor
+    def pull_buffercache(self):
+        anchor: BuffercachePullAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
+                                                                                        AnchorEnum.BUFFERCACHE_PULL_ANCHOR)
+        self.anchor_to_handlers[AnchorEnum.BUFFERCACHE_PULL_ANCHOR] = anchor
 
-    def fetch_real_node_cost(self):
+    def pull_real_node_cost(self):
         pass
 
-    def fetch_real_node_card(self):
+    def pull_real_node_card(self):
         pass
 
-    def fetch_estimated_cost(self):
-        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.ESTIMATED_COST_FETCH_ANCHOR)
-        self.anchor_to_handlers[AnchorEnum.ESTIMATED_COST_FETCH_ANCHOR] = anchor
+    def pull_estimated_cost(self):
+        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.ESTIMATED_COST_PULL_ANCHOR)
+        self.anchor_to_handlers[AnchorEnum.ESTIMATED_COST_PULL_ANCHOR] = anchor

@@ -1,6 +1,6 @@
 import unittest
 
-from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PostgreSQLConfig
 from pilotscope.PilotEnum import DatabaseEnum
 
@@ -12,11 +12,11 @@ class MyTestCase(unittest.TestCase):
         self.config = PostgreSQLConfig()
         self.config.db = "stats_tiny"
         self.config.db_type = DatabaseEnum.POSTGRESQL
-        self.state_manager = PilotStateManager(self.config)
+        self.state_manager = PilotDataInteractor(self.config)
         self.sql = "select * from badges limit 10;"
 
     def test_fetch_card(self):
-        self.state_manager.fetch_subquery_card()
+        self.state_manager.pull_subquery_card()
         res = self.state_manager.execute(self.sql)
         print(res)
 

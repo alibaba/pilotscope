@@ -367,7 +367,7 @@ class SparkSQLController(BaseDBController):
 
     # check whether the input key (config name) is modifiable in runtime
     # and set its value to the given value if it is modifiable
-    def set_hint(self, key, value):
+    def push_hint(self, key, value):
         if self.get_connection().conf.isModifiable(key):
             # self.connection.conf.set(key, value)
             sql = "SET {} = {}".format(key, value)
@@ -466,7 +466,7 @@ class SparkSQLController(BaseDBController):
     # done
     def write_knob_to_file(self, knobs):
         for k, v in knobs.items():
-            self.set_hint(k, v)
+            self.push_hint(k, v)
 
     # done
     def recover_config(self):

@@ -3,11 +3,11 @@ sys.path.append("../")
 sys.path.append("../examples/Lero/source")
 import unittest
 
-from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.common.Drawer import Drawer
 from pilotscope.common.Util import pilotscope_exit
-from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
 from pilotscope.PilotEnum import DatabaseEnum, EventEnum
 from pilotscope.PilotModel import PilotModel
@@ -48,9 +48,9 @@ class LeroTest(unittest.TestCase):
             lero_handler = LeroParadigmCardAnchorHandler(lero_pilot_model, config)
 
             # Register what data needs to be cached for training purposes
-            state_manager = PilotStateManager(config)
-            state_manager.fetch_physical_plan()
-            state_manager.fetch_execution_time()
+            state_manager = PilotDataInteractor(config)
+            state_manager.pull_physical_plan()
+            state_manager.pull_execution_time()
 
             # core
             training_data_save_table = "{}_data_table".format(model_name)
@@ -88,9 +88,9 @@ class LeroTest(unittest.TestCase):
             config.set_db_type(DatabaseEnum.POSTGRESQL)
 
             # Register what data needs to be cached for training purposes
-            state_manager = PilotStateManager(config)
-            state_manager.fetch_physical_plan()
-            state_manager.fetch_execution_time()
+            state_manager = PilotDataInteractor(config)
+            state_manager.pull_physical_plan()
+            state_manager.pull_execution_time()
 
             # core
             scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
@@ -101,7 +101,7 @@ class LeroTest(unittest.TestCase):
             sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, and it is {}".format(i, sql))
-                state_manager = PilotStateManager(scheduler.config)
+                state_manager = PilotDataInteractor(scheduler.config)
 
                 state_manager.add_anchors(scheduler.collect_data_state_manager.anchor_to_handlers.values())
 
@@ -117,8 +117,8 @@ class LeroTest(unittest.TestCase):
         try:
             config = self.config
 
-            state_manager = PilotStateManager(config)
-            state_manager.fetch_execution_time()
+            state_manager = PilotDataInteractor(config)
+            state_manager.pull_execution_time()
 
             # core
             scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)

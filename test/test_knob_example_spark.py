@@ -3,8 +3,8 @@ sys.path.append("../")
 import unittest
 from pilotscope.common.TimeStatistic import TimeStatistic
 from examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
-from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
-from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.common.Drawer import Drawer
@@ -63,8 +63,8 @@ class KnobTest(unittest.TestCase):
     def test_knob(self):
         config = self.config
 
-        state_manager = PilotStateManager(config)
-        state_manager.fetch_execution_time()
+        state_manager = PilotDataInteractor(config)
+        state_manager.pull_execution_time()
         # core
         scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
         scheduler.pilot_data_manager = PilotTrainDataManager(PostgreSQLConfig()) # hack 
@@ -92,9 +92,9 @@ class KnobTest(unittest.TestCase):
 
         config = self.config
         self.algo = "spark"
-        state_manager = PilotStateManager(config)
-        state_manager.fetch_execution_time()
-        # state_manager.fetch_subquery_card()
+        state_manager = PilotDataInteractor(config)
+        state_manager.pull_execution_time()
+        # state_manager.pull_subquery_card()
 
         # core
         scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)

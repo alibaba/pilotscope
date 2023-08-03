@@ -2,8 +2,8 @@ import unittest
 import sys
 sys.path.append("../")
 sys.path.append("../examples/Index/index_selection_evaluation")
-from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
-from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.common.Drawer import Drawer
@@ -34,8 +34,8 @@ class IndexTest(unittest.TestCase):
             config.sql_execution_timeout = config.once_request_timeout = 50000
             config.print()
 
-            state_manager = PilotStateManager(config)
-            state_manager.fetch_execution_time()
+            state_manager = PilotDataInteractor(config)
+            state_manager.pull_execution_time()
 
             # core
             scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
@@ -72,8 +72,8 @@ class IndexTest(unittest.TestCase):
         try:
             config = self.config
 
-            state_manager = PilotStateManager(config)
-            state_manager.fetch_execution_time()
+            state_manager = PilotDataInteractor(config)
+            state_manager.pull_execution_time()
 
             # core
             scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)

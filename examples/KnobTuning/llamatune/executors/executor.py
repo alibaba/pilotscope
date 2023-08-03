@@ -197,7 +197,7 @@ class DummyExecutor(ExecutorInterface):
         metrics = np.random.rand(self.num_dbms_metrics)
         return perf, metrics
 
-from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
 
 class SysmlExecutor(ExecutorInterface):
@@ -240,7 +240,7 @@ class SysmlExecutor(ExecutorInterface):
         config.db = kwargs["db_name"]
         config.once_request_timeout = 120
         config.sql_execution_timeout = 120
-        self.state_manager = PilotStateManager(config)
+        self.state_manager = PilotDataInteractor(config)
         self.db_controller = self.state_manager.db_controller
 
     # NOTE: modified from DBTune (MIT liscense)
@@ -313,8 +313,8 @@ class SysmlExecutor(ExecutorInterface):
         with open(self.sqls_file_path,"r") as f:
             sqls = f.readlines()
         try:
-            self.state_manager.set_knob(dbms_info["config"])
-            self.state_manager.fetch_execution_time()
+            self.state_manager.push_knob(dbms_info["config"])
+            self.state_manager.pull_execution_time()
             # first sql: set knob and exec
             accu_execution_time = 0
             execution_times = []
@@ -325,7 +325,7 @@ class SysmlExecutor(ExecutorInterface):
                 execution_times.append(data.execution_time)
                 accu_execution_time += data.execution_time
             # the latter sql: use previous knob and exec
-            self.state_manager.fetch_execution_time()
+            self.state_manager.pull_execution_time()
             for i, sql in enumerate(sqls[1:]):
                 data = self.state_manager.execute(sql, is_reset=(i == len(sqls) - 1))
                 if data is None or data.execution_time is None:
@@ -400,14 +400,14 @@ class SparkExecutor(ExecutorInterface):
             "spark.sql.cbo.joinReorder.enabled":True,
             "spark.sql.pilotscope.enabled": True
         })
-        self.state_manager = PilotStateManager(self.config)
+        self.state_manager = PilotDataInteractor(self.config)
         self.db_controller = self.state_manager.db_controller
         
     def evaluate_configuration(self, dbms_info, benchmark_info):
         sqls = load_sql(self.sqls_file_path)
         try:
-            self.state_manager.set_knob(dbms_info["config"])
-            self.state_manager.fetch_execution_time()
+            self.state_manager.push_knob(dbms_info["config"])
+            self.state_manager.pull_execution_time()
             # first sql: set knob and exec
             accu_execution_time = 0
             execution_times = []
@@ -418,7 +418,7 @@ class SparkExecutor(ExecutorInterface):
                 execution_times.append(data.execution_time)
                 accu_execution_time += data.execution_time
             # the latter sql: use previous knob and exec
-            self.state_manager.fetch_execution_time()
+            self.state_manager.pull_execution_time()
             for i, sql in enumerate(sqls[1:]):
                 data = self.state_manager.execute(sql, is_reset=(i == len(sqls) - 1))
                 if data is None or data.execution_time is None:

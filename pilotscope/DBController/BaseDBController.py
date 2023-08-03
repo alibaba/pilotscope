@@ -80,7 +80,7 @@ class BaseDBController(ABC):
         pass
 
     @abstractmethod
-    def set_hint(self, key, value):
+    def push_hint(self, key, value):
         raise NotImplementedError
 
     @abstractmethod

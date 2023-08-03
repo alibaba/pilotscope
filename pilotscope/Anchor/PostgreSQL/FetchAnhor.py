@@ -1,4 +1,4 @@
-from pilotscope.Anchor.BaseAnchor.FetchAnchorHandler import *
+from pilotscope.Anchor.BaseAnchor.PullAnchorHandler import *
 from pilotscope.PilotEnum import ExperimentTimeEnum
 from pilotscope.common.TimeStatistic import TimeStatistic
 
@@ -7,11 +7,11 @@ class PostgreSQLAnchorMixin:
     pass
 
 
-class PostgreSQLRecordFetchAnchorHandler(RecordFetchAnchorHandler, PostgreSQLAnchorMixin):
+class PostgreSQLRecordPullAnchorHandler(RecordPullAnchorHandler, PostgreSQLAnchorMixin):
     pass
 
 
-class PostgreSQLLogicalPlanFetchAnchorHandler(LogicalPlanFetchAnchorHandler, PostgreSQLAnchorMixin):
+class PostgreSQLLogicalPlanPullAnchorHandler(LogicalPlanPullAnchorHandler, PostgreSQLAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
@@ -26,7 +26,7 @@ class PostgreSQLLogicalPlanFetchAnchorHandler(LogicalPlanFetchAnchorHandler, Pos
         fill_data.logical_plan = anchor_data.physical_plan
 
 
-class PostgreSQLPhysicalPlanFetchAnchorHandler(PhysicalPlanFetchAnchorHandler, PostgreSQLAnchorMixin):
+class PostgreSQLPhysicalPlanPullAnchorHandler(PhysicalPlanPullAnchorHandler, PostgreSQLAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
@@ -41,7 +41,7 @@ class PostgreSQLPhysicalPlanFetchAnchorHandler(PhysicalPlanFetchAnchorHandler, P
         TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
 
-class PostgreSQLEstimatedCostFetchAnchorHandler(EstimatedCostFetchAnchorHandler, PostgreSQLAnchorMixin):
+class PostgreSQLEstimatedCostPullAnchorHandler(EstimatedCostPullAnchorHandler, PostgreSQLAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
@@ -56,7 +56,7 @@ class PostgreSQLEstimatedCostFetchAnchorHandler(EstimatedCostFetchAnchorHandler,
         TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
 
-class PostgreSQLBuffercacheFetchAnchorHandler(BuffercacheFetchAnchorHandler, PostgreSQLAnchorMixin):
+class PostgreSQLBuffercachePullAnchorHandler(BuffercachePullAnchorHandler, PostgreSQLAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
@@ -69,13 +69,13 @@ class PostgreSQLBuffercacheFetchAnchorHandler(BuffercacheFetchAnchorHandler, Pos
         fill_data.buffercache = anchor_data.buffercache
 
 
-class PostgreSQLExecutionTimeFetchAnchorHandler(ExecutionTimeFetchAnchorHandler, PostgreSQLAnchorMixin):
+class PostgreSQLExecutionTimePullAnchorHandler(ExecutionTimePullAnchorHandler, PostgreSQLAnchorMixin):
     pass
 
 
-class PostgreSQLOptimizedSqlFetchAnchorHandler(OptimizedSqlFetchAnchorHandler, PostgreSQLAnchorMixin):
+class PostgreSQLOptimizedSqlPullAnchorHandler(OptimizedSqlPullAnchorHandler, PostgreSQLAnchorMixin):
     pass
 
 
-class PostgreSQLSubQueryCardFetchAnchorHandler(SubQueryCardFetchAnchorHandler, PostgreSQLAnchorMixin):
+class PostgreSQLSubQueryCardPullAnchorHandler(SubQueryCardPullAnchorHandler, PostgreSQLAnchorMixin):
     pass

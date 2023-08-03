@@ -1,6 +1,6 @@
 from pilotscope.Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
-from pilotscope.Anchor.BaseAnchor.FetchAnchorHandler import RecordFetchAnchorHandler
-from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.Anchor.BaseAnchor.PullAnchorHandler import RecordPullAnchorHandler
+from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotEnum import *
 from pilotscope.PilotEvent import *
 from pilotscope.PilotTransData import PilotTransData
@@ -13,11 +13,11 @@ class PilotScheduler:
     def __init__(self, config: PilotConfig) -> None:
         self.config = config
         self.training_data_save_table = None
-        self.collect_data_state_manager: PilotStateManager = None
+        self.collect_data_state_manager: PilotDataInteractor = None
         self.pilot_data_manager: PilotTrainDataManager = PilotTrainDataManager(self.config)
         self.type_2_event = {}
         self.user_tasks = []
-        self.simulate_console_state_manager = PilotStateManager(self.config)
+        self.simulate_console_state_manager = PilotDataInteractor(self.config)
 
 
     def init(self):
@@ -31,8 +31,8 @@ class PilotScheduler:
         if self.collect_data_state_manager is not None:
             state_manager.add_anchors(self.collect_data_state_manager.anchor_to_handlers.values())
 
-        # add recordFetchAnchor
-        record_handler = RecordFetchAnchorHandler(self.config)
+        # add recordPullAnchor
+        record_handler = RecordPullAnchorHandler(self.config)
         state_manager.add_anchor(record_handler.anchor_name, record_handler)
 
         # add all replace anchors from user
@@ -99,7 +99,7 @@ class PilotScheduler:
     def register_anchor_handler(self, anchor: BaseAnchorHandler):
         self.user_tasks.append(anchor)
 
-    def register_collect_data(self, training_data_save_table, state_manager: PilotStateManager):
+    def register_collect_data(self, training_data_save_table, state_manager: PilotDataInteractor):
         self.collect_data_state_manager = state_manager
         self.training_data_save_table = training_data_save_table
 

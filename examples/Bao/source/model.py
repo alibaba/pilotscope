@@ -96,7 +96,7 @@ class BaoRegression:
             self.__in_channels = joblib.load(f)
 
         self.__net = net.BaoNet(self.__in_channels)
-        self.__net.load_state_dict(torch.load(_nn_path(path)))
+        self.__net.load_state_dict(torch.load(_nn_path(path), map_location=torch.device("cuda" if CUDA else "cpu")))
         self.__net.eval()
 
         with open(_y_transform_path(path), "rb") as f:

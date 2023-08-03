@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from pilotscope.DBController.BaseDBController import BaseDBController
-from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotModel import PilotModel

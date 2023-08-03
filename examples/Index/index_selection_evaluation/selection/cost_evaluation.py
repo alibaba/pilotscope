@@ -2,7 +2,7 @@ import logging
 
 from sqlalchemy.exc import OperationalError
 
-from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotTransData import PilotTransData
 from pilotscope.common.Index import Index as pilotIndex
@@ -114,8 +114,8 @@ class CostEvaluation:
         for index in indexes:
             pilot_indexes.append(to_pilot_index(index))
 
-        state_manager.set_index(pilot_indexes)
-        state_manager.fetch_estimated_cost()
+        state_manager.push_index(pilot_indexes)
+        state_manager.pull_estimated_cost()
         total_cost = 0
         for query in workload.queries:
             self.cost_requests += 1

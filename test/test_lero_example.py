@@ -3,11 +3,11 @@ sys.path.append("../")
 sys.path.append("../examples/Lero/source")
 import unittest
 
-from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.common.Drawer import Drawer
 from pilotscope.common.Util import pilotscope_exit
-from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PilotConfig,PostgreSQLConfig
 from pilotscope.PilotEnum import DatabaseEnum, EventEnum
 from pilotscope.PilotModel import PilotModel
@@ -37,9 +37,9 @@ class LeroTest(unittest.TestCase):
             lero_handler = LeroParadigmCardAnchorHandler(lero_pilot_model, config)
 
             # Register what data needs to be cached for training purposes
-            state_manager = PilotStateManager(config)
-            state_manager.fetch_physical_plan()
-            state_manager.fetch_execution_time()
+            state_manager = PilotDataInteractor(config)
+            state_manager.pull_physical_plan()
+            state_manager.pull_execution_time()
 
             # core
             scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
@@ -67,8 +67,8 @@ class LeroTest(unittest.TestCase):
         try:
             config = self.config
 
-            state_manager = PilotStateManager(config)
-            state_manager.fetch_execution_time()
+            state_manager = PilotDataInteractor(config)
+            state_manager.pull_execution_time()
 
             # core
             scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)

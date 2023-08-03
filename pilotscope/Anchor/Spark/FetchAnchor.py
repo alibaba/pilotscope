@@ -8,11 +8,11 @@ class SparkAnchorMixin:
     pass
 
 
-class SparkRecordFetchAnchorHandler(RecordFetchAnchorHandler, SparkAnchorMixin):
+class SparkRecordPullAnchorHandler(RecordPullAnchorHandler, SparkAnchorMixin):
     pass
 
 
-class SparkLogicalPlanFetchAnchorHandler(PostgreSQLLogicalPlanFetchAnchorHandler, SparkAnchorMixin):
+class SparkLogicalPlanPullAnchorHandler(PostgreSQLLogicalPlanPullAnchorHandler, SparkAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
@@ -27,7 +27,7 @@ class SparkLogicalPlanFetchAnchorHandler(PostgreSQLLogicalPlanFetchAnchorHandler
         fill_data.logical_plan = anchor_data.physical_plan
 
 
-class SparkPhysicalPlanFetchAnchorHandler(PostgreSQLPhysicalPlanFetchAnchorHandler, SparkAnchorMixin):
+class SparkPhysicalPlanPullAnchorHandler(PostgreSQLPhysicalPlanPullAnchorHandler, SparkAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
@@ -42,7 +42,7 @@ class SparkPhysicalPlanFetchAnchorHandler(PostgreSQLPhysicalPlanFetchAnchorHandl
         TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
 
-class SparkEstimatedCostFetchAnchorHandler(PostgreSQLEstimatedCostFetchAnchorHandler, SparkAnchorMixin):
+class SparkEstimatedCostPullAnchorHandler(PostgreSQLEstimatedCostPullAnchorHandler, SparkAnchorMixin):
 
     def fetch_from_outer(self, db_controller:SparkSQLController, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
@@ -61,7 +61,7 @@ class SparkEstimatedCostFetchAnchorHandler(PostgreSQLEstimatedCostFetchAnchorHan
         # TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
 
-class SparkBuffercacheFetchAnchorHandler(PostgreSQLEstimatedCostFetchAnchorHandler, SparkAnchorMixin):
+class SparkBuffercachePullAnchorHandler(PostgreSQLEstimatedCostPullAnchorHandler, SparkAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
@@ -74,13 +74,13 @@ class SparkBuffercacheFetchAnchorHandler(PostgreSQLEstimatedCostFetchAnchorHandl
         fill_data.buffercache = anchor_data.buffercache
 
 
-class SparkExecutionTimeFetchAnchorHandler(PostgreSQLExecutionTimeFetchAnchorHandler, SparkAnchorMixin):
+class SparkExecutionTimePullAnchorHandler(PostgreSQLExecutionTimePullAnchorHandler, SparkAnchorMixin):
     pass
 
 
-class SparkOptimizedSqlFetchAnchorHandler(PostgreSQLOptimizedSqlFetchAnchorHandler, SparkAnchorMixin):
+class SparkOptimizedSqlPullAnchorHandler(PostgreSQLOptimizedSqlPullAnchorHandler, SparkAnchorMixin):
     pass
 
 
-class SparkSubQueryCardFetchAnchorHandler(PostgreSQLSubQueryCardFetchAnchorHandler, SparkAnchorMixin):
+class SparkSubQueryCardPullAnchorHandler(PostgreSQLSubQueryCardPullAnchorHandler, SparkAnchorMixin):
     pass

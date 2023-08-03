@@ -1,7 +1,7 @@
 import json
 from concurrent.futures import Future
 
-from pilotscope.Anchor.BaseAnchor.replaceAnchorHandler import ReplaceAnchorHandler
+from pilotscope.Anchor.BaseAnchor.PushAnchorHandler import ReplaceAnchorHandler
 
 all_https = []
 
@@ -16,9 +16,9 @@ def is_number(value):
 
 def extract_anchor_handlers(anchor_2_handlers: dict, is_fetch_anchor=True):
     res = {}
-    from pilotscope.Anchor.BaseAnchor.FetchAnchorHandler import FetchAnchorHandler
+    from pilotscope.Anchor.BaseAnchor.PullAnchorHandler import PullAnchorHandler
 
-    target = FetchAnchorHandler if is_fetch_anchor else ReplaceAnchorHandler
+    target = PullAnchorHandler if is_fetch_anchor else ReplaceAnchorHandler
     for anchor, handler in anchor_2_handlers.items():
         if isinstance(handler, target):
             res[anchor] = handler
@@ -26,16 +26,16 @@ def extract_anchor_handlers(anchor_2_handlers: dict, is_fetch_anchor=True):
 
 
 def extract_handlers(handlers, is_fetch_anchor):
-    from pilotscope.Anchor.BaseAnchor.FetchAnchorHandler import FetchAnchorHandler
-    target = FetchAnchorHandler if is_fetch_anchor else ReplaceAnchorHandler
+    from pilotscope.Anchor.BaseAnchor.PullAnchorHandler import PullAnchorHandler
+    target = PullAnchorHandler if is_fetch_anchor else ReplaceAnchorHandler
     return list(filter(lambda anchor: isinstance(anchor, target), handlers))
 
 
 def extract_table_data_from_anchor(fetch_anchors, data):
-    from pilotscope.Anchor.BaseAnchor.FetchAnchorHandler import FetchAnchorHandler
+    from pilotscope.Anchor.BaseAnchor.PullAnchorHandler import PullAnchorHandler
     column_2_value = {}
     for anchor in fetch_anchors:
-        if isinstance(anchor, FetchAnchorHandler):
+        if isinstance(anchor, PullAnchorHandler):
             anchor.add_data_to_table(column_2_value, data)
         else:
             raise RuntimeError

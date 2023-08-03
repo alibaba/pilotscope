@@ -4,7 +4,7 @@ sys.path.append("../examples/Bao/source")
 
 import time
 
-from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
 from pilotscope.common.Drawer import Drawer
 from pilotscope.common.TimeStatistic import TimeStatistic
 from pilotscope.common.dotDrawer import PlanDotDrawer
@@ -12,7 +12,7 @@ from examples.ExampleConfig import get_time_statistic_img_path, get_time_statist
 import unittest
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.common.Util import pilotscope_exit
-from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
 from pilotscope.PilotEnum import *
 from pilotscope.PilotScheduler import PilotScheduler
@@ -55,11 +55,11 @@ class BaoTest(unittest.TestCase):
             bao_handler = BaoParadigmHintAnchorHandler(bao_pilot_model, config)
 
             # Register what data needs to be cached for training purposes
-            state_manager = PilotStateManager(config)
-            state_manager.fetch_physical_plan()
-            state_manager.fetch_execution_time()
+            state_manager = PilotDataInteractor(config)
+            state_manager.pull_physical_plan()
+            state_manager.pull_execution_time()
             if self.used_cache:
-                state_manager.fetch_buffercache()
+                state_manager.pull_buffercache()
 
             # core
             scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
@@ -95,8 +95,8 @@ class BaoTest(unittest.TestCase):
             config = self.config
             config.once_request_timeout = config.sql_execution_timeout = 50000
             config.print()
-            state_manager = PilotStateManager(config)
-            state_manager.fetch_execution_time()
+            state_manager = PilotDataInteractor(config)
+            state_manager.pull_execution_time()
 
             # core
             scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)

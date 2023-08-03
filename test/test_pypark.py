@@ -45,7 +45,7 @@ class MyTestCase(unittest.TestCase):
 
         
         records = spark.sql("/*pilotscope " +
-            "{\"anchor\":{\"SUBQUERY_CARD_FETCH_ANCHOR\": {\"enable\": true, \"name\": \"SUBQUERY_CARD_FETCH_ANCHOR\"},\"RECORD_FETCH_ANCHOR\":{\"enable\":true,\"name\":\"RECORD_FETCH_ANCHOR\"}}," +
+            "{\"anchor\":{\"SUBQUERY_CARD_PULL_ANCHOR\": {\"enable\": true, \"name\": \"SUBQUERY_CARD_PULL_ANCHOR\"},\"RECORD_PULL_ANCHOR\":{\"enable\":true,\"name\":\"RECORD_PULL_ANCHOR\"}}," +
             "\"port\":9090,\"url\":\"11.164.204.36\",\"enableTerminate\":false,\"tid\":\"1234\"} pilotscope*/ " +
         "SELECT p.Id, pl.PostId FROM posts as p, postLinks as pl, " +
         " postHistory as ph WHERE p.Id = pl.PostId AND pl.PostId = ph.PostId AND " +

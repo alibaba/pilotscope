@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 from pilotscope.DBController.BaseDBController import BaseDBController
-from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
 from pilotscope.PilotEnum import ExperimentTimeEnum
 from pilotscope.PilotEvent import PeriodicDbControllerEvent
 from pilotscope.common.TimeStatistic import TimeStatistic

@@ -102,7 +102,7 @@ class SparkConfig(PilotConfig):
         self.pwd = pwd
         self.jdbc = jdbc
 
-    def set_knob_config(self, db_config_path, backup_db_config_path):
+    def push_knob_config(self, db_config_path, backup_db_config_path):
         self.db_config_path = db_config_path
         self.backup_db_config_path = backup_db_config_path
         return self

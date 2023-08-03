@@ -1,7 +1,7 @@
 from concurrent.futures.thread import ThreadPoolExecutor
 
-from pilotscope.Anchor.BaseAnchor.replaceAnchorHandler import HintAnchorHandler
-from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.Anchor.BaseAnchor.PushAnchorHandler import HintAnchorHandler
+from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotEnum import DatabaseEnum, ExperimentTimeEnum
@@ -94,12 +94,12 @@ class BaoParadigmHintAnchorHandler(HintAnchorHandler):
         return self.bao_hint.arms_hint2val[idx]
 
     def _get_plan(self, sql, hint2val):
-        pilot_state_manager = PilotStateManager(self.config)
+        pilot_state_manager = PilotDataInteractor(self.config)
         # print(hint2val)
-        pilot_state_manager.set_hint(hint2val)
-        pilot_state_manager.fetch_physical_plan()
+        pilot_state_manager.push_hint(hint2val)
+        pilot_state_manager.pull_physical_plan()
         if self.model.have_cache_data:
-            pilot_state_manager.fetch_buffercache()
+            pilot_state_manager.pull_buffercache()
 
         data: PilotTransData = pilot_state_manager.execute(sql)
         plan = data.physical_plan

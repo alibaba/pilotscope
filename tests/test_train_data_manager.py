@@ -1,9 +1,8 @@
 import unittest
 
 from pilotscope.DBController.PostgreSQLController import PostgreSQLController
-from pilotscope.Dao.PilotUserDataManager import PilotUserDataManager
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
-from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
 from pilotscope.PilotEnum import DatabaseEnum
 
 
@@ -39,13 +38,11 @@ class MyTestCase(unittest.TestCase):
 
     def test_read_data_visit_count(self):
         table = "lero"
-        user_data_dao = PilotUserDataManager(self.config)
-        print(user_data_dao.read_training_data_visit_id(table))
+        print(self.train_data_manager.read_training_data_visit_id(table))
 
     def test_set_data_visit_count(self):
         table = "lero"
-        user_data_dao = PilotUserDataManager(self.config)
-        user_data_dao.update_training_data_visit_id(table, 0)
+        self.train_data_manager.update_training_data_visit_id(table, 0)
 
 
 if __name__ == '__main__':

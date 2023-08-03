@@ -1,8 +1,8 @@
 import random
 
 from pilotscope.DBController.BaseDBController import BaseDBController
-from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
-from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
+from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotEnum import ExperimentTimeEnum
 from pilotscope.PilotEvent import PeriodicDbControllerEvent
@@ -16,7 +16,7 @@ from selection.workload import Query
 
 class DbConnector:
 
-    def __init__(self, state_manager: PilotStateManager):
+    def __init__(self, state_manager: PilotDataInteractor):
         super().__init__()
         self.state_manager = state_manager
         self.db_controller = state_manager.db_controller
@@ -55,7 +55,7 @@ class IndexPeriodicDbControllerEvent(PeriodicDbControllerEvent):
             "benchmark_name": self.config.db, "budget_MB": 250, "max_index_width": 2
         }
 
-        connector = DbConnector(PilotStateManager(self.config, DBControllerFactory.get_db_controller(self.config,
+        connector = DbConnector(PilotDataInteractor(self.config, DBControllerFactory.get_db_controller(self.config,
                                                                                                      enable_simulate_index=True)))
         algo = ExtendAlgorithm(connector, parameters=parameters)
         indexes = algo.calculate_best_indexes(workload)

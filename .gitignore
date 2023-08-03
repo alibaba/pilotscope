@@ -18,3 +18,5 @@ dist/**
 *.pdf
 *.xlsx
 *.png
+cacheData/**
+examples/ExampleData/**

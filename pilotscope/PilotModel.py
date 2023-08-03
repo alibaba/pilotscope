@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
 from pilotscope.common.Cache import Cache
 
 
