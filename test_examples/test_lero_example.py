@@ -63,40 +63,6 @@ class LeroTest(unittest.TestCase):
         finally:
             pilotscope_exit()
 
-    def test_pg_plan(self):
-        try:
-            config = self.config
-
-            state_manager = PilotDataInteractor(config)
-            state_manager.pull_execution_time()
-
-            # core
-            scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
-
-            scheduler.register_collect_data(pg_stats_test_result_table, state_manager)
-
-            # start
-            scheduler.init()
-
-            print("start to test sql")
-            sqls = load_test_sql(config.db)
-            for i, sql in enumerate(sqls):
-                print("current is the {}-th sql, and it is {}".format(i, sql))
-                scheduler.simulate_db_console(sql)
-        finally:
-            pilotscope_exit()
-
-    def test_compare_performance(self):
-
-        data_manager = PilotTrainDataManager(self.config)
-        pg_results = list(data_manager.read_all(self.test_data_table)["execution_time"])
-        algo_results = list(data_manager.read_all(pg_stats_test_result_table)["execution_time"])
-        Drawer.draw_bar(
-            {"PostgreSQL": pg_results, "Lero": algo_results},
-            file_name="lero_performance"
-        )
-
-
 
 if __name__ == '__main__':
     unittest.main()

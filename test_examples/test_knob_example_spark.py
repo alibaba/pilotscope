@@ -87,34 +87,7 @@ class KnobTest(unittest.TestCase):
             print("{}-th sql OK".format(i),flush = True)
         name_2_value = TimeStatistic.get_sum_data()
         Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db), is_rotation=True)
-    
-    def test_default_knob(self):
-
-        config = self.config
-        self.algo = "spark"
-        state_manager = PilotDataInteractor(config)
-        state_manager.pull_execution_time()
-        # state_manager.pull_subquery_card()
-
-        # core
-        scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
-        scheduler.pilot_data_manager = PilotTrainDataManager(PostgreSQLConfig()) # hack 
-        scheduler.register_collect_data("default_knob_data_spark_4", state_manager)
-        
-        scheduler.init()
-        sqls = load_test_sql(config.db)
-        for i, sql in enumerate(sqls):
-            print("current is the {}-th sql, and it is {}".format(i, sql))
-            TimeStatistic.start(ExperimentTimeEnum.PIPE_END_TO_END)
-            scheduler.simulate_db_console(sql)
-            TimeStatistic.end(ExperimentTimeEnum.PIPE_END_TO_END)
-            TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo, config.db))
-            # TimeStatistic.print()
-            print("{}-th sql OK".format(i),flush = True)
-        name_2_value = TimeStatistic.get_sum_data()
-        Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db), is_rotation=True)
-
-
+ 
 if __name__ == '__main__':
     try:
         unittest.main()

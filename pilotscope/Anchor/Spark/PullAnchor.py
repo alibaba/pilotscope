@@ -1,4 +1,4 @@
-from pilotscope.Anchor.PostgreSQL.FetchAnhor import *
+from pilotscope.Anchor.PostgreSQL.PullAnhor import *
 from pilotscope.DBController.SparkSQLController import SparkSQLController
 from pilotscope.PilotEnum import ExperimentTimeEnum
 from pilotscope.common.TimeStatistic import TimeStatistic

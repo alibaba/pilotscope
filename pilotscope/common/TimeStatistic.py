@@ -91,3 +91,10 @@ class TimeStatistic:
         for name in cls._total_time.keys():
             name_2_values[name] = cls._count[name]
         return name_2_values
+
+    @classmethod
+    def clear(cls):
+        cls._start_time = {}
+        cls._count = {}
+        cls._total_time = {}
+        cls._lock = Lock()

@@ -68,7 +68,7 @@ class BaoTest(unittest.TestCase):
                                             state_manager=state_manager)
 
             pretraining_event = BaoPretrainingModelEvent(config, bao_pilot_model, self.pretraining_data_table,
-                                                         enable_collection=False,
+                                                         enable_collection=True,
                                                          enable_training=True)
             scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
             # start
@@ -81,32 +81,9 @@ class BaoTest(unittest.TestCase):
                 scheduler.simulate_db_console(sql)
                 TimeStatistic.end(ExperimentTimeEnum.SQL_END_TO_END)
             TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo, config.db))
-            self.draw_time_statistic()
+            name_2_value = TimeStatistic.get_average_data()
+            Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db), is_rotation=True)
             print("run ok")
-        finally:
-            pilotscope_exit()
-
-    def test_pg_plan(self):
-        try:
-            config = self.config
-            config.once_request_timeout = config.sql_execution_timeout = 50000
-            config.print()
-            state_manager = PilotDataInteractor(config)
-            state_manager.pull_execution_time()
-
-            # core
-            scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
-
-            scheduler.register_collect_data(self.pg_test_data_table, state_manager)
-
-            # start
-            scheduler.init()
-
-            print("start to test sql")
-            sqls = load_test_sql(config.db)
-            for i, sql in enumerate(sqls):
-                print("current is the {}-th sql, and it is {}".format(i, sql))
-                scheduler.simulate_db_console(sql)
         finally:
             pilotscope_exit()
 
@@ -115,20 +92,6 @@ class BaoTest(unittest.TestCase):
         df = train_data_manager.read_all(self.pretraining_data_table)
         res = PlanDotDrawer.get_plan_dot_str(df["plan"][2])
         pass
-
-    def draw_time_statistic(self):
-        name_2_value = TimeStatistic.get_average_data()
-        # name_2_value = TimeStatistic.get_sum_data()
-        Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db), is_rotation=True)
-
-    def test_compare_performance(self):
-        data_manager = PilotTrainDataManager(self.config)
-        pg_results = list(data_manager.read_all(self.pg_test_data_table)["execution_time"])
-        algo_results = list(data_manager.read_all(self.test_data_table)["execution_time"])
-        Drawer.draw_bar(
-            {"PostgreSQL": pg_results, "Bao": algo_results},
-            file_name="bao_performance"
-        )
 
 
 if __name__ == '__main__':
