@@ -58,7 +58,7 @@ class MyTestCase(unittest.TestCase):
         res = self.state_manager.execute(sql)
         origin_cost = res.estimated_cost
         print("index_cost is {}, origin_cost is {}".format(index_cost, origin_cost))
-        self.assertFalse(abs(origin_cost - index_cost) < 100)
+        self.assertTrue(origin_cost - index_cost > 0)
 
     def test_index_batch(self):
         sqls = ["select date from badges where date=1406838696",

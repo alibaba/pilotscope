@@ -1,3 +1,6 @@
+import sys
+sys.path.append("../")
+sys.path.append("../examples/Lero/source")
 import unittest
 
 from pilotscope.Dao.PilotTrainDataManager import PilotTrainDataManager
@@ -5,7 +8,7 @@ from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.common.Drawer import Drawer
 from pilotscope.common.Util import pilotscope_exit
 from pilotscope.DataFetcher.PilotStateManager import PilotStateManager
-from pilotscope.PilotConfig import PilotConfig
+from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
 from pilotscope.PilotEnum import DatabaseEnum, EventEnum
 from pilotscope.PilotModel import PilotModel
 from pilotscope.PilotScheduler import PilotScheduler
@@ -18,8 +21,8 @@ from examples.utils import load_test_sql
 
 class LeroTest(unittest.TestCase):
     def setUp(self):
-        self.config: PilotConfig = PilotConfig()
-        self.config.db = "stats"
+        self.config: PilotConfig = PostgreSQLConfig()
+        self.config.db = "stats_tiny"
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.model_name = "lero_pair"
         self.test_data_table = "{}_test_data_table".format(self.model_name)
@@ -36,11 +39,10 @@ class LeroTest(unittest.TestCase):
             else:
                 print("Using CPU")
 
-            config: PilotConfig = PilotConfig()
-            config.db = "stats"
+            config = self.config
             config.set_db_type(DatabaseEnum.POSTGRESQL)
 
-            model_name = "leroDynamic"
+            model_name = "lero_pair" # This test can only work when existing a model
             lero_pilot_model: PilotModel = LeroPilotModel(model_name)
             lero_pilot_model.load()
             lero_handler = LeroParadigmCardAnchorHandler(lero_pilot_model, config)
@@ -68,7 +70,7 @@ class LeroTest(unittest.TestCase):
             scheduler.register_event(EventEnum.PERIOD_TRAIN_EVENT, period_train_event)
 
             # start
-            scheduler.start()
+            scheduler.init()
 
             # exit()
             print("start to dynamic train and test sql")

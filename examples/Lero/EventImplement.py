@@ -77,7 +77,7 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
                 column_2_value["time"] = data.execution_time
                 column_2_value["scale"] = f
                 column_2_value_list.append(column_2_value)
-        return column_2_value_list
+        return column_2_value_list, True
 
     def _custom_pretrain_model(self, train_data_manager: PilotTrainDataManager, existed_user_model):
         data: DataFrame = train_data_manager.read_all(self.save_table_name)
