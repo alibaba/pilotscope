@@ -4,7 +4,7 @@ import re
 import subprocess
 import time
 
-import pyhdb
+# import pyhdb
 
 from selection.database_connector import DatabaseConnector
 

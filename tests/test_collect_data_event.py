@@ -9,6 +9,10 @@ from pilotscope.PilotEvent import PeriodCollectionDataEvent
 from pilotscope.PilotSysConfig import PilotSysConfig
 
 count = 0
+def my_print():
+    global count
+    count += 1
+    print("count {}".format(count))
 
 
 class UserDataCollector(PeriodCollectionDataEvent):
@@ -42,9 +46,3 @@ class MyTestCase(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-
-def my_print():
-    global count
-    count += 1
-    print("count {}".format(count))

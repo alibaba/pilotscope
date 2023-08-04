@@ -60,47 +60,10 @@ class IndexTest(unittest.TestCase):
             TimeStatistic.end(ExperimentTimeEnum.PIPE_END_TO_END)
             TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo, config.db))
 
-            self.draw_time_statistic()
+            name_2_value = TimeStatistic.get_sum_data()
+            Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db), is_rotation=True)
         finally:
             pilotscope_exit()
-
-    def draw_time_statistic(self):
-        name_2_value = TimeStatistic.get_sum_data()
-        Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db), is_rotation=True)
-
-    def test_pg(self):
-        try:
-            config = self.config
-
-            state_manager = PilotDataInteractor(config)
-            state_manager.pull_execution_time()
-
-            # core
-            scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
-
-            scheduler.register_collect_data("default_index_data", state_manager)
-
-            # start
-            scheduler.init()
-            db_controller = DBControllerFactory.get_db_controller(config)
-            db_controller.drop_all_indexes()
-            print("start to test sql")
-            sqls = load_test_sql(self.config.db)[0:10]
-            for i, sql in enumerate(sqls):
-                print("current is the {}-th sql, and it is {}".format(i, sql))
-                scheduler.simulate_db_console(sql)
-        finally:
-            pilotscope_exit()
-
-    def test_compare_performance(self):
-        data_manager = PilotTrainDataManager(self.config)
-        pg_results = list(data_manager.read_all("default_index_data")["execution_time"])
-        extend_results = list(data_manager.read_all("extend_index_data")["execution_time"])
-        drawer = Drawer()
-        Drawer.draw_bar(
-            {"PostgreSQL": pg_results, "Extend": extend_results},
-            file_name="extend_index_performance"
-        )
 
 
 if __name__ == '__main__':

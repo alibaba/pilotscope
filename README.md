@@ -4,7 +4,13 @@ run
 pip install . -e
 ```
 
-to install pilotscope
+to install pilotscope.
+
+install all requirements for all examples
+
+```
+pip install -e .[dev]
+```
 
 install stats_tiny dataset for test:
 

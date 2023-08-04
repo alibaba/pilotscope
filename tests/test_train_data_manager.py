@@ -12,12 +12,12 @@ class MyTestCase(unittest.TestCase):
         super().__init__(methodName)
         self.config = PostgreSQLConfig()
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
-        self.config.db = "PilotScopeMeta"
-        self.controller = PostgreSQLController(self.config, allow_to_create_db=True)
+        # self.config.db = "PilotScopeMeta"
+        # self.controller = PostgreSQLController(self.config, allow_to_create_db=True)
         self.train_data_manager = PilotTrainDataManager(self.config)
         self.table_name = "lero"
 
-    def test_create_table(self):
+    def test_0_create_table(self):
         data = {"name": "wlg", "age": 10}
         self.train_data_manager._create_table_if_absence(self.table_name, data)
 

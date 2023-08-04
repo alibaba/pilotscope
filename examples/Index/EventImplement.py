@@ -9,9 +9,9 @@ from pilotscope.PilotEvent import PeriodicDbControllerEvent
 from pilotscope.common.Index import Index as PilotIndex
 from pilotscope.common.TimeStatistic import TimeStatistic
 from examples.utils import load_training_sql, to_pilot_index, load_test_sql
-from selection.algorithms.extend_algorithm import ExtendAlgorithm
-from selection.index_selection_evaluation import to_workload
-from selection.workload import Query
+from examples.Index.index_selection_evaluation.selection.algorithms.extend_algorithm import ExtendAlgorithm
+from examples.Index.index_selection_evaluation.selection.index_selection_evaluation import to_workload
+from examples.Index.index_selection_evaluation.selection.workload import Query
 
 
 class DbConnector:

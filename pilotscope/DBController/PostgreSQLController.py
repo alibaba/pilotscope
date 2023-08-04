@@ -47,7 +47,7 @@ class PostgreSQLController(BaseDBController):
 
     def get_available_extensions(self):
         sql = ("SELECT name, default_version, installed_version FROM"
-               " pg_available_extensions ORDER BY name;")
+               " pg_available_extensions WHERE installed_version is not NULL ORDER BY name;")
         res = self.execute(sql, fetch=True)
         extensions = []
         for row in res:

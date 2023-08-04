@@ -359,13 +359,13 @@ class SysmlExecutor(ExecutorInterface):
             self.db_controller.recover_config()
 
 
-from pilotscope.DBController.SparkSQLController import SparkSQLController, SparkConfig, SUCCESS, FAILURE, SparkSQLDataSourceEnum
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotEnum import DatabaseEnum
 
 class SparkExecutor(ExecutorInterface):
     def __init__(self, spaces, storage, parse_metrics=False, num_dbms_metrics=None, **kwargs):
+        from pilotscope.DBController.SparkSQLController import SparkConfig, SparkSQLDataSourceEnum
         self.parse_metrics = parse_metrics
         self.num_dbms_metrics = num_dbms_metrics
         self.sqls_file_path=kwargs["sqls_file_path"]
