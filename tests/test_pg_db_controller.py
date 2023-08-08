@@ -91,6 +91,11 @@ class MyTestCase(unittest.TestCase):
     #     recover_imdb_index(self.db_controller)
     #     res = self.db_controller.get_all_indexes()
     #     print(res)
+    def test_get_column_number_of_distinct_value(self):
+        res = self.db_controller.get_column_number_of_distinct_value(self.table, self.column)
+        print(res)
+        self.assertTrue(res == 784)
+
     @classmethod
     def tearDownClass(cls):
         cls.db_controller.drop_table_if_existence(cls.test_table)

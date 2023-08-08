@@ -259,6 +259,9 @@ class PostgreSQLController(BaseDBController):
     def get_relation_content(self, relation_names, fetch_column_name = False):
         sql = 'SELECT * from {}'.format(relation_names)
         return self.execute(sql, fetch = True, fetch_column_name = fetch_column_name)
+    
+    def get_column_number_of_distinct_value(self, table_name, column_name):
+        return self.execute(f"select count(distinct {column_name}) from {table_name};", True)[0][0]
 
 
 class SimulateIndexVisitor:

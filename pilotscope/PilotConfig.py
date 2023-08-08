@@ -50,6 +50,12 @@ class PostgreSQLConfig(PilotConfig):
         self.pgdata = "~"
         self.db_config_path = "/var/lib/pgsql/13.1/data/postgresql.conf"
         self.backup_db_config_path = "postgresql-13.1.conf"
+        
+    def set_postgresql_loacl_config(self, pg_ctl, pgdata, db_config_path, backup_db_config_path):
+        self.pg_ctl = pg_ctl
+        self.pgdata = pgdata
+        self.db_config_path = db_config_path
+        self.backup_db_config_path = backup_db_config_path
 
 
 class SparkConfig(PilotConfig):
