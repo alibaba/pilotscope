@@ -15,7 +15,7 @@ class HttpDataFetcher(DataFetcher):
     def __init__(self, config: PilotConfig) -> None:
         super().__init__(config)
         self.port = self.get_free_port()
-        self.url = config.pilotscope_core_url
+        self.url = config.pilotscope_core_host
         self.server = ServerManager(self.url, self.port)
         self.timeout = self.config.once_request_timeout
 

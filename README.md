@@ -1,7 +1,7 @@
 run
 
 ```
-pip install . -e
+pip install -e .
 ```
 
 to install pilotscope.

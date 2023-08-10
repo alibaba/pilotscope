@@ -10,13 +10,12 @@ pilot_logger = logging.getLogger("PilotScope")
 
 class PilotConfig:
 
-    def __init__(self, db_type: DatabaseEnum, db="stats", pilotscope_core_url="localhost", db_host="localhost") -> None:
+    def __init__(self, db_type: DatabaseEnum, db="stats", pilotscope_core_host="localhost") -> None:
         self.db_type: DatabaseEnum = db_type
 
-        self.pilotscope_core_url = pilotscope_core_url
+        self.pilotscope_core_host = pilotscope_core_host
         self.data_fetch_method = DataFetchMethodEnum.HTTP
         self.db = db
-        self.db_host = db_host
 
         # second
         self.sql_execution_timeout = 100
@@ -34,7 +33,19 @@ class PilotConfig:
 
     def set_db_type(self, db):
         self.db_type = db
-        pass
+    
+    def set_db(self, db):
+        self.db = db
+        
+    def set_sql_execution_timeout(self, time):
+        self.sql_execution_timeout = time
+        
+    def set_once_request_timeout(self, time):
+        self.once_request_timeout = time
+        
+    def set_pilotscope_core_url(self, pilotscope_core_host):
+        self.pilotscope_core_host = pilotscope_core_host        
+        
 
 
 class PostgreSQLConfig(PilotConfig):
@@ -56,6 +67,12 @@ class PostgreSQLConfig(PilotConfig):
         self.pgdata = pgdata
         self.db_config_path = db_config_path
         self.backup_db_config_path = backup_db_config_path
+        
+    def set_host(self, host):
+        self.host = host
+        
+    def set_password(self, pwd):
+        self.pwd = pwd        
 
 
 class SparkConfig(PilotConfig):

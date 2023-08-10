@@ -19,7 +19,7 @@ class MyTestCase(unittest.TestCase):
         self.state_manager = PilotDataInteractor(self.config)
         self.table = "badges"
         self.indexable_column = "date"
-        self.sql = "select * from badges limit 10" 
+        self.sql = "select count(*) from badges as b, users as u where b.userid= u.id and u.upvotes>=0;" 
         self.index_sql = "select date from badges where date=1406838696"
 
     def test_pull_execution_time(self):
