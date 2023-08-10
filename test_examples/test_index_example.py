@@ -34,8 +34,8 @@ class IndexTest(unittest.TestCase):
             config.sql_execution_timeout = config.once_request_timeout = 50000
             config.print()
 
-            state_manager = PilotDataInteractor(config)
-            state_manager.pull_execution_time()
+            data_interactor = PilotDataInteractor(config)
+            data_interactor.pull_execution_time()
 
             # core
             scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
@@ -43,7 +43,7 @@ class IndexTest(unittest.TestCase):
             # allow to pretrain model
             periodic_db_controller_event = IndexPeriodicDbControllerEvent(config, 200, exec_in_init=True)
             scheduler.register_event(EventEnum.PERIODIC_DB_CONTROLLER_EVENT, periodic_db_controller_event)
-            scheduler.register_collect_data(self.test_data_table, state_manager)
+            scheduler.register_collect_data(self.test_data_table, data_interactor)
 
             # start
             TimeStatistic.start(ExperimentTimeEnum.PIPE_END_TO_END)

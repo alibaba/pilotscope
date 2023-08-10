@@ -59,17 +59,17 @@ class SparkBaoTest(unittest.TestCase):
             bao_handler = BaoParadigmHintAnchorHandler(bao_pilot_model, config)
 
             # Register what data needs to be cached for training purposes
-            state_manager = PilotDataInteractor(config)
-            state_manager.pull_physical_plan()
-            state_manager.pull_execution_time()
+            data_interactor = PilotDataInteractor(config)
+            data_interactor.pull_physical_plan()
+            data_interactor.pull_execution_time()
             if self.used_cache:
-                state_manager.pull_buffercache()
+                data_interactor.pull_buffercache()
 
             # core
             scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
             scheduler.register_anchor_handler(bao_handler)
             scheduler.register_collect_data(training_data_save_table=self.test_data_table,
-                                            state_manager=state_manager)
+                                            data_interactor=data_interactor)
 
             pretraining_event = BaoPretrainingModelEvent(config, bao_pilot_model, self.pretraining_data_table,
                                                          enable_collection=True,

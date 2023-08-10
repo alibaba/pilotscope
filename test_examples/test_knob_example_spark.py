@@ -63,12 +63,12 @@ class KnobTest(unittest.TestCase):
     def test_knob(self):
         config = self.config
 
-        state_manager = PilotDataInteractor(config)
-        state_manager.pull_execution_time()
+        data_interactor = PilotDataInteractor(config)
+        data_interactor.pull_execution_time()
         # core
         scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
         scheduler.pilot_data_manager = PilotTrainDataManager(PostgreSQLConfig()) # hack 
-        scheduler.register_collect_data("llamatune_data_spark", state_manager)
+        scheduler.register_collect_data("llamatune_data_spark", data_interactor)
 
         # allow to pretrain model
         periodic_db_controller_event = KnobPeriodicDbControllerEvent(config, 2000, llamatune_config_file = "../examples/KnobTuning/llamatune/configs/llama_config_spark.ini", exec_in_init = True, optimizer_type = "smac") # optimizer_type could be "smac" or "ddpg"

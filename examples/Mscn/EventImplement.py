@@ -18,7 +18,7 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
     def __init__(self, config: PilotConfig, bind_model: PilotModel, save_table_name, enable_collection=True, enable_training=True, training_data_file = None):
         super().__init__(config, bind_model, save_table_name, enable_collection, enable_training)
         self.sqls = []
-        self.pilot_state_manager = PilotDataInteractor(self.config)
+        self.pilot_data_interactor = PilotDataInteractor(self.config)
         self.training_data_file = training_data_file
 
     def _custom_collect_data(self):
@@ -26,11 +26,11 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
         column_2_value_list = []
         for sql in self.sqls:
             print(sql,flush = True)
-            # self.pilot_state_manager.pull_subquery_card()
-            # data: PilotTransData = self.pilot_state_manager.execute(sql)
+            # self.pilot_data_interactor.pull_subquery_card()
+            # data: PilotTransData = self.pilot_data_interactor.execute(sql)
             # for sub_sql in data.subquery_2_card.keys():
-            self.pilot_state_manager.pull_record()
-            data: PilotTransData = self.pilot_state_manager.execute(sql)
+            self.pilot_data_interactor.pull_record()
+            data: PilotTransData = self.pilot_data_interactor.execute(sql)
             column_2_value={"query": sql, "card": data.records[0][0]}
             if(data.records[0][0]>0): # Mscn can only handler card that is larger than 0
                 print(column_2_value)
@@ -43,13 +43,13 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
     def _custom_pretrain_model(self, train_data_manager: PilotTrainDataManager, existed_user_model):
         if not self.training_data_file is None:
             tokens, labels = load_tokens(self.training_data_file, self.training_data_file+".token")
-            schema = load_schema(self.pilot_state_manager.db_controller)
+            schema = load_schema(self.pilot_data_interactor.db_controller)
             model = MscnModel()
             model.fit(tokens, labels, schema)
         else:
             data: DataFrame = train_data_manager.read_all(self._get_table_name())
             tables, joins, predicates = parse_queries(data["query"].values)
-            schema = load_schema(self.pilot_state_manager.db_controller)
+            schema = load_schema(self.pilot_data_interactor.db_controller)
             model = MscnModel()
             model.fit((tables, joins, predicates), data["card"].values, schema)
         return model

@@ -12,11 +12,11 @@ class MscnParadigmCardAnchorHandler(CardAnchorHandler):
         super().__init__(config)
         self.model = model
         self.config = config
-        self.pilot_state_manager = PilotDataInteractor(config)
+        self.pilot_data_interactor = PilotDataInteractor(config)
 
     def user_custom_task(self, sql):
-        self.pilot_state_manager.pull_subquery_card()
-        data: PilotTransData = self.pilot_state_manager.execute(sql)
+        self.pilot_data_interactor.pull_subquery_card()
+        data: PilotTransData = self.pilot_data_interactor.execute(sql)
         assert data.subquery_2_card is not None
         subquery_2_card = data.subquery_2_card
         subquery = subquery_2_card.keys()

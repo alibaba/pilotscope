@@ -240,8 +240,8 @@ class SysmlExecutor(ExecutorInterface):
         config.db = kwargs["db_name"]
         config.once_request_timeout = 120
         config.sql_execution_timeout = 120
-        self.state_manager = PilotDataInteractor(config)
-        self.db_controller = self.state_manager.db_controller
+        self.data_interactor = PilotDataInteractor(config)
+        self.db_controller = self.data_interactor.db_controller
 
     # NOTE: modified from DBTune (MIT liscense)
     def get_internal_metrics(self):
@@ -313,21 +313,21 @@ class SysmlExecutor(ExecutorInterface):
         with open(self.sqls_file_path,"r") as f:
             sqls = f.readlines()
         try:
-            self.state_manager.push_knob(dbms_info["config"])
-            self.state_manager.pull_execution_time()
+            self.data_interactor.push_knob(dbms_info["config"])
+            self.data_interactor.pull_execution_time()
             # first sql: set knob and exec
             accu_execution_time = 0
             execution_times = []
-            data = self.state_manager.execute(sqls[0], is_reset=True)
+            data = self.data_interactor.execute(sqls[0], is_reset=True)
             if data is None or data.execution_time is None:
                 raise TimeoutError
             else:
                 execution_times.append(data.execution_time)
                 accu_execution_time += data.execution_time
             # the latter sql: use previous knob and exec
-            self.state_manager.pull_execution_time()
+            self.data_interactor.pull_execution_time()
             for i, sql in enumerate(sqls[1:]):
-                data = self.state_manager.execute(sql, is_reset=(i == len(sqls) - 1))
+                data = self.data_interactor.execute(sql, is_reset=(i == len(sqls) - 1))
                 if data is None or data.execution_time is None:
                     raise TimeoutError
                     execution_times.append(self.db_controller.config.once_request_timeout)
@@ -400,27 +400,27 @@ class SparkExecutor(ExecutorInterface):
             "spark.sql.cbo.joinReorder.enabled":True,
             "spark.sql.pilotscope.enabled": True
         })
-        self.state_manager = PilotDataInteractor(self.config)
-        self.db_controller = self.state_manager.db_controller
+        self.data_interactor = PilotDataInteractor(self.config)
+        self.db_controller = self.data_interactor.db_controller
         
     def evaluate_configuration(self, dbms_info, benchmark_info):
         sqls = load_sql(self.sqls_file_path)
         try:
-            self.state_manager.push_knob(dbms_info["config"])
-            self.state_manager.pull_execution_time()
+            self.data_interactor.push_knob(dbms_info["config"])
+            self.data_interactor.pull_execution_time()
             # first sql: set knob and exec
             accu_execution_time = 0
             execution_times = []
-            data = self.state_manager.execute(sqls[0], is_reset=True)
+            data = self.data_interactor.execute(sqls[0], is_reset=True)
             if data is None or data.execution_time is None:
                 raise TimeoutError
             else:
                 execution_times.append(data.execution_time)
                 accu_execution_time += data.execution_time
             # the latter sql: use previous knob and exec
-            self.state_manager.pull_execution_time()
+            self.data_interactor.pull_execution_time()
             for i, sql in enumerate(sqls[1:]):
-                data = self.state_manager.execute(sql, is_reset=(i == len(sqls) - 1))
+                data = self.data_interactor.execute(sql, is_reset=(i == len(sqls) - 1))
                 if data is None or data.execution_time is None:
                     raise TimeoutError
                     execution_times.append(self.db_controller.config.once_request_timeout)

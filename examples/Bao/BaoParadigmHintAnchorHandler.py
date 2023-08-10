@@ -94,14 +94,14 @@ class BaoParadigmHintAnchorHandler(HintAnchorHandler):
         return self.bao_hint.arms_hint2val[idx]
 
     def _get_plan(self, sql, hint2val):
-        pilot_state_manager = PilotDataInteractor(self.config)
+        pilot_data_interactor = PilotDataInteractor(self.config)
         # print(hint2val)
-        pilot_state_manager.push_hint(hint2val)
-        pilot_state_manager.pull_physical_plan()
+        pilot_data_interactor.push_hint(hint2val)
+        pilot_data_interactor.pull_physical_plan()
         if self.model.have_cache_data:
-            pilot_state_manager.pull_buffercache()
+            pilot_data_interactor.pull_buffercache()
 
-        data: PilotTransData = pilot_state_manager.execute(sql)
+        data: PilotTransData = pilot_data_interactor.execute(sql)
         plan = data.physical_plan
         if self.model.have_cache_data:
             plan["Buffers"] = data.buffercache

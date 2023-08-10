@@ -22,7 +22,7 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
     def __init__(self, config: PilotConfig, bind_model: PilotModel, save_table_name, enable_collection=True,
                  enable_training=True):
         super().__init__(config, bind_model, save_table_name, enable_collection, enable_training)
-        self.pilot_state_manager = PilotDataInteractor(self.config)
+        self.pilot_data_interactor = PilotDataInteractor(self.config)
         self.bao_hint = BaoParadigmHintAnchorHandler.HintForBao(config.db_type)
         self.sqls = self.load_sql()
         self.cur_sql_idx = 0
@@ -40,12 +40,12 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
         print("current  is {}-th sql, and total sqls is {}".format(self.cur_sql_idx, len(self.sqls)))
         for hint2val in self.bao_hint.arms_hint2val:
             column_2_value = {}
-            self.pilot_state_manager.push_hint(hint2val)
-            self.pilot_state_manager.pull_physical_plan()
-            self.pilot_state_manager.pull_execution_time()
+            self.pilot_data_interactor.push_hint(hint2val)
+            self.pilot_data_interactor.pull_physical_plan()
+            self.pilot_data_interactor.pull_execution_time()
             if self._model.have_cache_data:
-                self.pilot_state_manager.pull_buffercache()
-            data: PilotTransData = self.pilot_state_manager.execute(sql)
+                self.pilot_data_interactor.pull_buffercache()
+            data: PilotTransData = self.pilot_data_interactor.execute(sql)
             if data is not None and data.execution_time is not None:
                 column_2_value["plan"] = data.physical_plan
                 column_2_value["sql"] = sql

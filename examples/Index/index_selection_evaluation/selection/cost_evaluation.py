@@ -105,7 +105,7 @@ class CostEvaluation:
 
     def pilot_calculate_cost(self, workload, indexes):
         self.current_indexes = set(indexes)
-        state_manager = self.db_connector.state_manager
+        data_interactor = self.db_connector.data_interactor
         sqls = []
         pilot_indexes = []
         for query in workload.queries:
@@ -114,12 +114,12 @@ class CostEvaluation:
         for index in indexes:
             pilot_indexes.append(to_pilot_index(index))
 
-        state_manager.push_index(pilot_indexes)
-        state_manager.pull_estimated_cost()
+        data_interactor.push_index(pilot_indexes)
+        data_interactor.pull_estimated_cost()
         total_cost = 0
         for query in workload.queries:
             self.cost_requests += 1
-            total_cost += self._request_cache_pilot(query, indexes, state_manager)
+            total_cost += self._request_cache_pilot(query, indexes, data_interactor)
 
         for i, index in enumerate(indexes):
             pilot_index = pilot_indexes[i]
@@ -131,7 +131,7 @@ class CostEvaluation:
             index.hypopg_oid = pilot_index.hypopg_oid
             index.hypopg_name = pilot_index.hypopg_name
 
-        # state_manager.reset()
+        # data_interactor.reset()
         return total_cost
 
     def write_cost(self, file_name, cost):
@@ -205,7 +205,7 @@ class CostEvaluation:
             self.cache[(query, relevant_indexes)] = cost
             return cost
 
-    def _request_cache_pilot(self, query, indexes, state_manager):
+    def _request_cache_pilot(self, query, indexes, data_interactor):
         q_i_hash = (query, frozenset(indexes))
         if q_i_hash in self.relevant_indexes_cache:
             relevant_indexes = self.relevant_indexes_cache[q_i_hash]
@@ -220,7 +220,7 @@ class CostEvaluation:
         # If no cache hit request cost from database system
         else:
             # cost = self._get_cost(query)
-            data: PilotTransData = state_manager.execute(query.text, is_reset=False)
+            data: PilotTransData = data_interactor.execute(query.text, is_reset=False)
             cost = data.estimated_cost
             self.cache[(query, relevant_indexes)] = cost
             return cost

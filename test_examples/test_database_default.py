@@ -30,13 +30,13 @@ class MyTestCase(unittest.TestCase):
         config.db = self.db
         config.once_request_timeout = config.sql_execution_timeout = 120
         config.print()
-        state_manager = PilotDataInteractor(config)
-        state_manager.pull_execution_time()
+        data_interactor = PilotDataInteractor(config)
+        data_interactor.pull_execution_time()
 
         # core
         scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
 
-        scheduler.register_collect_data(self.pg_test_data_table, state_manager)
+        scheduler.register_collect_data(self.pg_test_data_table, data_interactor)
 
         # start
         scheduler.init()
@@ -79,13 +79,13 @@ class MyTestCase(unittest.TestCase):
             "spark.sql.cbo.joinReorder.enabled":True,
             "spark.sql.pilotscope.enabled": True
         })
-        state_manager = PilotDataInteractor(config)
-        state_manager.pull_execution_time()
+        data_interactor = PilotDataInteractor(config)
+        data_interactor.pull_execution_time()
 
         # core
         scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
         scheduler.pilot_data_manager = PilotTrainDataManager(PostgreSQLConfig()) # hack 
-        scheduler.register_collect_data(self.spark_test_data_table, state_manager)
+        scheduler.register_collect_data(self.spark_test_data_table, data_interactor)
         
         scheduler.init()
         sqls = load_test_sql(config.db)

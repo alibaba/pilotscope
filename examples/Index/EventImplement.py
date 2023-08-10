@@ -16,10 +16,10 @@ from examples.Index.index_selection_evaluation.selection.workload import Query
 
 class DbConnector:
 
-    def __init__(self, state_manager: PilotDataInteractor):
+    def __init__(self, data_interactor: PilotDataInteractor):
         super().__init__()
-        self.state_manager = state_manager
-        self.db_controller = state_manager.db_controller
+        self.data_interactor = data_interactor
+        self.db_controller = data_interactor.db_controller
 
     def get_cost(self, query: Query):
         return self.db_controller.get_estimated_cost(query.text)

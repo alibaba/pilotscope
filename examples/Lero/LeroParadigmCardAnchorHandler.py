@@ -15,7 +15,7 @@ class LeroParadigmCardAnchorHandler(CardAnchorHandler):
         self.model = model
         self.config = config
         self.db_controller = DBControllerFactory.get_db_controller(config)
-        self.pilot_state_manager = PilotDataInteractor(config)
+        self.pilot_data_interactor = PilotDataInteractor(config)
 
     def predict(self, plans):
         leroModel: LeroModelPairWise = self.model.user_model
@@ -32,17 +32,17 @@ class LeroParadigmCardAnchorHandler(CardAnchorHandler):
 
     def user_custom_task(self, sql):
         factors = [0.1, 1, 10]
-        self.pilot_state_manager.pull_subquery_card()
-        data: PilotTransData = self.pilot_state_manager.execute(sql)
+        self.pilot_data_interactor.pull_subquery_card()
+        data: PilotTransData = self.pilot_data_interactor.execute(sql)
         assert data is not None
         subquery_2_card = data.subquery_2_card
 
         plans = []
         for f in factors:
             scale_subquery_2_card = scale_card(subquery_2_card, f)
-            self.pilot_state_manager.push_card(scale_subquery_2_card)
-            self.pilot_state_manager.pull_physical_plan()
-            data: PilotTransData = self.pilot_state_manager.execute(sql)
+            self.pilot_data_interactor.push_card(scale_subquery_2_card)
+            self.pilot_data_interactor.pull_physical_plan()
+            data: PilotTransData = self.pilot_data_interactor.execute(sql)
             if data is None:
                 continue
             plans.append(data.physical_plan)

@@ -29,8 +29,8 @@ class KnobTest(unittest.TestCase):
     def test_knob(self):
         config = self.config
 
-        state_manager = PilotDataInteractor(config)
-        state_manager.pull_execution_time()
+        data_interactor = PilotDataInteractor(config)
+        data_interactor.pull_execution_time()
 
         # core
         scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
@@ -38,7 +38,7 @@ class KnobTest(unittest.TestCase):
         # allow to pretrain model
         periodic_db_controller_event = KnobPeriodicDbControllerEvent(config, 200, llamatune_config_file = "../examples/KnobTuning/llamatune/configs/llama_config.ini", exec_in_init = True, optimizer_type = "smac") # optimizer_type could be "smac" or "ddpg"
         scheduler.register_event(EventEnum.PERIODIC_DB_CONTROLLER_EVENT, periodic_db_controller_event)
-        scheduler.register_collect_data("llamatune_data", state_manager)
+        scheduler.register_collect_data("llamatune_data", data_interactor)
         TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo, config.db))
         # TimeStatistic.print()
         # start

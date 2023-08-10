@@ -44,7 +44,7 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
                  enable_training=True):
         super().__init__(config, bind_model, save_table_name, enable_collection, enable_training)
         self.sqls = []
-        self.pilot_state_manager = PilotDataInteractor(self.config)
+        self.pilot_data_interactor = PilotDataInteractor(self.config)
 
     def load_sql(self):
         self.sqls = load_training_sql(self.config.db)[0:100]
@@ -58,18 +58,18 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
 
         for i, sql in enumerate(self.sqls):
             print("current  is {}-th sql, and total sqls is {}".format(i, len(self.sqls)))
-            self.pilot_state_manager.pull_subquery_card()
-            data: PilotTransData = self.pilot_state_manager.execute(sql)
+            self.pilot_data_interactor.pull_subquery_card()
+            data: PilotTransData = self.pilot_data_interactor.execute(sql)
             if data is None:
                 continue
             subquery_2_card = data.subquery_2_card
             for f in factors:
                 column_2_value = {}
                 scale_subquery_2_card = scale_card(subquery_2_card, f)
-                self.pilot_state_manager.push_card(scale_subquery_2_card)
-                self.pilot_state_manager.pull_physical_plan()
-                self.pilot_state_manager.pull_execution_time()
-                data: PilotTransData = self.pilot_state_manager.execute(sql)
+                self.pilot_data_interactor.push_card(scale_subquery_2_card)
+                self.pilot_data_interactor.pull_physical_plan()
+                self.pilot_data_interactor.pull_execution_time()
+                data: PilotTransData = self.pilot_data_interactor.execute(sql)
                 if data is None:
                     continue
                 column_2_value["sql"] = sql
@@ -102,7 +102,7 @@ class LeroPeriodTrainingEvent(PeriodTrainingEvent):
 class LeroDynamicCollectEventPeriod(PeriodPerCountCollectionDataEvent):
     def __init__(self, save_table_name, config, per_query_count):
         super().__init__(save_table_name, config, per_query_count)
-        self.pilot_state_manager = PilotDataInteractor(self.config)
+        self.pilot_data_interactor = PilotDataInteractor(self.config)
         self.offset = 0
         self._table_name = save_table_name
 
@@ -119,18 +119,18 @@ class LeroDynamicCollectEventPeriod(PeriodPerCountCollectionDataEvent):
         sqls = self.load_per_sqls()
         for i, sql in enumerate(sqls):
             print("Collecting {}-th sql".format(i + (self.offset - 1) * self.per_query_count))
-            self.pilot_state_manager.pull_subquery_card()
-            data: PilotTransData = self.pilot_state_manager.execute(sql)
+            self.pilot_data_interactor.pull_subquery_card()
+            data: PilotTransData = self.pilot_data_interactor.execute(sql)
             if data is None:
                 continue
             subquery_2_card = data.subquery_2_card
             for f in factors:
                 column_2_value = {}
                 scale_subquery_2_card = scale_card(subquery_2_card, f)
-                self.pilot_state_manager.push_card(scale_subquery_2_card)
-                self.pilot_state_manager.pull_physical_plan()
-                self.pilot_state_manager.pull_execution_time()
-                data: PilotTransData = self.pilot_state_manager.execute(sql)
+                self.pilot_data_interactor.push_card(scale_subquery_2_card)
+                self.pilot_data_interactor.pull_physical_plan()
+                self.pilot_data_interactor.pull_execution_time()
+                data: PilotTransData = self.pilot_data_interactor.execute(sql)
                 if data is None:
                     continue
                 column_2_value["sql"] = sql
