@@ -18,6 +18,8 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
     def __init__(self, config: PilotConfig, bind_model: PilotModel, save_table_name, enable_collection=True, enable_training=True, training_data_file = None):
         super().__init__(config, bind_model, save_table_name, enable_collection, enable_training)
         self.sqls = []
+        self.config.set_once_request_timeout(60)
+        self.config.set_sql_execution_timeout(60)
         self.pilot_data_interactor = PilotDataInteractor(self.config)
         self.training_data_file = training_data_file
 
@@ -26,15 +28,15 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
         column_2_value_list = []
         for sql in self.sqls:
             print(sql,flush = True)
-            # self.pilot_data_interactor.pull_subquery_card()
-            # data: PilotTransData = self.pilot_data_interactor.execute(sql)
-            # for sub_sql in data.subquery_2_card.keys():
-            self.pilot_data_interactor.pull_record()
+            self.pilot_data_interactor.pull_subquery_card()
             data: PilotTransData = self.pilot_data_interactor.execute(sql)
-            column_2_value={"query": sql, "card": data.records[0][0]}
-            if(data.records[0][0]>0): # Mscn can only handler card that is larger than 0
+            for sub_sql in data.subquery_2_card.keys():
+                self.pilot_data_interactor.pull_record()
+                data: PilotTransData = self.pilot_data_interactor.execute(sub_sql)
+            if(not data.records is None):
+                column_2_value={"query": sql, "card": data.records[0][0]}
                 print(column_2_value)
-                column_2_value_list.append(column_2_value)
+            column_2_value_list.append(column_2_value)
         return column_2_value_list, True
     
     def _get_table_name(self):
@@ -51,5 +53,6 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
             tables, joins, predicates = parse_queries(data["query"].values)
             schema = load_schema(self.pilot_data_interactor.db_controller)
             model = MscnModel()
-            model.fit((tables, joins, predicates), data["card"].values, schema)
+            # Mscn can only handler card that is larger than 0, so we add 1 to all cards. In prediction we minus it by 1.
+            model.fit((tables, joins, predicates), data["card"].values+1, schema)
         return model

@@ -22,14 +22,13 @@ class MscnParadigmCardAnchorHandler(CardAnchorHandler):
         subquery = subquery_2_card.keys()
         try:
             _, preds_unnorm, t_total = self.model.user_model.predict(subquery)
-            print(subquery, preds_unnorm)
-            res = {sq : str(pred) for sq, pred in zip(subquery, preds_unnorm)}
-            print("OK"*10)
+            # print(subquery, preds_unnorm)
+            # Mscn can only handler card that is larger than 0, so we add 1 to all cards in training. In prediction we minus it by 1.
+            res = {sq : str(max(0.0, pred - 1)) for sq, pred in zip(subquery, preds_unnorm)}
+            print("MSCN estimates OK")
         except Exception as e:
-            raise e
+            # raise e
             print(e)
-            import time
-            time.sleep(1)
             res = subquery_2_card
         return res
 

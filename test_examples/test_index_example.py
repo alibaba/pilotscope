@@ -24,9 +24,7 @@ class IndexTest(unittest.TestCase):
         self.config.db = "stats_tiny"
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.algo = "extend"
-
-        self.test_data_table = "{}_{}_test_data_table2".format(self.algo, self.config.db)
-        self.pg_test_data_table = "{}_{}_test_data_table2".format("pg", self.config.db)
+        self.test_data_table = "{}_{}_test_data_table".format(self.algo, self.config.db)
 
     def test_index(self):
         try:

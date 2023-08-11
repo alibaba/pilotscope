@@ -37,18 +37,17 @@ class MscnTest(unittest.TestCase):
             data_interactor.pull_execution_time()
 
             # core
-            training_data_save_table = "{}_data_table".format(model_name)
-            pretrain_data_save_table = "{}_pretrain_data_table".format(model_name)
+            test_data_save_table = "{}_data_table".format(model_name)
+            pretrain_data_save_table = "{}_pretrain_data_table2".format(model_name)
             scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
             scheduler.register_anchor_handler(mscn_handler)
-            scheduler.register_collect_data(training_data_save_table=training_data_save_table,
+            scheduler.register_collect_data(training_data_save_table=test_data_save_table,
                                             data_interactor=data_interactor)
             # allow to pretrain model           
             pretraining_event = MscnPretrainingModelEvent(config, mscn_pilot_model, pretrain_data_save_table, 
                                                           enable_collection=True,
-                                                          enable_training=True
-                                                          ,training_data_file=None)
-                                                        #)
+                                                          enable_training=True,
+                                                          training_data_file=None)
                                                         # If training_data_file is None, training data will be collected in this run
             scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
 
