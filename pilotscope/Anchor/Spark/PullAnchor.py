@@ -16,15 +16,15 @@ class SparkLogicalPlanPullAnchorHandler(PostgreSQLLogicalPlanPullAnchorHandler, 
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
+        TimeStatistic.start(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
         if fill_data.logical_plan is not None:
             return
 
-        physical_plan = anchor_data.physical_plan
+        if anchor_data.logical_plan is None:
+            anchor_data.logical_plan = db_controller.explain_logical_plan(sql, comment=pilot_comment)
 
-        if physical_plan is None:
-            anchor_data.physical_plan = db_controller.explain_physical_plan(sql, comment=pilot_comment)
-
-        fill_data.logical_plan = anchor_data.physical_plan
+        fill_data.logical_plan = anchor_data.logical_plan
+        TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
 
 class SparkPhysicalPlanPullAnchorHandler(PostgreSQLPhysicalPlanPullAnchorHandler, SparkAnchorMixin):

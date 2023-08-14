@@ -26,6 +26,7 @@ class PilotDataInteractor:
         self.anchor_to_handlers = {}
         self.config = config
         self.port = None
+        self.analyzed = False
         self.data_fetcher: DataFetcher = DataFetchFactory.get_data_fetcher(config)
 
     def execute_batch(self, sqls, is_reset=True) -> List[Optional[PilotTransData]]:
@@ -265,12 +266,16 @@ class PilotDataInteractor:
         anchor: SubQueryCardPullAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
                                                                                          AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR] = anchor
+        if self.config.db_type == DatabaseEnum.SPARK and not self.analyzed:
+            self.db_controller.analyze_all_table_stats()
+            self.analyzed = True
 
     def pull_rewrite_sql(self):
         pass
 
     def pull_logical_plan(self):
-        pass
+        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.LOGICAL_PLAN_PULL_ANCHOR)
+        self.anchor_to_handlers[AnchorEnum.LOGICAL_PLAN_PULL_ANCHOR] = anchor
 
     def pull_physical_plan(self):
         anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.PHYSICAL_PLAN_PULL_ANCHOR)
