@@ -49,8 +49,8 @@ class MyTestCase(unittest.TestCase):
     def test_get_hint_sql(self):
         # print(self.db_controller.connection.sparkContext.getConf().getAll())
         self.db_controller.load_all_tables_from_datasource()
-        self.db_controller.push_hint("spark.sql.autoBroadcastJoinThreshold", "1234")
-        self.db_controller.push_hint("spark.execution.memory", "1234")
+        self.db_controller.set_hint("spark.sql.autoBroadcastJoinThreshold", "1234")
+        self.db_controller.set_hint("spark.execution.memory", "1234")
         self.db_controller.clear_all_tables()
 
     def test_create_table(self):

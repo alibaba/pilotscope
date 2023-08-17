@@ -46,6 +46,11 @@ class PostgreSQLController(BaseDBController):
             self.execute("create extension hypopg")
 
     def get_available_extensions(self):
+        """Get all extensions that have installed in the connected database
+
+        :return: the list of extension names
+        :rtype: list
+        """        
         sql = ("SELECT name, default_version, installed_version FROM"
                " pg_available_extensions WHERE installed_version is not NULL ORDER BY name;")
         res = self.execute(sql, fetch=True)
@@ -55,10 +60,22 @@ class PostgreSQLController(BaseDBController):
         return extensions
 
     def _create_conn_str(self):
-        # postgresql://postgres@localhost/stats
-        return "{}://{}@{}/{}".format("postgresql", self.config.user, self.config.host, self.config.db)
+        # default postgresql://postgres@localhost:5432/stats
+        return "{}://{}@{}:{}/{}".format("postgresql", self.config.user, self.config.host, self.config.port ,self.config.db)
 
     def execute(self, sql, fetch=False, fetch_column_name=False):
+        """Execute a sql statement
+
+        :param sql: sql or extended sql
+        :type sql: str
+        :param fetch: fetch result or not. If True, the function will return a list of tuple representing the result of the sql.
+        :type fetch: bool, optional
+        :param fetch_column_name: fetch the column names of the sql or not. If True, the first item of the result will be a tuple of column names. The parameter only makes sense when parameter ``fetch`` is True.
+        :type fetch_column_name: bool, optional
+        :raises DBStatementTimeoutException: the time of execution exceeded ``self.config.sql_execution_timeout``
+        :return: If ``fetch`` is True, the function will return a list of tuple representing the result of the sql. Otherwise, it will return None
+        :rtype: list or None
+        """        
         row = None
         try:
             self.connect_if_loss()
@@ -81,12 +98,30 @@ class PostgreSQLController(BaseDBController):
                 raise e
         return row
 
-    def push_hint(self, key, value):
+    def set_hint(self, key, value):
+        """Set hint in the connection the controller has
+
+        :param key: the name of the hint
+        :type key: str
+        :param value: the value set to
+        :type value: str
+        """        
         sql = "SET {} TO {}".format(key, value)
         self.execute(sql)
 
     def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
                                  enable_autoincrement_id_key=True):
+        """Create a table according to parameters if absences
+
+        :param table_name: the name of the table you want to create
+        :type table_name: str
+        :param column_2_value: a dict, whose keys is the names of columns and values repersent data type. The values is arbitrary, we only use the type of values. 
+        :type column_2_value: dict
+        :param primary_key_column: If ``primary_key_column`` is a string, the column named ``primary_key_column`` will be the primary key of the new table. If it is None, there will be no primary key.
+        :type primary_key_column: str or None, optional
+        :param enable_autoincrement_id_key: If it is True, the primary key will be autoincrement. It is only meaningful when primary_key_column is a string.
+        :type enable_autoincrement_id_key: bool, optional
+        """        
         column_2_type = self._to_db_data_type(column_2_value)
         metadata_obj = self.metadata
         if not self.exist_table(table_name):
@@ -102,15 +137,31 @@ class PostgreSQLController(BaseDBController):
             self.name_2_table[table_name] = table
     
     def drop_table_if_existence(self, table_name):
+        """Try to drop table named ``table_name``
+
+        :param table_name: the name of the table
+        :type table_name: str
+        """        
         if table_name in self.name_2_table:
             self.name_2_table[table_name].drop(self.engine)
             del self.name_2_table[table_name]
 
     def insert(self, table_name, column_2_value: dict):
+        """Insert a new row into the table with each column's value set as column_2_value.
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :param column_2_value: a dict where the keys are column names and the values are the values to be inserted
+        :type column_2_value: dict
+        """        
         table = self.name_2_table[table_name]
         self.execute(table.insert().values(column_2_value))
 
-    def create_index(self, index):
+    def create_index(self, index: Index):
+        """
+        :param index: a index object
+        :type index: pilotscope.common.Index
+        """        
         if self.enable_simulate_index:
             self.simulate_index_visitor.create_index(index)
         else:
@@ -119,6 +170,10 @@ class PostgreSQLController(BaseDBController):
             self.execute(sql, fetch=False)
 
     def drop_index(self, index):
+        """
+        :param index: an index object
+        :type index: pilotscope.common.Index
+        """   
         if self.enable_simulate_index:
             self.simulate_index_visitor.drop_index(index)
         else:
@@ -133,11 +188,14 @@ class PostgreSQLController(BaseDBController):
         else:
             indexes = self.get_all_indexes()
             for index in indexes:
-                index_name = index.index_name
-                if not index_name.startswith("pgsysml_"):
-                    self.drop_index(index)
+                self.drop_index(index)
 
     def get_all_indexes_byte(self):
+        """If using hypothesis index, i.e., self.enable_simulate_index is True, return the expected size in bytes of all hypothesis indexes; otherwise, return the actual size of the indexes in bytes.
+
+        :return: size of indexes in bytes
+        :rtype: float
+        """        
         if self.enable_simulate_index:
             return self.simulate_index_visitor.get_all_indexes_byte()
         else:
@@ -149,6 +207,11 @@ class PostgreSQLController(BaseDBController):
             return float(result[0][0])
 
     def get_table_indexes_byte(self, table):
+        """If using hypothesis index, i.e., self.enable_simulate_index is True, return the expected size in bytes of all hypothesis indexes of the table; otherwise, return the actual size of the indexes of the table in bytes.
+        :param str table: the name of the table
+        :return: size of indexes in bytes
+        :rtype: float
+        """        
         if self.enable_simulate_index:
             return self.simulate_index_visitor.get_index_byte(table)
         else:
@@ -157,7 +220,14 @@ class PostgreSQLController(BaseDBController):
             result = self.execute(sql, fetch=True)
             return float(result[0][0])
 
-    def get_index_byte(self, index):
+    def get_index_byte(self, index: Index):
+        """If using hypothesis index, i.e., self.enable_simulate_index is True, return the expected size in bytes of the index otherwise, return the actual size of the index in bytes.
+
+        :param index: an index object
+        :type index: pilotscope.common.Index
+        :return: size of the index in bytes
+        :rtype: float
+        """        
         if self.enable_simulate_index:
             return self.simulate_index_visitor.get_index_byte(index)
         else:
@@ -166,6 +236,11 @@ class PostgreSQLController(BaseDBController):
             return int(result[0][0])
 
     def exist_table(self, table_name) -> bool:
+        """If the table named ``table_name`` exist or not
+
+        :return: the the table named ``table_name`` exist, it is return True; otherwise, it is return False
+        :rtype: bool
+        """        
         has_table = self.engine.dialect.has_table(self.get_connection(), table_name)
         if has_table:
             return True
@@ -194,6 +269,11 @@ class PostgreSQLController(BaseDBController):
                                                                                    sql)
 
     def get_buffercache(self):
+        """Get the numbers of buffer per table in the shared buffer cache in real time.
+
+        :return: a dict, of which keys are the names of table and values are the numbers of buffer per table
+        :rtype: dict (str: int)
+        """        
         sql = """
             SELECT c.relname, count(*) AS buffers
             FROM pg_buffercache b JOIN pg_class c
@@ -214,6 +294,8 @@ class PostgreSQLController(BaseDBController):
         return os.system("su {} -c '{}'".format(self.config.user, cmd))
 
     def shutdown(self):
+        """Shutdown the local DBMS
+        """        
         for instance in type(self).instances:
             # if hasattr(instance, "engine"):
             instance.disconnect() # to set DBController's self.connection_thread.conn is None
@@ -222,6 +304,11 @@ class PostgreSQLController(BaseDBController):
         self._surun("{} stop -D {}".format(self.config.pg_ctl, self.config.pgdata))
 
     def start(self):
+        """Try to start DBMS. If fails the first time, recover config to ``self.config.backup_db_config_path`` and raise ``DatabaseStartException``. If fails again after recovering config, raise DatabaseCrashException.
+
+        :raises DatabaseStartException:
+        :raises DatabaseCrashException:
+        """        
         res = self._surun("{} start -D {}".format(self.config.pg_ctl, self.config.pgdata))
         if res != 0: 
             self.recover_config()
@@ -237,13 +324,20 @@ class PostgreSQLController(BaseDBController):
         res = os.popen("su {} -c '{} status -D {}'".format(self.config.user, self.config.pg_ctl, self.config.pgdata))
         return res.read()
 
-    def write_knob_to_file(self, knobs):
+    def write_knob_to_file(self, knobs: dict):
+        """Write knobs to config file
+
+        :param knobs: a dict with keys as the names of the knobs and values as the values to be set.
+        :type knobs: dict
+        """               
         with open(self.config.db_config_path, "a") as f:
             f.write("\n")
             for k, v in knobs.items():
                 f.write("{} = {}\n".format(k, v))
 
     def recover_config(self):
+        """Recover config file to the file at ``self.config.backup_db_config_path``
+        """        
         with open(self.config.backup_db_config_path, "r") as f:
             db_config_file = f.read()
         with open(self.config.db_config_path, "w") as f:
@@ -257,10 +351,26 @@ class PostgreSQLController(BaseDBController):
             return [x[0] for x in self.execute(sql, fetch = True)]
 
     def get_relation_content(self, relation_names, fetch_column_name = False):
+        """Get the whole content of a relation or table
+        
+        :param relation_names: the name of the relation or table
+        :type relation_names: str
+        :param fetch_column_name: fetch the column names of the sql or not. If True, the first item of the result will be a tuple of column names.
+        :type fetch_column_name: bool, optional
+        :return: a list of tuple representing the result of the whole content of the relation or table
+        """   
         sql = 'SELECT * from {}'.format(relation_names)
         return self.execute(sql, fetch = True, fetch_column_name = fetch_column_name)
     
     def get_column_number_of_distinct_value(self, table_name, column_name):
+        """Get the number of distinct value of a column
+
+        :param table_name: the name of the table that the column belongs to
+        :type table_name: str
+        :param column_name: the name of the column
+        :type column_name: str
+        :return: the number of distinct value, type of which is same as the data of the column
+        """    
         return self.execute(f"select count(distinct {column_name}) from {table_name};", True)[0][0]
 
 

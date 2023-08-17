@@ -9,8 +9,17 @@ from pilotscope.PilotConfig import PilotConfig
 from pilotscope.common.Index import Index
 
 
-class BaseDBController(ABC):
+class BaseDBController(ABC):    
     def __init__(self, config, echo=True, allow_to_create_db=False):
+        """ 
+
+        :param config: The database configuration information.
+        :type config: pilotscope.PilotConfig
+        :param echo: if True, the sqlachemy connection pool will log informational output such as when connections are invalidated as well as when connections are recycled to the default log handler, which defaults to sys.stdout for output. defaults to True
+        :type echo: bool, optional
+        :param allow_to_create_db: defaults to False
+        :type allow_to_create_db: bool, optional
+        """        
         self.config = config
         self.allow_to_create_db = allow_to_create_db
         self.echo = echo
@@ -36,16 +45,21 @@ class BaseDBController(ABC):
 
         return create_engine(conn_str, echo=self.echo, pool_size=10, pool_recycle=3600,
                              connect_args={
-                                 "options": "-c statement_timeout={}".format(self.config.sql_execution_timeout * 1000)},
+                                 "options": "-c statement_timeout={}".format(int(self.config.sql_execution_timeout * 1000))},
                              client_encoding='utf8', isolation_level="AUTOCOMMIT")
 
     def get_connection(self):
+        """Get the connection of DBController
+
+        :return: the connection object of sqlalchemy in thread-local data
+        :rtype: ``Connection`` of sqlalchemy
+        """        
         return self.connection_thread.conn
 
     def connect_if_loss(self):
         if not self.is_connect():
             self.connection_thread.conn = self.engine.connect()
-        pass
+
 
     def disconnect(self):
         if self.is_connect():
@@ -53,6 +67,11 @@ class BaseDBController(ABC):
             self.connection_thread.conn = None
 
     def is_connect(self):
+        """If self have connected, return True. Otherwise, return False. Note that if the DBMS is stopped from outside, the return value of this function will not change.
+
+        :return: if self connected or not
+        :rtype: bool
+        """        
         return hasattr(self.connection_thread, "conn") and self.connection_thread.conn is not None
 
     @abstractmethod
@@ -80,7 +99,7 @@ class BaseDBController(ABC):
         pass
 
     @abstractmethod
-    def push_hint(self, key, value):
+    def set_hint(self, key, value):
         raise NotImplementedError
 
     @abstractmethod
@@ -136,29 +155,73 @@ class BaseDBController(ABC):
         return inspect(self.engine)
 
     def get_table_column_name(self, table_name):
+        """Get all column names of a table
+
+        :param table_name: the names of the table 
+        :type table_name: str
+        :return: the list of the names of column
+        :rtype: list
+        """        
         return [c.key for c in self.name_2_table[table_name].c]
     
     def get_table_row_count(self, table_name):
+        """Get the row count of the a table
+
+        :param table_name: the name of the table 
+        :type table_name: str
+        :return: the row count
+        :rtype: int
+        """        
         stmt = select(func.count()).select_from(self.name_2_table[table_name])
         result = self.execute(stmt, fetch=True)
         return result[0][0]
     
     def get_column_max(self, table_name, column_name):
+        """Get the maximum  of a column
+
+        :param table_name: the name of the table that the column belongs to
+        :type table_name: str
+        :param column_name: the name of the column
+        :type column_name: str
+        :return: the maximum, type of which is same as the data of the column
+        """    
         stmt = select(func.max(self.name_2_table[table_name].c[column_name])).select_from(self.name_2_table[table_name])
         result = self.execute(stmt, fetch=True)
         return result[0][0]
 
     def get_column_min(self, table_name, column_name):
+        """Get the minimum of a column
+
+        :param table_name: the name of the table that the column belongs to
+        :type table_name: str
+        :param column_name: the name of the column
+        :type column_name: str
+        :return: the maximum, type of which is same as the data of the column
+        """    
         stmt = select(func.min(self.name_2_table[table_name].c[column_name])).select_from(self.name_2_table[table_name])
         result = self.execute(stmt, fetch=True)
         return result[0][0]
     
     def get_index_number(self, table):
+        """Get the number of index in the table
+
+        :param table: name of the table
+        :type table: str
+        :return: the number of index 
+        :rtype: int
+        """        
         inspector = self._create_inspect()
         n = len(inspector.get_indexes(table))
         return n
 
     def get_existed_index(self, table):
+        """Get all indexes of a table
+
+        :param table: the name of the table
+        :type table: str
+        :return: a list of pilotscope.common.Index
+        :rtype: list
+        """        
         inspector = self._create_inspect()
         db_indexes = inspector.get_indexes(table)
 
@@ -168,6 +231,11 @@ class BaseDBController(ABC):
         return indexes
 
     def get_all_indexes(self):
+        """Get all indexes of all table
+
+        :return: a list of pilotscope.common.Index
+        :rtype: list
+        """        
         inspector = self._create_inspect()
         indexes = []
         for table in inspector.get_table_names():
@@ -177,24 +245,27 @@ class BaseDBController(ABC):
         return indexes
 
     def get_sqla_table(self, table_name):
+        """Get sqlachemy ``Table`` object of a table
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :return: the sqlachemy ``Table`` object of the table
+        :rtype: Table of sqlachemy
+        """        
         if table_name not in self.name_2_table:
             return None
         return self.name_2_table[table_name]
 
-    def get_data(self, query):
-        result = self.execute(query, fetch=True)
-        return DataFrame(result)
-
-    def update_data(self, query):
-        self.execute(query)
-
     def shutdown(self):
+        # shutdown local database 
         pass
 
     def start(self):
+        # start local database 
         pass
 
     def restart(self):
+        # restart local database 
         self.shutdown()
         self.start()
 

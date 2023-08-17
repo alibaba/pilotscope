@@ -47,7 +47,7 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
             tokens, labels = load_tokens(self.training_data_file, self.training_data_file+".token")
             schema = load_schema(self.pilot_data_interactor.db_controller)
             model = MscnModel()
-            model.fit(tokens, labels, schema)
+            model.fit(tokens, labels+1, schema)
         else:
             data: DataFrame = train_data_manager.read_all(self._get_table_name())
             tables, joins, predicates = parse_queries(data["query"].values)

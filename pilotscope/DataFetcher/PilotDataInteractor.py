@@ -21,6 +21,8 @@ from pilotscope.common.Util import pilotscope_exit, extract_anchor_handlers, ext
 
 
 class PilotDataInteractor:
+    """The core module for interacting with DBMS and handling push-and-pull operators
+    """    
     def __init__(self, config: PilotConfig, db_controller: BaseDBController = None) -> None:
         self.db_controller = DBControllerFactory.get_db_controller(config) if db_controller is None else db_controller
         self.anchor_to_handlers = {}
@@ -30,6 +32,15 @@ class PilotDataInteractor:
         self.data_fetcher: DataFetcher = DataFetchFactory.get_data_fetcher(config)
 
     def execute_batch(self, sqls, is_reset=True) -> List[Optional[PilotTransData]]:
+        """Execute sqls sequentially
+
+        :param sqls: list of string, whose items are sqls 
+        :type sqls: list
+        :param is_reset: If it is True, all anchors will be removed after execution
+        :type is_reset: bool, optional
+        :return: list of the results
+        :rtype: List[Optional[PilotTransData]]
+        """        
         datas = []
         flag = False
         for i, sql in enumerate(sqls):
@@ -39,6 +50,18 @@ class PilotDataInteractor:
         return datas
 
     def execute_parallel(self, sqls, parallel_num=10, is_reset=True):
+        """Execute sqls parallelly
+
+        :param sqls: list of string, whose items are sqls 
+        :type sqls: list
+        :param parallel_num: the number of threads, defaults to 10
+        :type parallel_num: int, optional
+        :param is_reset: If it is True, all anchors will be removed after execution
+        :type is_reset: bool, optional
+        :raises RuntimeError: simulate index does not support execute_parallel
+        :return: list of the results
+        :rtype: list of Future
+        """        
         if self.db_controller.enable_simulate_index:
             raise RuntimeError("simulate index does not support execute_parallel")
 
@@ -56,6 +79,15 @@ class PilotDataInteractor:
         return results
 
     def execute(self, sql, is_reset=True) -> Optional[PilotTransData]:
+        """Execute this SQL and finish all registered push-and-pull operators before.
+
+        :param sql: sql statement
+        :type sql: str
+        :param is_reset: If it is True, all anchors will be removed after execution
+        :type is_reset: bool, optional
+        :return: If no exceptions, it returns a ``PilotTransData`` representing extended result; otherwise, it returns None. 
+        :rtype: Optional[PilotTransData]
+        """        
         try:
             TimeStatistic.start("connect_if_loss")
             if not self.db_controller.is_connect():
