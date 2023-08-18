@@ -1,4 +1,4 @@
-from pilotscope.DataFetcher.HttpDataFetch import HttpDataFetcher
+from pilotscope.DataFetcher.HttpDataFetcher import HttpDataFetcher
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotEnum import DataFetchMethodEnum
 

@@ -12,12 +12,6 @@ class MscnPilotModel(PilotModel):
         self.lero_model_save_dir = "../examples/ExampleData/Mscn/Model"
         self.model_path = os.path.join(self.lero_model_save_dir, self.model_name)
 
-    def train(self, pilot_data_manager: PilotTrainDataManager):
-        print("enter MscnPilotModel.train")
-
-    def update(self, pilot_data_manager: PilotTrainDataManager):
-        print("enter MscnPilotModel.update")
-
     def _save_user_model(self, user_model):
         user_model.save(self.model_path)
 

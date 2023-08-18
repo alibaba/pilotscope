@@ -46,7 +46,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_pull_execution_time(self):
         self.data_interactor.pull_execution_time()
-        result = self.data_interactor.execute(self.sql3)
+        result = self.data_interactor.execute(self.sql)
         print(result)
 
     def test_pull_subquery_card(self):

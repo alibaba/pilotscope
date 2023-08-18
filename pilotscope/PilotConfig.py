@@ -53,7 +53,7 @@ class PilotConfig:
         self.sql_execution_timeout = time
         
     def set_once_request_timeout(self, time):
-        """Set the waiting time for fetching data. See ``pilotscope.DataFetchor.HttpDataFetch``
+        """Set the waiting time for fetching data. See ``pilotscope.DataFetchor.HttpDataFetcher``
 
         :param time: time in second
         :type time: int or float
