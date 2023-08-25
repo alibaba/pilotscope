@@ -197,18 +197,18 @@ def load_queries(file_name):
     print("Load {} queries done!".format(len(labels)))
     return queries, labels
 
-def load_schema(db_control):
+def load_schema(db_control: PostgreSQLController):
     PG_NUMERIC_TYPES = set(['SMALLINT', 'INTEGER', 'BIGINT', 'DECIMAL', 'NUMERIC', 'REAL', 'DOUBLE PRECISION', 
         'SMALLSERIAL', 'SERIAL', 'BIGSERIAL'])
     PG_TIMESTEMP_TYPES = set(['TIMESTAMP'])
     def get_table_info(table_name):
         res = dict()
         res['rows'] = db_control.get_table_row_count(table_name)
-        cols = db_control.get_table_column_name(table_name)
+        cols = db_control.get_table_column_name_all_schema(table_name)
         res['columns'] = dict()
         for col in cols:
             col_info = dict()
-            col_info["dtype"] = str(db_control.name_2_table[table_name].c[col].type)
+            col_info["dtype"] = str(db_control.get_sqla_table(table_name).c[col].type)
             col_info["ndv"] = db_control.get_column_number_of_distinct_value(table_name, col)
             if col_info["dtype"] in PG_NUMERIC_TYPES or col_info["dtype"] in PG_TIMESTEMP_TYPES:
                 col_info["max"] = db_control.get_column_max(table_name, col)
@@ -216,7 +216,7 @@ def load_schema(db_control):
             res['columns'][col] = col_info
         return res
     table_2_info={}
-    for table in db_control.name_2_table.keys():
+    for table in db_control.get_all_table_names():
         table_2_info[table]=get_table_info(table)
     return table_2_info
 

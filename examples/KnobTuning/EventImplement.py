@@ -55,7 +55,7 @@ def llamatune(conf):
     results_path = Path(config['storage']['outdir']) / inner_path
 
     # init executor
-    executor = ExecutorFactory.from_config(config, spaces, storage, parse_metrics=(self.optimizer_type == "ddpg"),
+    executor = ExecutorFactory.from_config(config, spaces, storage, parse_metrics=(conf["optimizer"] == "ddpg"),
                                             num_dbms_metrics=config.num_dbms_metrics)
 
     if conf["optimizer"] == "ddpg":

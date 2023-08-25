@@ -66,7 +66,13 @@ class PilotConfig:
         :param pilotscope_core_host: A string representing the host or the IP address
         :type pilotscope_core_host: str
         """        
-        self.pilotscope_core_host = pilotscope_core_host        
+        self.pilotscope_core_host = pilotscope_core_host
+    
+    def set_data_fetch_method(self, data_fetch_method: DataFetchMethodEnum):
+        self.data_fetch_method = data_fetch_method
+        
+    def set_pretraining_model_mode(self, pretraining_model_mode: TrainSwitchMode):
+        self.pretraining_model = pretraining_model_mode
     
     def print(self):
         for key, value in self.__dict__.items():

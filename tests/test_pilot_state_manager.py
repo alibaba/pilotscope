@@ -48,12 +48,18 @@ class MyTestCase(unittest.TestCase):
         sql = self.index_sql
         index_name = "test_index"
 
+        
+        index_before =self.data_interactor.db_controller.get_all_indexes()
+        
+        # Set index for `data` column, select on `data`. The cost is lower 
         index = Index([self.indexable_column], self.table, index_name=index_name)
         self.data_interactor.push_index([index], drop_other=True)
         self.data_interactor.pull_estimated_cost()
         res = self.data_interactor.execute(sql)
         index_cost = res.estimated_cost
-
+        
+        # Reset indexes
+        self.data_interactor.push_index(index_before, drop_other=True)
         self.data_interactor.pull_estimated_cost()
         res = self.data_interactor.execute(sql)
         origin_cost = res.estimated_cost
@@ -66,12 +72,15 @@ class MyTestCase(unittest.TestCase):
                 "select date from badges where date=1406838696"]
         index_name = "test_index_batch"
 
+        index_before =self.data_interactor.db_controller.get_all_indexes()
+
         index = Index([self.indexable_column], self.table, index_name=index_name)
-        self.data_interactor.push_index([index], drop_other=True)
+        self.data_interactor.push_index([index])
         self.data_interactor.pull_estimated_cost()
         datas: List[PilotTransData] = self.data_interactor.execute_batch(sqls)
         index_cost = _accumulate_cost(datas)
 
+        self.data_interactor.push_index(index_before)
         self.data_interactor.pull_estimated_cost()
         datas = self.data_interactor.execute_batch(sqls)
         origin_cost = _accumulate_cost(datas)

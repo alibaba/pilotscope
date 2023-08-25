@@ -6,19 +6,12 @@ from pilotscope.Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
 from pilotscope.PilotEnum import FetchMethod
 from pilotscope.PilotTransData import PilotTransData
 
-name_2_priority = {
-    AnchorEnum.EXECUTION_TIME_PULL_ANCHOR.name: 0,
-    AnchorEnum.PHYSICAL_PLAN_PULL_ANCHOR.name: 1,
-    "OTHER": 9
-}
-
 
 class PullAnchorHandler(BaseAnchorHandler):
     def __init__(self, config):
         super().__init__(config)
         self.anchor_name: str = None
         self.fetch_method = FetchMethod.OUTER
-        self.priority = self._assign_priority()
 
     def add_params_to_db_core(self, params: dict):
         super().add_params_to_db_core(params)
@@ -27,12 +20,6 @@ class PullAnchorHandler(BaseAnchorHandler):
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
         pass
-
-    def _assign_priority(self):
-        if self.anchor_name in name_2_priority:
-            return name_2_priority[self.anchor_name]
-        else:
-            return name_2_priority["OTHER"]
 
     def add_data_to_table(self, column_2_value, data: PilotTransData):
         pass
@@ -44,6 +31,7 @@ class RecordPullAnchorHandler(PullAnchorHandler):
         super().__init__(config)
         self.fetch_method = FetchMethod.INNER
         self.anchor_name = AnchorEnum.RECORD_PULL_ANCHOR.name
+        self.priority = self._assign_priority()
 
 
 class LogicalPlanPullAnchorHandler(PullAnchorHandler):
@@ -52,6 +40,7 @@ class LogicalPlanPullAnchorHandler(PullAnchorHandler):
         super().__init__(config)
         self.fetch_method = FetchMethod.OUTER
         self.anchor_name = AnchorEnum.LOGICAL_PLAN_PULL_ANCHOR.name
+        self.priority = self._assign_priority()
 
     def add_params_to_db_core(self, params: dict):
         super().add_params_to_db_core(params)
@@ -67,6 +56,7 @@ class PhysicalPlanPullAnchorHandler(PullAnchorHandler):
         super().__init__(config)
         self.fetch_method = FetchMethod.OUTER
         self.anchor_name = AnchorEnum.PHYSICAL_PLAN_PULL_ANCHOR.name
+        self.priority = self._assign_priority()
 
     def add_params_to_db_core(self, params: dict):
         super().add_params_to_db_core(params)
@@ -82,6 +72,7 @@ class BuffercachePullAnchorHandler(PullAnchorHandler):
         super().__init__(config)
         self.fetch_method = FetchMethod.OUTER
         self.anchor_name = AnchorEnum.BUFFERCACHE_PULL_ANCHOR.name
+        self.priority = self._assign_priority()
 
     def add_params_to_db_core(self, params: dict):
         super().add_params_to_db_core(params)
@@ -97,6 +88,7 @@ class EstimatedCostPullAnchorHandler(PullAnchorHandler):
         super().__init__(config)
         self.fetch_method = FetchMethod.OUTER
         self.anchor_name = AnchorEnum.ESTIMATED_COST_PULL_ANCHOR.name
+        self.priority = self._assign_priority()
 
     def add_params_to_db_core(self, params: dict):
         super().add_params_to_db_core(params)
@@ -112,6 +104,7 @@ class ExecutionTimePullAnchorHandler(PullAnchorHandler):
         super().__init__(config)
         self.fetch_method = FetchMethod.INNER
         self.anchor_name = AnchorEnum.EXECUTION_TIME_PULL_ANCHOR.name
+        self.priority = self._assign_priority()
 
     def add_data_to_table(self, column_2_value, data: PilotTransData):
         if data.execution_time is not None:
@@ -124,6 +117,7 @@ class OptimizedSqlPullAnchorHandler(PullAnchorHandler):
         super().__init__(config)
         self.fetch_method = FetchMethod.INNER
         self.anchor_name = AnchorEnum.OPTIMIZED_SQL_PULL_ANCHOR.name
+        self.priority = self._assign_priority()
 
 
 class SubQueryCardPullAnchorHandler(PullAnchorHandler):
@@ -132,3 +126,4 @@ class SubQueryCardPullAnchorHandler(PullAnchorHandler):
         super().__init__(config)
         self.fetch_method = FetchMethod.INNER
         self.anchor_name = AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR.name
+        self.priority = self._assign_priority()

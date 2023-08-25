@@ -181,22 +181,23 @@ class PilotDataInteractor:
             extract_anchor_handlers(anchor_2_handlers, is_fetch_anchor=True))
         return len(filter_anchor_2_handlers) > 0
 
-    def _roll_back_db(self):
-        handlers = extract_handlers(self.anchor_to_handlers.values(), is_fetch_anchor=False)
-        [handler.roll_back(self.db_controller) for handler in handlers]
+    # def _roll_back_db(self):
+    #     handlers = extract_handlers(self.anchor_to_handlers.values(), is_fetch_anchor=False)
+    #     [handler.roll_back(self.db_controller) for handler in handlers]
 
     def reset(self):
-        self._roll_back_db()
+        # self._roll_back_db()
         self.anchor_to_handlers.clear()
         self._reset_connection()
 
     def _reset_connection(self, *args, **kwargs):
         # todo
         if self.config.db_type != DatabaseEnum.SPARK:
-            self.db_controller.disconnect()
+            self.db_controller.reset()
 
     def _execute_sqls(self, comment_sql, is_execute_comment_sql):
         handlers = extract_handlers(self.anchor_to_handlers.values(), is_fetch_anchor=False)
+        handlers = sorted(handlers, key= lambda x: x.priority)
         TimeStatistic.start("execute_before_comment_sql")
         for handler in handlers:
             handler.execute_before_comment_sql(self.db_controller)
@@ -235,6 +236,7 @@ class PilotDataInteractor:
         replace_anchor_params = self._get_replace_anchor_params(self.anchor_to_handlers.values())
         anchor_data = AnchorTransData()
         handles = self.anchor_to_handlers.values()
+        handles = sorted(handles, key= lambda x: x.priority)
         for handle in handles:
             if isinstance(handle, PullAnchorHandler) and handle.fetch_method == FetchMethod.OUTER:
                 comment_creator = PilotCommentCreator(anchor_params=replace_anchor_params, enable_terminate_flag=False)
@@ -276,6 +278,7 @@ class PilotDataInteractor:
         self.anchor_to_handlers[AnchorEnum.KNOB_PUSH_ANCHOR] = anchor
 
     def push_cost(self, subplan_2_cost: dict):
+        raise NotImplementedError
         anchor: CostAnchorHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.COST_PUSH_ANCHOR)
         anchor.subplan_2_cost = subplan_2_cost
         self.anchor_to_handlers[AnchorEnum.COST_PUSH_ANCHOR] = anchor

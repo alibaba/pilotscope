@@ -1,7 +1,8 @@
 import os
+import re
 from abc import ABC
 
-from sqlalchemy import Table, Column, text, inspect
+from sqlalchemy import MetaData, Table, Column, text, inspect
 from sqlalchemy.exc import OperationalError
 from typing_extensions import deprecated
 
@@ -24,17 +25,17 @@ class PostgreSQLController(BaseDBController):
         self.disconnect()
         type(self).instances.remove(self)
 
-    def __init__(self, config, echo=False, allow_to_create_db=False, enable_simulate_index=False):
+    def __init__(self, config, echo=True, allow_to_create_db=False, enable_simulate_index=False):
         super().__init__(config, echo, allow_to_create_db)
         self.config: PostgreSQLConfig = config
 
-        self.simulate_index_controller = None
-
         self.enable_simulate_index = enable_simulate_index
+        self._add_extension()
         if self.enable_simulate_index:
             self.simulate_index_visitor = SimulateIndexVisitor(self)
-        self._add_extension()
-        pass
+            for index in super().get_all_indexes():
+                sql = f"SELECT hypopg_hide_index('{index.index_name}'::REGCLASS)"
+                self.execute(sql)
 
     def _add_extension(self):
         extensions = self.get_available_extensions()
@@ -109,54 +110,6 @@ class PostgreSQLController(BaseDBController):
         sql = "SET {} TO {}".format(key, value)
         self.execute(sql)
 
-    def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
-                                 enable_autoincrement_id_key=True):
-        """Create a table according to parameters if absences
-
-        :param table_name: the name of the table you want to create
-        :type table_name: str
-        :param column_2_value: a dict, whose keys is the names of columns and values repersent data type. The values is arbitrary, we only use the type of values. 
-        :type column_2_value: dict
-        :param primary_key_column: If ``primary_key_column`` is a string, the column named ``primary_key_column`` will be the primary key of the new table. If it is None, there will be no primary key.
-        :type primary_key_column: str or None, optional
-        :param enable_autoincrement_id_key: If it is True, the primary key will be autoincrement. It is only meaningful when primary_key_column is a string.
-        :type enable_autoincrement_id_key: bool, optional
-        """        
-        column_2_type = self._to_db_data_type(column_2_value)
-        metadata_obj = self.metadata
-        if not self.exist_table(table_name):
-            columns = []
-            for column, column_type in column_2_type.items():
-                if column == primary_key_column:
-                    columns.append(
-                        Column(column, column_type, primary_key=True, autoincrement=enable_autoincrement_id_key))
-                else:
-                    columns.append(Column(column, column_type))
-            table = Table(table_name, metadata_obj, *columns)
-            table.create(self.engine)
-            self.name_2_table[table_name] = table
-    
-    def drop_table_if_existence(self, table_name):
-        """Try to drop table named ``table_name``
-
-        :param table_name: the name of the table
-        :type table_name: str
-        """        
-        if table_name in self.name_2_table:
-            self.name_2_table[table_name].drop(self.engine)
-            del self.name_2_table[table_name]
-
-    def insert(self, table_name, column_2_value: dict):
-        """Insert a new row into the table with each column's value set as column_2_value.
-
-        :param table_name: the name of the table
-        :type table_name: str
-        :param column_2_value: a dict where the keys are column names and the values are the values to be inserted
-        :type column_2_value: dict
-        """        
-        table = self.name_2_table[table_name]
-        self.execute(table.insert().values(column_2_value))
-
     def create_index(self, index: Index):
         """
         :param index: a index object
@@ -196,29 +149,29 @@ class PostgreSQLController(BaseDBController):
         :return: size of indexes in bytes
         :rtype: float
         """        
+        # Returns size in bytes
         if self.enable_simulate_index:
-            return self.simulate_index_visitor.get_all_indexes_byte()
+            result = self.simulate_index_visitor.get_all_indexes_byte()
         else:
-            # Returns size in bytes
             sql = ("select sum(pg_indexes_size(table_name::text)) from "
-                   "(select table_name from information_schema.tables "
-                   "where table_schema='public') as all_tables;")
-            result = self.execute(sql, fetch=True)
-            return float(result[0][0])
+                    "(select table_name from information_schema.tables "
+                    "where table_schema='public') as all_tables;")
+            result = float(self.execute(sql, fetch=True)[0][0])
+        return result
 
     def get_table_indexes_byte(self, table):
         """If using hypothesis index, i.e., self.enable_simulate_index is True, return the expected size in bytes of all hypothesis indexes of the table; otherwise, return the actual size of the indexes of the table in bytes.
         :param str table: the name of the table
         :return: size of indexes in bytes
         :rtype: float
-        """        
+        """
+        # Returns size in bytes
         if self.enable_simulate_index:
-            return self.simulate_index_visitor.get_index_byte(table)
+            result = self.simulate_index_visitor.get_table_indexes_byte(table)
         else:
-            # Returns size in bytes
             sql = f"select pg_indexes_size('{table}');"
-            result = self.execute(sql, fetch=True)
-            return float(result[0][0])
+            result = float(self.execute(sql, fetch=True)[0][0])
+        return result
 
     def get_index_byte(self, index: Index):
         """If using hypothesis index, i.e., self.enable_simulate_index is True, return the expected size in bytes of the index otherwise, return the actual size of the index in bytes.
@@ -227,24 +180,30 @@ class PostgreSQLController(BaseDBController):
         :type index: pilotscope.common.Index
         :return: size of the index in bytes
         :rtype: float
-        """        
+        """
         if self.enable_simulate_index:
             return self.simulate_index_visitor.get_index_byte(index)
+        sql = f"select pg_table_size('{index.get_index_name()}');"
+        result = int(self.execute(sql, fetch=True)[0][0])
+        return result
+
+    def get_existed_index(self, table):
+        if self.enable_simulate_index:
+            return self.simulate_index_visitor.get_existed_index(table)
         else:
-            sql = f"select pg_table_size('{index.get_index_name()}');"
-            result = self.execute(sql, fetch=True)
-            return int(result[0][0])
+            return super().get_existed_index(table)
 
-    def exist_table(self, table_name) -> bool:
-        """If the table named ``table_name`` exist or not
+    def get_all_indexes(self):
+        if self.enable_simulate_index:
+            return self.simulate_index_visitor.get_all_indexes()
+        else:
+            return super().get_all_indexes()
 
-        :return: the the table named ``table_name`` exist, it is return True; otherwise, it is return False
-        :rtype: bool
-        """        
-        has_table = self.engine.dialect.has_table(self.get_connection(), table_name)
-        if has_table:
-            return True
-        return False
+    def get_index_number(self, table):
+        if self.enable_simulate_index:
+            return self.simulate_index_visitor.get_index_number(table)
+        else:
+            return super().get_index_number(table)
 
     def modify_sql_for_ignore_records(self, sql, is_execute):
         return self.get_explain_sql(sql, is_execute)
@@ -258,8 +217,8 @@ class PostgreSQLController(BaseDBController):
     def explain_execution_plan(self, sql, comment=""):
         return self._explain(sql, comment, True)
 
-    def get_estimated_cost(self, sql):
-        plan = self.explain_physical_plan(sql)
+    def get_estimated_cost(self, sql, comment=""):
+        plan = self.explain_physical_plan(sql, comment=comment)
         return plan["Plan"]["Total Cost"]
 
     def get_explain_sql(self, sql, execute: bool, comment=""):
@@ -343,12 +302,9 @@ class PostgreSQLController(BaseDBController):
         with open(self.config.db_config_path, "w") as f:
             f.write(db_config_file)
 
-    def get_table_column_name(self, table_name):
-        if table_name in self.name_2_table:
-            return super().get_table_column_name(table_name)
-        else:
-            sql = "SELECT column_name FROM information_schema.columns WHERE table_name = '{}';".format(table_name)
-            return [x[0] for x in self.execute(sql, fetch = True)]
+    def get_table_column_name_all_schema(self, table_name):
+        sql = "SELECT column_name FROM information_schema.columns WHERE table_name = '{}';".format(table_name)
+        return [x[0] for x in self.execute(sql, fetch = True)]
 
     def get_relation_content(self, relation_names, fetch_column_name = False):
         """Get the whole content of a relation or table
@@ -379,7 +335,6 @@ class SimulateIndexVisitor:
     def __init__(self, db_controller: PostgreSQLController):
         super().__init__()
         self.db_controller = db_controller
-        self.simulated_indexes = {}
 
     def create_index(self, index: Index):
         columns = index.joined_column_names()
@@ -391,39 +346,64 @@ class SimulateIndexVisitor:
         result = self.db_controller.execute(statement, fetch=True)[0]
         index.hypopg_oid = result[0]
         index.hypopg_name = result[1]
-        self.simulated_indexes[index.hypopg_oid] = index
+
+    def _get_oid_by_indexname(self, index_name):
+        sql = f"SELECT indexrelid FROM hypopg_list_indexes WHERE index_name like '%{index_name}%'"
+        res = self.db_controller.execute(sql, fetch=True)
+        assert len(res) == 1, f"No oid or more than one oid named like '%{index_name}%'"
+        return res[0][0]
+    
+    def _get_oid_of_index(self, index: Index):
+        if index.hypopg_oid is not None:
+            return index.hypopg_oid
+        elif index.hypopg_name is not None:
+            return self._get_oid_by_indexname(index_name=index.hypopg_name)
+        else:
+            return self._get_oid_by_indexname(index_name=index.index_name)
 
     def drop_index(self, index: Index):
-        oid = index.hypopg_oid
+        oid = self._get_oid_of_index(index)
         statement = f"select * from hypopg_drop_index({oid})"
         result = self.db_controller.execute(statement, fetch=True)
         assert result[0][0] is True, f"Could not drop simulated index with oid = {oid}."
 
-        self.simulated_indexes.pop(oid)
-
     def drop_all_indexes(self):
-        indexes = list(self.simulated_indexes.values())
-        for index in indexes:
-            self.drop_index(index)
-        self.simulated_indexes.clear()
+        sql = "select hypopg_reset()"
+        self.db_controller.execute(sql)
 
     def get_all_indexes_byte(self):
-        # todo
-        raise NotImplementedError
+        return self.get_table_indexes_byte("1' or '1'='1")
 
     def get_table_indexes_byte(self, table):
-        # todo
-        raise NotImplementedError
+        sql = f"SELECT sum(hypopg_relation_size(h.indexrelid)) from hypopg() h left join pg_class t on h.indrelid=t.oid where t.relname = '{table}'"
+        res = self.db_controller.execute(sql, fetch=True)[0][0]
+        return 0 if res is None else float(res)
 
     def get_index_byte(self, index: Index):
         try:
-            statement = f"select hypopg_relation_size({index.hypopg_oid})"
+            oid = self._get_oid_of_index(index)
+            statement = f"select hypopg_relation_size({oid})"
             result = self.db_controller.execute(statement, fetch=True)[0][0]
             assert result > 0, "Hypothetical index does not exist."
-            return result
+            return float(result)
         except:
             raise RuntimeError
+        
+    def get_index_number(self, table):
+        sql = f"SELECT COUNT(*) from hypopg() h left join pg_class t on h.indrelid=t.oid where t.relname = '{table}'"
+        return int(self.db_controller.execute(sql, fetch=True)[0][0])
 
     def get_all_indexes(self):
-        # sql = "SELECT * FROM hypopg_list_indexes"
-        raise NotImplementedError
+        return self.get_existed_index("1' or '1'='1")
+    
+    def get_existed_index(self, table):
+        sql = f"SELECT h.indexrelid, h.indexname, hypopg_get_indexdef(h.indexrelid), t.relname from hypopg() h left join pg_class t on h.indrelid=t.oid where t.relname = '{table}'"
+        res = self.db_controller.execute(sql, fetch=True)
+        indexes = []
+        for indexrelid, indexname, indexdef, relname in res:
+            col = [col.strip() for col in re.search(r"\([\S\s]*\)",indexdef).group(0)[1:-1].split(",")]
+            index = Index(columns=col, table=relname, index_name=None)
+            index.hypopg_name = indexname
+            index.hypopg_oid = indexrelid
+            indexes.append(index)
+        return indexes  

@@ -40,6 +40,7 @@ class CardAnchorHandler(ReplaceAnchorHandler):
         super().__init__(config)
         self.anchor_name = AnchorEnum.CARD_PUSH_ANCHOR.name
         self.subquery_2_card = subquery_2_card
+        self.priority = self._assign_priority()
 
     def apply_replace_data(self, sql):
         self.subquery_2_card = self.user_custom_task(sql)
@@ -54,6 +55,7 @@ class KonbAnchorHandler(ReplaceAnchorHandler):
         super().__init__(config)
         self.anchor_name = AnchorEnum.KNOB_PUSH_ANCHOR.name
         self.key_2_value_for_knob = key_2_value_for_knob
+        self.priority = self._assign_priority()
 
     def apply_replace_data(self, sql):
         self.key_2_value_for_knob = self.user_custom_task(sql)
@@ -73,6 +75,7 @@ class CostAnchorHandler(ReplaceAnchorHandler):
         super().__init__(config)
         self.anchor_name = AnchorEnum.COST_PUSH_ANCHOR.name
         self.subplan_2_cost = subplan_2_cost
+        self.priority = self._assign_priority()
 
     def apply_replace_data(self, sql):
         self.subplan_2_cost = self.user_custom_task(sql)
@@ -88,6 +91,7 @@ class HintAnchorHandler(ReplaceAnchorHandler):
         super().__init__(config)
         self.anchor_name = AnchorEnum.HINT_PUSH_ANCHOR.name
         self.key_2_value_for_hint = key_2_value_for_hint
+        self.priority = self._assign_priority()
 
     def apply_replace_data(self, sql):
         self.key_2_value_for_hint = self.user_custom_task(sql)
@@ -110,6 +114,7 @@ class IndexAnchorHandler(ReplaceAnchorHandler):
         self.indexes = indexes
         self.drop_other = drop_other
         self.trigger_type = ReplaceAnchorTriggerEnum.WORKLOAD
+        self.priority = self._assign_priority()
 
     def apply_replace_data(self, sql):
         raise RuntimeError("IndexAnchorHandler should be extended as user task,"

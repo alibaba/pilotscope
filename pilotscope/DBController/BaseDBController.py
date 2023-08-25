@@ -2,7 +2,7 @@ import threading
 from abc import ABC, abstractmethod
 
 from pandas import DataFrame
-from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table, inspect, select, func
+from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table, inspect, select, func, Column
 from sqlalchemy_utils import database_exists, create_database
 
 from pilotscope.PilotConfig import PilotConfig
@@ -28,14 +28,9 @@ class BaseDBController(ABC):
 
     def _db_init(self):
         self.engine = self._create_engine()
-
-        # update info of existed tables
+        
         self.metadata = MetaData()
-        self.metadata.reflect(self.engine)
-        self.name_2_table = {}
-        for table_name, table_info in self.metadata.tables.items():
-            self.name_2_table[table_name] = table_info
-
+        
         self.connect_if_loss()
 
     def _create_engine(self):
@@ -60,6 +55,10 @@ class BaseDBController(ABC):
         if not self.is_connect():
             self.connection_thread.conn = self.engine.connect()
 
+    def reset(self):
+        self.connection_thread.conn.close()
+        self.engine.pool = self.engine.pool.recreate()
+        self.connection_thread.conn = self.engine.connect()
 
     def disconnect(self):
         if self.is_connect():
@@ -154,6 +153,67 @@ class BaseDBController(ABC):
     def _create_inspect(self):
         return inspect(self.engine)
 
+    def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
+                                 enable_autoincrement_id_key=True):
+        """Create a table according to parameters if absences
+
+        :param table_name: the name of the table you want to create
+        :type table_name: str
+        :param column_2_value: a dict, whose keys is the names of columns and values repersent data type. The values is arbitrary, we only use the type of values. 
+        :type column_2_value: dict
+        :param primary_key_column: If ``primary_key_column`` is a string, the column named ``primary_key_column`` will be the primary key of the new table. If it is None, there will be no primary key.
+        :type primary_key_column: str or None, optional
+        :param enable_autoincrement_id_key: If it is True, the primary key will be autoincrement. It is only meaningful when primary_key_column is a string.
+        :type enable_autoincrement_id_key: bool, optional
+        """        
+        if not self.exist_table(table_name):
+            column_2_type = self._to_db_data_type(column_2_value)
+            columns = []
+            for column, column_type in column_2_type.items():
+                if column == primary_key_column:
+                    columns.append(
+                        Column(column, column_type, primary_key=True, autoincrement=enable_autoincrement_id_key))
+                else:
+                    columns.append(Column(column, column_type))
+            table = Table(table_name, self.metadata, *columns, extend_existing=True)
+            table.create(self.engine)
+
+
+    def drop_table_if_existence(self, table_name):
+        """Try to drop table named ``table_name``
+
+        :param table_name: the name of the table
+        :type table_name: str
+        """
+        if self.exist_table(table_name):
+            Table(table_name, self.metadata, autoload_with = self.engine).drop(self.engine)
+        
+    def exist_table(self, table_name) -> bool:
+        """If the table named ``table_name`` exist or not
+
+        :return: the the table named ``table_name`` exist, it is return True; otherwise, it is return False
+        :rtype: bool
+        """        
+        return self.engine.dialect.has_table(self.get_connection(), table_name)
+    
+    def get_all_sqla_tables(self):
+        self.metadata.reflect(self.engine)
+        return self.metadata.tables
+    
+    def get_all_table_names(self):
+        return list(self.get_all_sqla_tables().keys())
+    
+    def insert(self, table_name, column_2_value: dict):
+        """Insert a new row into the table with each column's value set as column_2_value.
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :param column_2_value: a dict where the keys are column names and the values are the values to be inserted
+        :type column_2_value: dict
+        """        
+        table = Table(table_name, self.metadata, autoload_with=self.engine)
+        self.execute(table.insert().values(column_2_value))
+
     def get_table_column_name(self, table_name):
         """Get all column names of a table
 
@@ -162,7 +222,7 @@ class BaseDBController(ABC):
         :return: the list of the names of column
         :rtype: list
         """        
-        return [c.key for c in self.name_2_table[table_name].c]
+        return [c.key for c in self.get_sqla_table(table_name).c]
     
     def get_table_row_count(self, table_name):
         """Get the row count of the a table
@@ -171,8 +231,9 @@ class BaseDBController(ABC):
         :type table_name: str
         :return: the row count
         :rtype: int
-        """        
-        stmt = select(func.count()).select_from(self.name_2_table[table_name])
+        """
+        table = self.get_sqla_table(table_name)        
+        stmt = select(func.count()).select_from(table)
         result = self.execute(stmt, fetch=True)
         return result[0][0]
     
@@ -184,8 +245,9 @@ class BaseDBController(ABC):
         :param column_name: the name of the column
         :type column_name: str
         :return: the maximum, type of which is same as the data of the column
-        """    
-        stmt = select(func.max(self.name_2_table[table_name].c[column_name])).select_from(self.name_2_table[table_name])
+        """
+        table = self.get_sqla_table(table_name)
+        stmt = select(func.max(table.c[column_name])).select_from(table)
         result = self.execute(stmt, fetch=True)
         return result[0][0]
 
@@ -197,8 +259,9 @@ class BaseDBController(ABC):
         :param column_name: the name of the column
         :type column_name: str
         :return: the maximum, type of which is same as the data of the column
-        """    
-        stmt = select(func.min(self.name_2_table[table_name].c[column_name])).select_from(self.name_2_table[table_name])
+        """
+        table = self.get_sqla_table(table_name)
+        stmt = select(func.min(table.c[column_name])).select_from(table)
         result = self.execute(stmt, fetch=True)
         return result[0][0]
     
@@ -251,10 +314,9 @@ class BaseDBController(ABC):
         :type table_name: str
         :return: the sqlachemy ``Table`` object of the table
         :rtype: Table of sqlachemy
-        """        
-        if table_name not in self.name_2_table:
-            return None
-        return self.name_2_table[table_name]
+        """
+        # update info of existed tables
+        return Table(table_name, self.metadata, autoload_with=self.engine)
 
     def shutdown(self):
         # shutdown local database 

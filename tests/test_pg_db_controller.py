@@ -24,6 +24,24 @@ class MyTestCase(unittest.TestCase):
         cls.db_controller.create_table_if_absences(cls.test_table, {"col_1":1, "col_2":1})
         cls.db_controller.insert(cls.test_table, {"col_1":1, "col_2":1})
 
+    def test_create_table(self):
+        example_data = {"col_1":{1:"string"}, "col_2":[1,2,3], "col_3":0.1, "col_4":"string"}
+        table = "new_table"
+        self.db_controller.create_table_if_absences(table, example_data)
+        #KNOWN ISSUE: Although create_table_if_absences can handle dict and list, insert can not handle them
+        # self.db_controller.insert(table,example_data)
+        self.db_controller.drop_table_if_existence(table)
+        self.db_controller.create_table_if_absences(table, {"col_1":1, "col_2":1}, primary_key_column="col_1")
+        self.assertTrue(self.db_controller.exist_table(table))
+        self.db_controller.drop_table_if_existence(table)
+
+    def test_get_table_column_name(self):
+        res = self.db_controller.get_table_column_name(self.table)
+        print(res)
+        self.assertTrue(res == ['id', 'userid', 'date'])
+        res = self.db_controller.get_table_column_name_all_schema(self.table)
+        self.assertTrue(res == ['id', 'userid', 'date'])
+    
     def test_explain_physical_plan(self):
         res = self.db_controller.explain_physical_plan(self.sql)
         print(res)
@@ -40,8 +58,11 @@ class MyTestCase(unittest.TestCase):
         print(res)
 
     def test_get_relation_content(self):
-        res = self.db_controller.get_relation_content(self.test_table, True)
-        print(res)
+        res = self.db_controller.get_relation_content(self.test_table, fetch_column_name=True)
+        self.assertTrue(res[0]==('col_1', 'col_2'))
+        res_wo_header = self.db_controller.get_relation_content(self.test_table, fetch_column_name=False)
+        self.assertTrue(res[1:]==res_wo_header)
+        print(res,res_wo_header)
 
     def test_create_drop_index(self):
     
@@ -55,7 +76,6 @@ class MyTestCase(unittest.TestCase):
         self.db_controller.drop_index(index)
         cur_n = self.db_controller.get_index_number(self.table)
         self.assertEqual(cur_n, n)
-
 
     def test_get_all_indexes_byte(self):
         size = self.db_controller.get_all_indexes_byte()
@@ -75,13 +95,14 @@ class MyTestCase(unittest.TestCase):
 
     def test_get_all_indexes(self):
         res = self.db_controller.get_all_indexes()
-        print(res)
+        print(res,len(res))
+        self.assertTrue(len(res)==12)
 
     def create_and_drop_table(self):
         test_table = "test_table_name"
         self.db_controller.create_table_if_absences(test_table, {"col":1})
         self.assertTrue(self.db_controller.exist_table(test_table))
-        self.assertTrue(test_table in self.db_controller.name_2_table)
+        # self.assertTrue(test_table in self.db_controller.name_2_table)
         self.db_controller.drop_table_if_existence(test_table)
         self.assertFalse(self.db_controller.exist_table(test_table))
     # def test_recover_imdb_index(self):
@@ -91,11 +112,26 @@ class MyTestCase(unittest.TestCase):
     #     recover_imdb_index(self.db_controller)
     #     res = self.db_controller.get_all_indexes()
     #     print(res)
-    def test_get_column_number_of_distinct_value(self):
+    def test_get_column_number_of_distinct_value_min_max_count(self):
         res = self.db_controller.get_column_number_of_distinct_value(self.table, self.column)
         print(res)
         self.assertTrue(res == 784)
-
+        res = self.db_controller.get_column_max(self.table, self.column)
+        print(res)
+        self.assertTrue(res == 1410631710)
+        res = self.db_controller.get_column_min(self.table, self.column)
+        print(res)
+        self.assertTrue(res == 1279568349)
+        res = self.db_controller.get_table_row_count(self.table)
+        print(res)
+        self.assertTrue(res == 798)
+        
+    def test_get_table_names(self):
+        res = self.db_controller.get_all_table_names()
+        print(res)
+        for x in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:
+            self.assertTrue(x in res, res)
+        
     @classmethod
     def tearDownClass(cls):
         cls.db_controller.drop_table_if_existence(cls.test_table)

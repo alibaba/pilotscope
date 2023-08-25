@@ -31,17 +31,19 @@ class MyTestCase(unittest.TestCase):
         self.config = PostgreSQLConfig()
 
     def test_event(self):
-        collector = UserDataCollector(self.config, 1)
+        collector = UserDataCollector(self.config, 0.1)
         collector.start()
         print("sleep")
-        time.sleep(3)
+        time.sleep(1)
         print("sleep end")
+        collector.stop()
 
     def test_timer(self):
         scheduler = BackgroundScheduler()
-        scheduler.add_job(my_print, "interval", seconds=1)
+        scheduler.add_job(my_print, "interval", seconds=0.1)
         scheduler.start()
-        time.sleep(3)
+        time.sleep(1)
+        scheduler.shutdown()
 
 
 if __name__ == '__main__':
