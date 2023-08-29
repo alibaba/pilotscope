@@ -3,7 +3,6 @@ import time
 from http.server import HTTPServer
 
 from pilotscope.Server.Server import RequestHandler
-from examples.utils import load_training_sql
 
 
 class MyTestCase(unittest.TestCase):

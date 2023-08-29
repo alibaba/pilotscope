@@ -34,7 +34,7 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
                 self.pilot_data_interactor.pull_record()
                 data: PilotTransData = self.pilot_data_interactor.execute(sub_sql)
             if(not data.records is None):
-                column_2_value={"query": sql, "card": data.records[0][0]}
+                column_2_value={"query": sql, "card": data.records.values[0][0]}
                 print(column_2_value)
             column_2_value_list.append(column_2_value)
         return column_2_value_list, True

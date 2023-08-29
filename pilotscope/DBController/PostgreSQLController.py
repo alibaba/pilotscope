@@ -260,7 +260,7 @@ class PostgreSQLController(BaseDBController):
             instance.disconnect() # to set DBController's self.connection_thread.conn is None
             instance.engine.dispose(close = True)
             # del instance.engine
-        self._surun("{} stop -D {}".format(self.config.pg_ctl, self.config.pgdata))
+        self._surun("{} stop -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.pgdata))
 
     def start(self):
         """Try to start DBMS. If fails the first time, recover config to ``self.config.backup_db_config_path`` and raise ``DatabaseStartException``. If fails again after recovering config, raise DatabaseCrashException.
@@ -268,10 +268,10 @@ class PostgreSQLController(BaseDBController):
         :raises DatabaseStartException:
         :raises DatabaseCrashException:
         """        
-        res = self._surun("{} start -D {}".format(self.config.pg_ctl, self.config.pgdata))
+        res = self._surun("{} start -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.pgdata))
         if res != 0: 
             self.recover_config()
-            res = self._surun("{} start -D {}".format(self.config.pg_ctl, self.config.pgdata))
+            res = self._surun("{} start -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.pgdata))
             if res == 0:
                 raise DatabaseStartException
             else:

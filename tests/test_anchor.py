@@ -26,16 +26,16 @@ class MyTestCase(unittest.TestCase):
         data = self.data_interactor.execute("show enable_nestloop;", is_reset=True)
         # data = self.data_interactor.execute("select pg_backend_pid();", is_reset=True)
         print(data.records)
-        self.assertEqual(data.records[0][0], "off") 
+        self.assertEqual(data.records.values[0][0], "off") 
         self.data_interactor.pull_record()
         data = self.data_interactor.execute("show enable_nestloop;")
         # data = self.data_interactor.execute("select pg_backend_pid();")
         print(data.records)
-        self.assertEqual(data.records[0][0], "on")
+        self.assertEqual(data.records.values[0][0], "on")
         self.data_interactor.pull_record()
         data = self.data_interactor.execute("show max_connections;")
         print(data.records)
-        self.assertEqual(data.records[0][0], '101') # even reset, knob don't change 
+        self.assertEqual(data.records.values[0][0], '101') # even reset, knob don't change 
         
         self.data_interactor.pull_estimated_cost()
         self.data_interactor.pull_physical_plan()

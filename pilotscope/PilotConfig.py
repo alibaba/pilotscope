@@ -11,7 +11,7 @@ class PilotConfig:
     """
     The PilotConfig class is used for storing and managing configuration information for PilotScope, including the host address of PilotScope, the name of the database to connect to, the user name and password to login to the database and etc.
     """
-    def __init__(self, db_type: DatabaseEnum, db="stats", pilotscope_core_host="localhost") -> None:
+    def __init__(self, db_type: DatabaseEnum, db="stats_tiny", pilotscope_core_host="localhost") -> None:
         self.db_type: DatabaseEnum = db_type
 
         self.pilotscope_core_host = pilotscope_core_host
@@ -50,7 +50,7 @@ class PilotConfig:
         :param time: sql execution timeout in second.
         :type time: int or float
         """        
-        self.sql_execution_timeout = time
+        self.sql_execution_timeout = float(time)
         
     def set_once_request_timeout(self, time):
         """Set the waiting time for fetching data. See ``pilotscope.DataFetchor.HttpDataFetcher``
@@ -58,7 +58,7 @@ class PilotConfig:
         :param time: time in second
         :type time: int or float
         """        
-        self.once_request_timeout = time
+        self.once_request_timeout = float(time)
         
     def set_pilotscope_core_host(self, pilotscope_core_host):
         """Set the host that database sends extend result to. The value will add to the `prefixes`, whose key is "port" in json.
@@ -154,7 +154,6 @@ class SparkConfig(PilotConfig):
         # datasource
         self.datasource_type = None
         self.host = None
-        self.db = None
         self.user = None
         self.pwd = None
         self.jdbc = "org.postgresql:postgresql:42.6.0"

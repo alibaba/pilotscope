@@ -1,5 +1,6 @@
 import threading
 import time
+import pandas
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from typing import Optional, List
@@ -122,8 +123,11 @@ class PilotDataInteractor:
             else:
                 data = PilotTransData()
             TimeStatistic.end("is_need_to_receive_data")
-
-            data.records = records
+            if records is not None:
+                if self.config.db_type == DatabaseEnum.POSTGRESQL:
+                    data.records = pandas.DataFrame.from_records(records[1:],columns=records[0])
+                else:
+                    data.records = records
             data.sql = origin_sql
             TimeStatistic.start("_fetch_data_from_outer")
             self._fetch_data_from_outer(origin_sql, data)
@@ -207,7 +211,7 @@ class PilotDataInteractor:
         records = python_sql_execution_time = None
         if is_execute_comment_sql:
             start_time = time.time()
-            records = self.db_controller.execute(comment_sql, fetch=True)
+            records = self.db_controller.execute(comment_sql, fetch=True, fetch_column_name=True)
             python_sql_execution_time = time.time() - start_time
         TimeStatistic.end("self.db_controller.execute")
         return records, python_sql_execution_time

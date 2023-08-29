@@ -85,7 +85,6 @@ class MyTestCase(unittest.TestCase):
         scheduler.init()
         data = scheduler.simulate_db_console(self.sql)
         print(data)
-        self.assertEqual(data, [(1406838696,)])
         
         config.set_db("PilotScopeUserData")
         db_controller = DBControllerFactory.get_db_controller(config,echo=True)

@@ -416,7 +416,7 @@ class SparkSQLController(BaseDBController):
         table = self.name_2_table[table_name]
         table.insert(self.engine, column_2_value, persist=persist)
 
-    def execute(self, sql, fetch=False) -> Union[pandas.DataFrame, DataFrame]:
+    def execute(self, sql, fetch=False, fetch_column_name=False) -> Union[pandas.DataFrame, DataFrame]:
         row = None
         try:
             self.connect_if_loss()

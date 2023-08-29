@@ -3,6 +3,7 @@
 **/__pycache__/**
 .idea/
 test_examples/results/**
+examples/results/**
 dev_data/
 
 *.log
@@ -21,3 +22,4 @@ dist/**
 cacheData/**
 examples/ExampleData/**
 PilotScopeDocs/**
+examples/temp_log_of_pilotscope_console.txt
