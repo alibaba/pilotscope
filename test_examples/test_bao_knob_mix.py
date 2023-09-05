@@ -71,7 +71,7 @@ class BaoTest(unittest.TestCase):
                                                          enable_collection=True,
                                                          enable_training=True)
             scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
-            periodic_db_controller_event = KnobPeriodicDbControllerEvent(config, 200, llamatune_config_file = "../examples/KnobTuning/llamatune/configs/llama_config.ini", exec_in_init = True, optimizer_type = "smac") # optimizer_type could be "smac" or "ddpg"
+            periodic_db_controller_event = KnobPeriodicDbControllerEvent(config, 200, llamatune_config_file = "../examples/KnobTuning/llamatune/configs/llama_config.ini", exec_in_init = True, optimizer_type = "smac") 
             scheduler.register_event(EventEnum.PERIODIC_DB_CONTROLLER_EVENT, periodic_db_controller_event)
             # start
             scheduler.init()

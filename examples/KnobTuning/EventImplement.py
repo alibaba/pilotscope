@@ -15,10 +15,10 @@ import sys
 sys.path.append("../examples/KnobTuning/llamatune")
 from config import config
 from executors.executor import ExecutorFactory
-from optimizer import get_ddpg_optimizer, get_smac_optimizer
+from optimizer import get_smac_optimizer
 from space import ConfigSpaceGenerator
 from storage import StorageFactory
-import run_ddpg, run_smac
+import run_smac
 import logging
 import time
 
@@ -58,32 +58,19 @@ def llamatune(conf):
     executor = ExecutorFactory.from_config(config, spaces, storage, parse_metrics=(conf["optimizer"] == "ddpg"),
                                             num_dbms_metrics=config.num_dbms_metrics)
 
-    if conf["optimizer"] == "ddpg":
-        exp_state = run_ddpg.ExperimentState(
-            dbms_info_config, benchmark_info_config, results_path, target_metric)
-        optimizer = get_ddpg_optimizer(config, spaces,
-                                        partial(run_ddpg.evaluate_dbms_conf, spaces, executor, storage, columns),
-                                        exp_state)
-    elif conf["optimizer"] == "smac":
-        exp_state = run_smac.ExperimentState(
-            dbms_info_config, benchmark_info_config, results_path, target_metric)
-        optimizer = get_smac_optimizer(config, spaces,
-                                        partial(run_smac.evaluate_dbms_conf, spaces, executor, storage, columns),
-                                        exp_state)
+    exp_state = run_smac.ExperimentState(
+        dbms_info_config, benchmark_info_config, results_path, target_metric)
+    optimizer = get_smac_optimizer(config, spaces,
+                                    partial(run_smac.evaluate_dbms_conf, spaces, executor, storage, columns),
+                                    exp_state)
 
     # evaluate on default config
     default_config = spaces.get_default_configuration()
 
     logger.info('Evaluating Default Configuration')
     logger.debug(default_config)
-    if conf["optimizer"] == "ddpg":
-        perf, default_metrics = run_ddpg.evaluate_dbms_conf(spaces, executor, storage, columns, default_config,
-                                                            state=exp_state)
-        assert len(default_metrics) == config.num_dbms_metrics, \
-            ('DBMS metrics number does not match with expected: '
-                f'[ret={len(default_metrics)}] [exp={config.num_dbms_metrics}]')
-    elif conf["optimizer"] == "smac":
-        perf = run_smac.evaluate_dbms_conf(spaces, executor, storage, columns, default_config, state=exp_state)
+    
+    perf = run_smac.evaluate_dbms_conf(spaces, executor, storage, columns, default_config, state=exp_state)
     perf = perf if exp_state.minimize else -perf
     assert perf >= 0, \
         f'Performance should not be negative: perf={perf}, metric={target_metric}'
@@ -91,11 +78,8 @@ def llamatune(conf):
     # set starting point for worse performance
     exp_state.worse_perf = perf * 4 if exp_state.minimize else perf / 4
 
-    if conf["optimizer"] == "ddpg":
-        # run DDPG
-        optimizer.run()
-    else:
-        optimizer.optimize()
+    
+    optimizer.optimize()
 
     # Print final stats
     logger.info(f'\nBest Configuration:\n{exp_state.best_conf}')
@@ -109,7 +93,7 @@ def llamatune(conf):
 
 class KnobPeriodicDbControllerEvent(PeriodicDbControllerEvent):
 
-    def __init__(self, config, per_query_count, llamatune_config_file, exec_in_init=True, optimizer_type="ddpg"):
+    def __init__(self, config, per_query_count, llamatune_config_file, exec_in_init=True, optimizer_type="smac"):
         super().__init__(config, per_query_count, exec_in_init = exec_in_init)
         self.optimizer_type = optimizer_type
         self.llamatune_config_file = llamatune_config_file
@@ -126,7 +110,7 @@ class KnobPeriodicDbControllerEvent(PeriodicDbControllerEvent):
         conf = {
             "conf_filepath": self.llamatune_config_file,
             "seed": int(time.time()),
-            "optimizer": self.optimizer_type  # "ddpg" or "smac"
+            "optimizer": self.optimizer_type
         }
 
         exp_state = llamatune(conf)
