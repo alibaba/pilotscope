@@ -5,30 +5,35 @@ from pilotscope.DBController.BaseDBController import BaseDBController
 from pilotscope.common.Index import Index
 from pilotscope.common.TimeStatistic import TimeStatistic
 from pilotscope.common.Util import json_str_to_json_obj
+import sys
+import os
 
+def get_path(sql_file):
+    my_path = os.path.abspath(__file__)
+    return os.path.join(os.path.dirname(my_path), sql_file)
 
 def load_training_sql(db):
     if "stats_tiny" == db.lower():
-        return load_sql("../examples/stats_train_time2int.txt")
+        return load_sql(get_path("stats_train_time2int.txt"))
     elif "stats" in db.lower():
-        return load_sql("../examples/stats_train.txt")
+        return load_sql(get_path("stats_train.txt"))
     elif "imdb" in db:
-        return load_sql("../examples/job_train_ascii.txt")
+        return load_sql(get_path("job_train_ascii.txt"))
     elif "tpcds" in db.lower():
-        return load_sql("../examples/tpcds_train_sql.txt")
+        return load_sql(get_path("tpcds_train_sql.txt"))
     else:
         raise NotImplementedError
 
 
 def load_test_sql(db):
     if "stats_tiny" == db.lower():
-        return load_sql("../examples/stats_test_time2int.txt")
+        return load_sql(get_path("stats_test_time2int.txt"))
     elif "stats" in db:
-        return load_sql("../examples/stats_test.txt")
+        return load_sql(get_path("stats_test.txt"))
     elif "imdb" in db:
-        return load_sql("../examples/job_test.txt")
+        return load_sql(get_path("job_test.txt"))
     elif "tpcds" in db.lower():
-        return load_sql("../examples/tpcds_test_sql.txt")
+        return load_sql(get_path("tpcds_test_sql.txt"))
     else:
         raise NotImplementedError
 
