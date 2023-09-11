@@ -41,7 +41,7 @@ def get_lero_preset_scheduler(config, enable_collection, enable_training) -> Pil
 
     # allow to pretrain model
     pretraining_event = LeroPretrainingModelEvent(config, lero_pilot_model, pretraining_data_table,
-                                                    enable_collection=False, enable_training=False)
+                                                    enable_collection=enable_collection, enable_training=enable_training)
     scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
 
     # start

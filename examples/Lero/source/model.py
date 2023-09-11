@@ -9,9 +9,8 @@ import torch.optim
 from torch.utils.data import DataLoader
 
 from feature import SampleEntity
-from TreeConvolution.tcnn import (BinaryTreeConv, DynamicPooling,
-                                  TreeActivation, TreeLayerNorm)
-from TreeConvolution.util import prepare_trees
+from tcnn.module import ConvTree, ActivationTreeWrap, LayerNormTree, DynamicPoolingTree
+from tcnn.util import prepare_trees
 
 CUDA = torch.cuda.is_available()
 GPU_LIST = [0, 1, 2, 3, 4, 5, 6, 7]
@@ -70,15 +69,15 @@ class LeroNet(nn.Module):
         self.device = None
 
         self.tree_conv = nn.Sequential(
-            BinaryTreeConv(self.input_feature_dim, 256),
-            TreeLayerNorm(),
-            TreeActivation(nn.LeakyReLU()),
-            BinaryTreeConv(256, 128),
-            TreeLayerNorm(),
-            TreeActivation(nn.LeakyReLU()),
-            BinaryTreeConv(128, 64),
-            TreeLayerNorm(),
-            DynamicPooling(),
+            ConvTree(self.input_feature_dim, 256),
+            LayerNormTree(),
+            ActivationTreeWrap(nn.LeakyReLU()),
+            ConvTree(256, 128),
+            LayerNormTree(),
+            ActivationTreeWrap(nn.LeakyReLU()),
+            ConvTree(128, 64),
+            LayerNormTree(),
+            DynamicPoolingTree(),
             nn.Linear(64, 32),
             nn.LeakyReLU(),
             nn.Linear(32, 1)
