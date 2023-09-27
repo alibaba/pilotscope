@@ -95,7 +95,7 @@ class PostgreSQLController(BaseDBController):
             else:
                 raise e
         except Exception as e:
-            if "PilotScopeFetchEnd" not in str(e):
+            if "PilotScopePullEnd" not in str(e):
                 raise e
         return row
 
