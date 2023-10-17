@@ -1,38 +1,34 @@
+from typing import List
+
 from pilotscope.Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
-from pilotscope.Anchor.BaseAnchor.PullAnchorHandler import RecordPullAnchorHandler
-from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
+from pilotscope.Anchor.BaseAnchor.BasePullHandler import RecordPullHandler, BasePullHandler
+from pilotscope.Anchor.BaseAnchor.BasePushHandler import BasePushHandler
+from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotEnum import *
 from pilotscope.PilotEvent import *
 from pilotscope.PilotTransData import PilotTransData
-from pilotscope.common.TimeStatistic import TimeStatistic
-from pilotscope.common.Util import extract_table_data_from_anchor, extract_handlers
+from pilotscope.Common.TimeStatistic import TimeStatistic
+from pilotscope.Common.Util import extract_handlers
 
 
 class PilotScheduler:
 
     def __init__(self, config: PilotConfig) -> None:
         self.config = config
-        self.training_data_save_table = None
-        self.collect_data_data_interactor: PilotDataInteractor = None
+        self.table_name_for_store_data = None
         self.pilot_data_manager: PilotTrainDataManager = PilotTrainDataManager(self.config)
         self.type_2_event = {}
-        self.user_tasks = []
-        self.simulate_console_data_interactor = PilotDataInteractor(self.config)
-
+        self.user_tasks: List[BasePushHandler] = []
+        self.data_interactor = PilotDataInteractor(self.config)
 
     def init(self):
         self._deal_initial_events()
-        pass
 
     def simulate_db_console(self, sql):
-        data_interactor = self.simulate_console_data_interactor
-
-        # add anchor for collecting data to training model
-        if self.collect_data_data_interactor is not None:
-            data_interactor.add_anchors(self.collect_data_data_interactor.anchor_to_handlers.values())
+        data_interactor = self.data_interactor
 
         # add recordPullAnchor
-        record_handler = RecordPullAnchorHandler(self.config)
+        record_handler = RecordPullHandler(self.config)
         data_interactor.add_anchor(record_handler.anchor_name, record_handler)
 
         # add all replace anchors from user
@@ -41,7 +37,7 @@ class PilotScheduler:
         # replace value based on user's method
 
         for replace_handle in self.user_tasks:
-            replace_handle.apply_replace_data(sql)
+            replace_handle.update_injected_data(sql)
 
         TimeStatistic.start("data_interactor.execute")
         result = data_interactor.execute(sql, is_reset=False)
@@ -55,17 +51,19 @@ class PilotScheduler:
 
     def _post_process(self, data: PilotTransData):
         TimeStatistic.start(ExperimentTimeEnum.WRITE_TABLE)
-        self._collect_training_data(data)
+        self._store_collected_data_into_table(data)
         TimeStatistic.end(ExperimentTimeEnum.WRITE_TABLE)
         self._deal_execution_end_events()
 
-    #
-
-    def _collect_training_data(self, data: PilotTransData):
-        if self.collect_data_data_interactor is not None:
-            fetch_anchors = extract_handlers(self.collect_data_data_interactor.anchor_to_handlers.values(), True)
-            column_2_value = extract_table_data_from_anchor(fetch_anchors, data)
-            self.pilot_data_manager.save_data(self.training_data_save_table, column_2_value)
+    def _store_collected_data_into_table(self, data: PilotTransData):
+        pull_anchors = extract_handlers(self.data_interactor.get_all_handlers(), True)
+        column_2_value = {}
+        for anchor in pull_anchors:
+            if isinstance(anchor, BasePullHandler):
+                anchor.prepare_data_for_writing(column_2_value, data)
+            else:
+                raise RuntimeError
+        self.pilot_data_manager.save_data(self.table_name_for_store_data, column_2_value)
 
     def _deal_initial_events(self):
         pretraining_thread = None
@@ -99,9 +97,30 @@ class PilotScheduler:
     def register_anchor_handler(self, anchor: BaseAnchorHandler):
         self.user_tasks.append(anchor)
 
-    def register_collect_data(self, training_data_save_table, data_interactor: PilotDataInteractor):
-        self.collect_data_data_interactor = data_interactor
-        self.training_data_save_table = training_data_save_table
+    def register_collect_data(self, table_name_for_store_data, pull_execution_time=False, pull_logical_plan=False,
+                              pull_physical_plan=False, pull_real_node_card=False, pull_real_node_cost=False,
+                              pull_subquery_2_cards=False, pull_buffer_cache=False, pull_estimated_cost=False,
+                              pull_records=False):
+
+        if pull_execution_time:
+            self.data_interactor.pull_execution_time()
+        if pull_logical_plan:
+            self.data_interactor.pull_logical_plan()
+        if pull_physical_plan:
+            self.data_interactor.pull_physical_plan()
+        if pull_real_node_card:
+            self.data_interactor.pull_real_node_card()
+        if pull_real_node_cost:
+            self.data_interactor.pull_real_node_cost()
+        if pull_subquery_2_cards:
+            self.data_interactor.pull_subquery_card()
+        if pull_buffer_cache:
+            self.data_interactor.pull_buffercache()
+        if pull_estimated_cost:
+            self.data_interactor.pull_estimated_cost()
+        if pull_records:
+            self.data_interactor.pull_record()
+        self.table_name_for_store_data = table_name_for_store_data
 
     def register_event(self, event_type: EventEnum, event: Event):
         self.type_2_event[event_type] = event

@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table, i
 from sqlalchemy_utils import database_exists, create_database
 
 from pilotscope.PilotConfig import PilotConfig
-from pilotscope.common.Index import Index
+from pilotscope.Common.Index import Index
 
 
 class BaseDBController(ABC):    
@@ -116,10 +116,6 @@ class BaseDBController(ABC):
 
     @abstractmethod
     def exist_table(self, table_name) -> bool:
-        pass
-
-    @abstractmethod
-    def create_index(self, index):
         pass
 
     @abstractmethod

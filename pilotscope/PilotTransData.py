@@ -1,6 +1,6 @@
 import json
 
-from pilotscope.common.Util import is_number
+from pilotscope.Common.Util import is_number
 
 
 class PilotTransData:

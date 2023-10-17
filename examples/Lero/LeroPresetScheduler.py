@@ -1,57 +1,50 @@
 import sys
+
 sys.path.append("../")
 sys.path.append("../examples/Lero/source")
 
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
-from pilotscope.common.Util import pilotscope_exit
-from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
-from pilotscope.PilotConfig import PilotConfig,PostgreSQLConfig
-from pilotscope.PilotEnum import DatabaseEnum, EventEnum
+from pilotscope.PilotEnum import EventEnum, AllowedPullDataEnum
 from pilotscope.PilotModel import PilotModel
 from pilotscope.PilotScheduler import PilotScheduler
-from examples.Lero.EventImplement import LeroPretrainingModelEvent, LeroDynamicCollectEventPeriod, LeroPeriodTrainingEvent
-from examples.Lero.LeroParadigmCardAnchorHandler import LeroParadigmCardAnchorHandler
+from examples.Lero.EventImplement import LeroPretrainingModelEvent, LeroDynamicCollectEventPeriod, \
+    LeroPeriodTrainingEvent
+from examples.Lero.LeroParadigmCardAnchorHandler import LeroCardPushHandler
 from examples.Lero.LeroPilotModel import LeroPilotModel
+
 
 def get_lero_preset_scheduler(config, enable_collection, enable_training) -> PilotScheduler:
     if type(enable_collection) == str:
         enable_collection = eval(enable_collection)
     if type(enable_training) == str:
         enable_training = eval(enable_training)
-    
-    model_name = "lero_pair"    
+
+    model_name = "lero_pair"
     test_data_table = "{}_test_data_table".format(model_name)
     pretraining_data_table = "lero_pretraining_collect_data"
-        
+
     lero_pilot_model: PilotModel = LeroPilotModel(model_name)
     lero_pilot_model.load()
-    lero_handler = LeroParadigmCardAnchorHandler(lero_pilot_model, config)
-
-    # Register what data needs to be cached for training purposes
-    data_interactor = PilotDataInteractor(config)
-    data_interactor.pull_physical_plan()
-    data_interactor.pull_execution_time()
+    lero_handler = LeroCardPushHandler(lero_pilot_model, config)
 
     # core
     scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
     scheduler.register_anchor_handler(lero_handler)
-    scheduler.register_collect_data(training_data_save_table=test_data_table,
-                                    data_interactor=data_interactor)
+    scheduler.register_collect_data(test_data_table, pull_execution_time=True, pull_physical_plan=True)
 
     # allow to pretrain model
     pretraining_event = LeroPretrainingModelEvent(config, lero_pilot_model, pretraining_data_table,
-                                                    enable_collection=enable_collection, enable_training=enable_training)
+                                                  enable_collection=enable_collection, enable_training=enable_training)
     scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
 
     # start
     scheduler.init()
     return scheduler
 
+
 def get_lero_dynamic_preset_scheduler(config) -> PilotScheduler:
-    
     model_name = "lero_pair"
-        
+
     import torch
     print(torch.version.cuda)
     if torch.cuda.is_available():
@@ -59,22 +52,16 @@ def get_lero_dynamic_preset_scheduler(config) -> PilotScheduler:
     else:
         print("Using CPU")
 
-    model_name = "lero_pair" # This test can only work when existing a model
+    model_name = "lero_pair"  # This test can only work when existing a model
     lero_pilot_model: PilotModel = LeroPilotModel(model_name)
     lero_pilot_model.load()
-    lero_handler = LeroParadigmCardAnchorHandler(lero_pilot_model, config)
-
-    # Register what data needs to be cached for training purposes
-    data_interactor = PilotDataInteractor(config)
-    data_interactor.pull_physical_plan()
-    data_interactor.pull_execution_time()
+    lero_handler = LeroCardPushHandler(lero_pilot_model, config)
 
     # core
     training_data_save_table = "{}_data_table".format(model_name)
     scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
     scheduler.register_anchor_handler(lero_handler)
-    scheduler.register_collect_data(training_data_save_table=training_data_save_table,
-                                    data_interactor=data_interactor)
+    scheduler.register_collect_data(training_data_save_table, pull_execution_time=True, pull_physical_plan=True)
 
     # dynamically collect data
     dynamic_training_data_save_table = "{}_period_training_data_table".format(model_name)
@@ -83,7 +70,7 @@ def get_lero_dynamic_preset_scheduler(config) -> PilotScheduler:
 
     # dynamically update model
     period_train_event = LeroPeriodTrainingEvent(dynamic_training_data_save_table, config, 100,
-                                                    lero_pilot_model)
+                                                 lero_pilot_model)
     scheduler.register_event(EventEnum.PERIOD_TRAIN_EVENT, period_train_event)
 
     # start

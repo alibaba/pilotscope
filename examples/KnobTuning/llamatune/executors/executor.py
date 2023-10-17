@@ -197,7 +197,7 @@ class DummyExecutor(ExecutorInterface):
         metrics = np.random.rand(self.num_dbms_metrics)
         return perf, metrics
 
-from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
+from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
 
 class SysmlExecutor(ExecutorInterface):

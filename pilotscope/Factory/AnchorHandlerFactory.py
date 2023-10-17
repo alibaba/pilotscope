@@ -1,4 +1,4 @@
-from pilotscope.Anchor.BaseAnchor.PushAnchorHandler import *
+from pilotscope.Anchor.BaseAnchor.BasePushHandler import *
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotEnum import DatabaseEnum
 
@@ -18,40 +18,37 @@ class AnchorHandlerFactory:
     def _get_spark_anchor_handle(cls, config, anchor: AnchorEnum):
         # replace
         if anchor == AnchorEnum.CARD_PUSH_ANCHOR:
-            return CardAnchorHandler(config)
+            return CardPushHandler(config)
         elif anchor == AnchorEnum.HINT_PUSH_ANCHOR:
-            return HintAnchorHandler(config)
+            return HintPushHandler(config)
         elif anchor == AnchorEnum.COST_PUSH_ANCHOR:
-            return CostAnchorHandler(config)
+            return CostPushHandler(config)
         elif anchor == AnchorEnum.INDEX_PUSH_ANCHOR:
-            return IndexAnchorHandler(config)
+            return IndexPushHandler(config)
         elif anchor == AnchorEnum.KNOB_PUSH_ANCHOR:
-            return KonbAnchorHandler(config)
+            return KnobPushHandler(config)
         # fetch
         elif anchor == AnchorEnum.RECORD_PULL_ANCHOR:
             from pilotscope.Anchor.Spark.PullAnchor import SparkRecordPullAnchorHandler
             return SparkRecordPullAnchorHandler(config)
         elif anchor == AnchorEnum.EXECUTION_TIME_PULL_ANCHOR:
-            from pilotscope.Anchor.Spark.PullAnchor import SparkExecutionTimePullAnchorHandler
-            return SparkExecutionTimePullAnchorHandler(config)
+            from pilotscope.Anchor.Spark.PullAnchor import SparkExecutionTimePullHandler
+            return SparkExecutionTimePullHandler(config)
         elif anchor == AnchorEnum.PHYSICAL_PLAN_PULL_ANCHOR:
-            from pilotscope.Anchor.Spark.PullAnchor import SparkPhysicalPlanPullAnchorHandler
-            return SparkPhysicalPlanPullAnchorHandler(config)
-        elif anchor == AnchorEnum.OPTIMIZED_SQL_PULL_ANCHOR:
-            from pilotscope.Anchor.Spark.PullAnchor import SparkOptimizedSqlPullAnchorHandler
-            return SparkOptimizedSqlPullAnchorHandler(config)
+            from pilotscope.Anchor.Spark.PullAnchor import SparkPhysicalPlanPullHandler
+            return SparkPhysicalPlanPullHandler(config)
         elif anchor == AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR:
-            from pilotscope.Anchor.Spark.PullAnchor import SparkSubQueryCardPullAnchorHandler
-            return SparkSubQueryCardPullAnchorHandler(config)
+            from pilotscope.Anchor.Spark.PullAnchor import SparkSubQueryCardPullHandler
+            return SparkSubQueryCardPullHandler(config)
         elif anchor == AnchorEnum.LOGICAL_PLAN_PULL_ANCHOR:
-            from pilotscope.Anchor.Spark.PullAnchor import SparkLogicalPlanPullAnchorHandler
-            return SparkLogicalPlanPullAnchorHandler(config)
+            from pilotscope.Anchor.Spark.PullAnchor import SparkLogicalPlanPullHandler
+            return SparkLogicalPlanPullHandler(config)
         elif anchor == AnchorEnum.ESTIMATED_COST_PULL_ANCHOR:
-            from pilotscope.Anchor.Spark.PullAnchor import SparkEstimatedCostPullAnchorHandler
-            return SparkEstimatedCostPullAnchorHandler(config)
+            from pilotscope.Anchor.Spark.PullAnchor import SparkEstimatedCostPullHandler
+            return SparkEstimatedCostPullHandler(config)
         elif anchor == AnchorEnum.BUFFERCACHE_PULL_ANCHOR:
-            from pilotscope.Anchor.Spark.PullAnchor import SparkBuffercachePullAnchorHandler
-            return SparkBuffercachePullAnchorHandler(config)
+            from pilotscope.Anchor.Spark.PullAnchor import SparkBuffercachePullHandler
+            return SparkBuffercachePullHandler(config)
         else:
             raise RuntimeError()
 
@@ -59,39 +56,36 @@ class AnchorHandlerFactory:
     def _get_postgresql_anchor_handle(cls, config, anchor: AnchorEnum):
         # replace
         if anchor == AnchorEnum.CARD_PUSH_ANCHOR:
-            return CardAnchorHandler(config)
-        elif anchor == AnchorEnum.HINT_PUSH_ANCHOR: 
-            return HintAnchorHandler(config)
+            return CardPushHandler(config)
+        elif anchor == AnchorEnum.HINT_PUSH_ANCHOR:
+            return HintPushHandler(config)
         elif anchor == AnchorEnum.COST_PUSH_ANCHOR:
-            return CostAnchorHandler(config)
+            return CostPushHandler(config)
         elif anchor == AnchorEnum.INDEX_PUSH_ANCHOR:
-            return IndexAnchorHandler(config)
+            return IndexPushHandler(config)
         elif anchor == AnchorEnum.KNOB_PUSH_ANCHOR:
-            return KonbAnchorHandler(config)
+            return KnobPushHandler(config)
         # fetch
         elif anchor == AnchorEnum.RECORD_PULL_ANCHOR:
-            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLRecordPullAnchorHandler
-            return PostgreSQLRecordPullAnchorHandler(config)
+            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLRecordPullHandler
+            return PostgreSQLRecordPullHandler(config)
         elif anchor == AnchorEnum.EXECUTION_TIME_PULL_ANCHOR:
-            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLExecutionTimePullAnchorHandler
-            return PostgreSQLExecutionTimePullAnchorHandler(config)
+            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLExecutionTimePullHandler
+            return PostgreSQLExecutionTimePullHandler(config)
         elif anchor == AnchorEnum.PHYSICAL_PLAN_PULL_ANCHOR:
-            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLPhysicalPlanPullAnchorHandler
-            return PostgreSQLPhysicalPlanPullAnchorHandler(config)
-        elif anchor == AnchorEnum.OPTIMIZED_SQL_PULL_ANCHOR:
-            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLOptimizedSqlPullAnchorHandler
-            return PostgreSQLOptimizedSqlPullAnchorHandler(config)
+            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLPhysicalPlanPullHandler
+            return PostgreSQLPhysicalPlanPullHandler(config)
         elif anchor == AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR:
-            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLSubQueryCardPullAnchorHandler
-            return PostgreSQLSubQueryCardPullAnchorHandler(config)
+            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLSubQueryCardPullHandler
+            return PostgreSQLSubQueryCardPullHandler(config)
         elif anchor == AnchorEnum.LOGICAL_PLAN_PULL_ANCHOR:
-            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLLogicalPlanPullAnchorHandler
-            return PostgreSQLLogicalPlanPullAnchorHandler(config)
+            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLLogicalPlanPullHandler
+            return PostgreSQLLogicalPlanPullHandler(config)
         elif anchor == AnchorEnum.ESTIMATED_COST_PULL_ANCHOR:
-            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLEstimatedCostPullAnchorHandler
-            return PostgreSQLEstimatedCostPullAnchorHandler(config)
+            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLEstimatedCostPullHandler
+            return PostgreSQLEstimatedCostPullHandler(config)
         elif anchor == AnchorEnum.BUFFERCACHE_PULL_ANCHOR:
-            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLBuffercachePullAnchorHandler
-            return PostgreSQLBuffercachePullAnchorHandler(config)
+            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLBuffercachePullHandler
+            return PostgreSQLBuffercachePullHandler(config)
         else:
             raise RuntimeError()

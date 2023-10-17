@@ -4,14 +4,14 @@ from pandas import DataFrame
 from examples.Bao.source.SparkPlanCompress import SparkPlanCompress
 
 from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
-from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
+from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotEvent import PeriodTrainingEvent, PretrainingModelEvent
 from pilotscope.PilotModel import PilotModel
 from pilotscope.PilotTransData import PilotTransData
-from pilotscope.common.Util import json_str_to_json_obj
-from pilotscope.common.dotDrawer import PlanDotDrawer
-from examples.Bao.BaoParadigmHintAnchorHandler import BaoParadigmHintAnchorHandler, modify_sql_for_spark
+from pilotscope.Common.Util import json_str_to_json_obj
+from pilotscope.Common.dotDrawer import PlanDotDrawer
+from examples.Bao.BaoParadigmHintAnchorHandler import BaoHintPushHandler, modify_sql_for_spark
 from examples.Bao.source.model import BaoRegression
 from examples.utils import load_training_sql, to_tree_json
 from pilotscope.PilotEnum import DatabaseEnum
@@ -23,7 +23,7 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
                  enable_training=True):
         super().__init__(config, bind_model, save_table_name, enable_collection, enable_training)
         self.pilot_data_interactor = PilotDataInteractor(self.config)
-        self.bao_hint = BaoParadigmHintAnchorHandler.HintForBao(config.db_type)
+        self.bao_hint = BaoHintPushHandler.HintForBao(config.db_type)
         self.sqls = self.load_sql()
         self.cur_sql_idx = 0
 

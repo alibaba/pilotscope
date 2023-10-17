@@ -1,32 +1,31 @@
-from pilotscope.Anchor.BaseAnchor.PullAnchorHandler import *
+from pilotscope.Anchor.BaseAnchor.BasePullHandler import *
 from pilotscope.PilotEnum import ExperimentTimeEnum
-from pilotscope.common.TimeStatistic import TimeStatistic
+from pilotscope.Common.TimeStatistic import TimeStatistic
 
 
 class PostgreSQLAnchorMixin:
+    def get_physical_plan(self, db_controller, sql, pilot_comment):
+        return db_controller.explain_physical_plan(sql, comment=pilot_comment)
+
+
+class PostgreSQLRecordPullHandler(RecordPullHandler, PostgreSQLAnchorMixin):
     pass
 
 
-class PostgreSQLRecordPullAnchorHandler(RecordPullAnchorHandler, PostgreSQLAnchorMixin):
-    pass
-
-
-class PostgreSQLLogicalPlanPullAnchorHandler(LogicalPlanPullAnchorHandler, PostgreSQLAnchorMixin):
+class PostgreSQLLogicalPlanPullHandler(LogicalPlanPullHandler, PostgreSQLAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
         if fill_data.logical_plan is not None:
             return
 
-        physical_plan = anchor_data.physical_plan
-
-        if physical_plan is None:
-            anchor_data.physical_plan = db_controller.explain_physical_plan(sql, comment=pilot_comment)
+        if anchor_data.physical_plan is None:
+            anchor_data.physical_plan = self.get_physical_plan(db_controller, sql, pilot_comment)
 
         fill_data.logical_plan = anchor_data.physical_plan
 
 
-class PostgreSQLPhysicalPlanPullAnchorHandler(PhysicalPlanPullAnchorHandler, PostgreSQLAnchorMixin):
+class PostgreSQLPhysicalPlanPullHandler(PhysicalPlanPullHandler, PostgreSQLAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
@@ -35,13 +34,13 @@ class PostgreSQLPhysicalPlanPullAnchorHandler(PhysicalPlanPullAnchorHandler, Pos
             return
 
         if anchor_data.physical_plan is None:
-            anchor_data.physical_plan = db_controller.explain_physical_plan(sql, comment=pilot_comment)
+            anchor_data.physical_plan = self.get_physical_plan(db_controller, sql, pilot_comment)
 
         fill_data.physical_plan = anchor_data.physical_plan
         TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
 
-class PostgreSQLEstimatedCostPullAnchorHandler(EstimatedCostPullAnchorHandler, PostgreSQLAnchorMixin):
+class PostgreSQLEstimatedCostPullHandler(EstimatedCostPullHandler, PostgreSQLAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
@@ -57,7 +56,7 @@ class PostgreSQLEstimatedCostPullAnchorHandler(EstimatedCostPullAnchorHandler, P
         TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
 
-class PostgreSQLBuffercachePullAnchorHandler(BuffercachePullAnchorHandler, PostgreSQLAnchorMixin):
+class PostgreSQLBuffercachePullHandler(BuffercachePullHandler, PostgreSQLAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
@@ -70,13 +69,9 @@ class PostgreSQLBuffercachePullAnchorHandler(BuffercachePullAnchorHandler, Postg
         fill_data.buffercache = anchor_data.buffercache
 
 
-class PostgreSQLExecutionTimePullAnchorHandler(ExecutionTimePullAnchorHandler, PostgreSQLAnchorMixin):
+class PostgreSQLExecutionTimePullHandler(ExecutionTimePullHandler, PostgreSQLAnchorMixin):
     pass
 
 
-class PostgreSQLOptimizedSqlPullAnchorHandler(OptimizedSqlPullAnchorHandler, PostgreSQLAnchorMixin):
-    pass
-
-
-class PostgreSQLSubQueryCardPullAnchorHandler(SubQueryCardPullAnchorHandler, PostgreSQLAnchorMixin):
+class PostgreSQLSubQueryCardPullHandler(SubQueryCardPullHandler, PostgreSQLAnchorMixin):
     pass

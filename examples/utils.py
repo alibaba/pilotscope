@@ -2,9 +2,9 @@ import json
 from copy import copy
 
 from pilotscope.DBController.BaseDBController import BaseDBController
-from pilotscope.common.Index import Index
-from pilotscope.common.TimeStatistic import TimeStatistic
-from pilotscope.common.Util import json_str_to_json_obj
+from pilotscope.Common.Index import Index
+from pilotscope.Common.TimeStatistic import TimeStatistic
+from pilotscope.Common.Util import json_str_to_json_obj
 import sys
 import os
 

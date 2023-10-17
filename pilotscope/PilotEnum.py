@@ -18,7 +18,7 @@ class HintEnum(PilotEnum):
     ENABLE_HASH_JOIN = 0
 
 
-class ReplaceAnchorTriggerEnum(PilotEnum):
+class PushHandlerTriggerLevelEnum(PilotEnum):
     WORKLOAD = 0,
     QUERY = 1
 
@@ -35,14 +35,14 @@ class DataFetchMethodEnum(PilotEnum):
     HTTP = 0
 
 
-class AllowedFetchDataEnum(PilotEnum):
+class AllowedPullDataEnum(PilotEnum):
     PHYSICAL_PLAN = "physical_plan",
     LOGICAL_PLAN = "logical_plan",
     EXECUTION_TIME = "execution_time",
     REAL_COST_SUBPLAN = "real_cost_subplan",
     REAL_CARD_SUBQUERY = "real_card_subquery",
     SUBQUERY_2_CARDS = "subquery_2_cards",
-    HINTS = "hints",
+    BUFFER_CACHE = "buffer_cache",
 
 
 class FetchMethod(PilotEnum):

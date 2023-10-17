@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
-from pilotscope.common.Cache import Cache
+from pilotscope.Common.Cache import Cache
 
 
 class PilotModel(ABC):

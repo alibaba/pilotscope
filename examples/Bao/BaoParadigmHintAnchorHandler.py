@@ -1,14 +1,14 @@
 from concurrent.futures.thread import ThreadPoolExecutor
 
-from pilotscope.Anchor.BaseAnchor.PushAnchorHandler import HintAnchorHandler
-from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
+from pilotscope.Anchor.BaseAnchor.BasePushHandler import HintPushHandler
+from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotEnum import DatabaseEnum, ExperimentTimeEnum
 from pilotscope.PilotModel import PilotModel
 from pilotscope.PilotTransData import PilotTransData
-from pilotscope.common.TimeStatistic import TimeStatistic
-from pilotscope.common.Util import wait_futures_results
+from pilotscope.Common.TimeStatistic import TimeStatistic
+from pilotscope.Common.Util import wait_futures_results
 
 
 def modify_sql_for_spark(config, sql: str):
@@ -17,7 +17,7 @@ def modify_sql_for_spark(config, sql: str):
     return sql
 
 
-class BaoParadigmHintAnchorHandler(HintAnchorHandler):
+class BaoHintPushHandler(HintPushHandler):
     class HintForBao:
         def __init__(self, db_type: DatabaseEnum) -> None:  # Hint Chores Factory
             if db_type == DatabaseEnum.POSTGRESQL:
@@ -60,7 +60,7 @@ class BaoParadigmHintAnchorHandler(HintAnchorHandler):
     def predict(self, plans):
         return self.model.user_model.predict(plans)
 
-    def user_custom_task(self, sql):
+    def acquire_injected_data(self, sql):
         sql = modify_sql_for_spark(self.config, sql)
         try:
             TimeStatistic.start(ExperimentTimeEnum.AI_TASK)

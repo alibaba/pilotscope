@@ -7,7 +7,7 @@ from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotModel import PilotModel
-from pilotscope.common.Thread import ValueThread
+from pilotscope.Common.Thread import ValueThread
 
 
 class Event(ABC):

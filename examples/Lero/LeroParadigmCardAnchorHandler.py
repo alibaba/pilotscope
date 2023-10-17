@@ -1,14 +1,14 @@
-from pilotscope.Anchor.BaseAnchor.PushAnchorHandler import CardAnchorHandler
+from pilotscope.Anchor.BaseAnchor.BasePushHandler import CardPushHandler
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PilotConfig
-from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
+from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotModel import PilotModel
 from pilotscope.PilotTransData import PilotTransData
 from examples.utils import scale_card
 from model import LeroModelPairWise
 
 
-class LeroParadigmCardAnchorHandler(CardAnchorHandler):
+class LeroCardPushHandler(CardPushHandler):
 
     def __init__(self, model: PilotModel, config: PilotConfig) -> None:
         super().__init__(config)
@@ -30,7 +30,7 @@ class LeroParadigmCardAnchorHandler(CardAnchorHandler):
                 best_time = time
         return best_idx
 
-    def user_custom_task(self, sql):
+    def acquire_injected_data(self, sql):
         factors = [0.1, 1, 10]
         self.pilot_data_interactor.pull_subquery_card()
         data: PilotTransData = self.pilot_data_interactor.execute(sql)

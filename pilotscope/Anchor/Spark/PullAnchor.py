@@ -1,18 +1,18 @@
 from pilotscope.Anchor.PostgreSQL.PullAnhor import *
 from pilotscope.DBController.SparkSQLController import SparkSQLController
 from pilotscope.PilotEnum import ExperimentTimeEnum
-from pilotscope.common.TimeStatistic import TimeStatistic
+from pilotscope.Common.TimeStatistic import TimeStatistic
 
 
 class SparkAnchorMixin:
     pass
 
 
-class SparkRecordPullAnchorHandler(RecordPullAnchorHandler, SparkAnchorMixin):
+class SparkRecordPullAnchorHandler(RecordPullHandler, SparkAnchorMixin):
     pass
 
 
-class SparkLogicalPlanPullAnchorHandler(PostgreSQLLogicalPlanPullAnchorHandler, SparkAnchorMixin):
+class SparkLogicalPlanPullHandler(PostgreSQLLogicalPlanPullHandler, SparkAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
@@ -27,7 +27,7 @@ class SparkLogicalPlanPullAnchorHandler(PostgreSQLLogicalPlanPullAnchorHandler, 
         TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
 
-class SparkPhysicalPlanPullAnchorHandler(PostgreSQLPhysicalPlanPullAnchorHandler, SparkAnchorMixin):
+class SparkPhysicalPlanPullHandler(PostgreSQLPhysicalPlanPullHandler, SparkAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
@@ -42,9 +42,9 @@ class SparkPhysicalPlanPullAnchorHandler(PostgreSQLPhysicalPlanPullAnchorHandler
         TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
 
-class SparkEstimatedCostPullAnchorHandler(PostgreSQLEstimatedCostPullAnchorHandler, SparkAnchorMixin):
+class SparkEstimatedCostPullHandler(PostgreSQLEstimatedCostPullHandler, SparkAnchorMixin):
 
-    def fetch_from_outer(self, db_controller:SparkSQLController, sql, pilot_comment, anchor_data: AnchorTransData,
+    def fetch_from_outer(self, db_controller: SparkSQLController, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
         raise NotImplementedError
         # TimeStatistic.start(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
@@ -61,7 +61,7 @@ class SparkEstimatedCostPullAnchorHandler(PostgreSQLEstimatedCostPullAnchorHandl
         # TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
 
-class SparkBuffercachePullAnchorHandler(PostgreSQLEstimatedCostPullAnchorHandler, SparkAnchorMixin):
+class SparkBuffercachePullHandler(PostgreSQLEstimatedCostPullHandler, SparkAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):
@@ -74,13 +74,9 @@ class SparkBuffercachePullAnchorHandler(PostgreSQLEstimatedCostPullAnchorHandler
         fill_data.buffercache = anchor_data.buffercache
 
 
-class SparkExecutionTimePullAnchorHandler(PostgreSQLExecutionTimePullAnchorHandler, SparkAnchorMixin):
+class SparkExecutionTimePullHandler(PostgreSQLExecutionTimePullHandler, SparkAnchorMixin):
     pass
 
 
-class SparkOptimizedSqlPullAnchorHandler(PostgreSQLOptimizedSqlPullAnchorHandler, SparkAnchorMixin):
-    pass
-
-
-class SparkSubQueryCardPullAnchorHandler(PostgreSQLSubQueryCardPullAnchorHandler, SparkAnchorMixin):
+class SparkSubQueryCardPullHandler(PostgreSQLSubQueryCardPullHandler, SparkAnchorMixin):
     pass

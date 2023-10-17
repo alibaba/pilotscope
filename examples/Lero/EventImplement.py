@@ -3,7 +3,7 @@ import json
 from pandas import DataFrame
 
 from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
-from pilotscope.DataFetcher.PilotDataInteractor import PilotDataInteractor
+from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotEvent import PeriodTrainingEvent, PretrainingModelEvent, PeriodPerCountCollectionDataEvent
 from pilotscope.PilotModel import PilotModel

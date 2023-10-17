@@ -2,7 +2,7 @@
 .vscode
 **/__pycache__/**
 .idea/
-test_examples/results/**
+test_example_algorithms/results/**
 examples/results/**
 dev_data/
 

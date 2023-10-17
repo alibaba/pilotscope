@@ -2,14 +2,13 @@ import json
 from copy import deepcopy
 
 from pandas import DataFrame
-from sqlalchemy import select, Table
 
 from pilotscope.DBController.BaseDBController import BaseDBController
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotEnum import DatabaseEnum
 from pilotscope.PilotSysConfig import PilotSysConfig
-from pilotscope.common.Util import is_number
+from pilotscope.Common.Util import is_number
 
 
 class PilotTrainDataManager:
@@ -70,7 +69,7 @@ class PilotTrainDataManager:
 
     def read_all(self, table_name):
         query = "select * from {}".format(table_name)
-        self.db_controller.connect_if_loss() # 
+        self.db_controller.connect_if_loss()  #
         res = DataFrame(self.db_controller.execute(query, fetch=True))
 
         # update id
@@ -94,15 +93,6 @@ class PilotTrainDataManager:
 
         return res
 
-    def _extract_max_id(self, df: DataFrame):
-        return int(df.at[df.index[-1], PilotSysConfig.DATA_COLLECT_TABLE_PRIMARY_ID])
-
-    def _get_table_last_id(self, table):
-        return self.read_training_data_visit_id(table)
-
-    def _update_table_last_id(self, table, cur_id):
-        self.update_training_data_visit_id(table, cur_id)
-
     def update_training_data_visit_id(self, table_name, cur_id):
         query = "select * from {} where table_name='{}'".format(self.collect_data_visit_table, table_name)
         exist_data = DataFrame(self.db_controller.execute(query, fetch=True))
@@ -122,3 +112,12 @@ class PilotTrainDataManager:
         if len(res) == 0:
             return None
         return int(res.at[res.index[0], res.columns[0]])
+
+    def _extract_max_id(self, df: DataFrame):
+        return int(df.at[df.index[-1], PilotSysConfig.DATA_COLLECT_TABLE_PRIMARY_ID])
+
+    def _get_table_last_id(self, table):
+        return self.read_training_data_visit_id(table)
+
+    def _update_table_last_id(self, table, cur_id):
+        self.update_training_data_visit_id(table, cur_id)

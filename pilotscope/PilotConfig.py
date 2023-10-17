@@ -11,6 +11,7 @@ class PilotConfig:
     """
     The PilotConfig class is used for storing and managing configuration information for PilotScope, including the host address of PilotScope, the name of the database to connect to, the user name and password to login to the database and etc.
     """
+
     def __init__(self, db_type: DatabaseEnum, db="stats_tiny", pilotscope_core_host="localhost") -> None:
         self.db_type: DatabaseEnum = db_type
 
@@ -19,64 +20,63 @@ class PilotConfig:
         self.db = db
 
         # second
-        self.sql_execution_timeout = 100
+        self.sql_execution_timeout = 300
         self.once_request_timeout = self.sql_execution_timeout
 
         # pretraining
         self.pretraining_model = TrainSwitchMode.WAIT
 
-
     def __str__(self):
         return self.__dict__.__str__()
 
-    def set_db_type(self, db: DatabaseEnum):   
+    def set_db_type(self, db: DatabaseEnum):
         """Set database type.
         
         :arg PilotEnum db: now support ``pilotscope.PilotEnum.DatabaseEnum.POSTGRESQL`` and ``pilotscope.PilotEnum.DatabaseEnum.SPARK``
         """
         self.db_type = db
-    
+
     def set_db(self, db):
         """Set the database name to connect to. 
 
         :param db: database name
         :type db: str
-        """              
+        """
         self.db = db
-        
+
     def set_sql_execution_timeout(self, time):
         """Set the timeout for sql execution, which will pass to database adapter.
 
         :param time: sql execution timeout in second.
         :type time: int or float
-        """        
+        """
         self.sql_execution_timeout = float(time)
-        
+
     def set_once_request_timeout(self, time):
         """Set the waiting time for fetching data. See ``pilotscope.DataFetchor.HttpDataFetcher``
 
         :param time: time in second
         :type time: int or float
-        """        
+        """
         self.once_request_timeout = float(time)
-        
+
     def set_pilotscope_core_host(self, pilotscope_core_host):
         """Set the host that database sends extend result to. The value will add to the `prefixes`, whose key is "port" in json.
 
         :param pilotscope_core_host: A string representing the host or the IP address
         :type pilotscope_core_host: str
-        """        
+        """
         self.pilotscope_core_host = pilotscope_core_host
-    
+
     def set_data_fetch_method(self, data_fetch_method: DataFetchMethodEnum):
         self.data_fetch_method = data_fetch_method
-        
+
     def set_pretraining_model_mode(self, pretraining_model_mode: TrainSwitchMode):
         self.pretraining_model = pretraining_model_mode
-    
+
     def print(self):
         for key, value in self.__dict__.items():
-            print("{} = {}".format(key, value))    
+            print("{} = {}".format(key, value))
 
 
 class PostgreSQLConfig(PilotConfig):
@@ -93,7 +93,7 @@ class PostgreSQLConfig(PilotConfig):
         self.pgdata = "~"
         self.db_config_path = "/var/lib/pgsql/13.1/data/postgresql.conf"
         self.backup_db_config_path = "postgresql-13.1.conf"
-        
+
     def set_postgresql_local_config(self, pg_ctl, pgdata, db_config_path, backup_db_config_path):
         """Set value for local PostgreSQL. They influence the start, stop, changing config file, etc. If you do not need these functions, it is not necessary to set these values.
 
@@ -105,43 +105,43 @@ class PostgreSQLConfig(PilotConfig):
         :type db_config_path: str
         :param backup_db_config_path: location of the backup of the database config file, you could copy the default config file to anothor directory and fill the directory here.
         :type backup_db_config_path: str
-        """        
+        """
         self.pg_ctl = pg_ctl
         self.pgdata = pgdata
         self.db_config_path = db_config_path
         self.backup_db_config_path = backup_db_config_path
-        
-    def set_host(self, host = "localhost"):
+
+    def set_host(self, host="localhost"):
         """Set the database server host or socket directory of DBMS to connect to.
 
         :param host: A string representing the database server host or socket directory (default: "localhost")
         :type host: str
-        """        
+        """
         self.host = host
-    
-    def set_port(self, port = "5432"):
+
+    def set_port(self, port="5432"):
         """Set the database server port to connect to. 
 
         :param port:  A string representing the database server port (default: "5432")
         :type port: str
-        """        
-        self.port = port    
-    
-    def set_user(self, user = "postgres"):
+        """
+        self.port = port
+
+    def set_user(self, user="postgres"):
         """Set the database user name 
 
         :param user: database user name (default: "postgres")
         :type user: str
         """
-        self.user = user 
-    
+        self.user = user
+
     def set_password(self, pwd):
         """Set the password of the database user
 
         :param pwd: password string
         :type pwd: str
-        """        
-        self.pwd = pwd        
+        """
+        self.pwd = pwd
 
 
 class SparkConfig(PilotConfig):

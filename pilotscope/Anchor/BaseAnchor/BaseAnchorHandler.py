@@ -10,15 +10,16 @@ class BaseAnchorHandler(ABC):
         AnchorEnum.PHYSICAL_PLAN_PULL_ANCHOR.name: 1,
         "OTHER": 9
     }
+
     def __init__(self, config) -> None:
         self.enable = True
         self.anchor_name = AnchorEnum.BASE_ANCHOR.name
         self.config = config
 
-    def add_params_to_db_core(self, params: dict):
+    def add_trans_params(self, params: dict):
         return params.update({"enable": self.enable, "name": self.anchor_name})
-    
-    def _assign_priority(self):
+
+    def get_call_priority(self):
         if self.anchor_name in self.name_2_priority:
             return self.name_2_priority[self.anchor_name]
         else:
