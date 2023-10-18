@@ -20,13 +20,14 @@ class PeriodTrainingEvent(Event, ABC):
         super().__init__(config)
         self.per_query_count = per_query_count
         self.query_count = 0
-        self.model = model
+        self.pilot_model = model
 
     def update(self, pilot_data_manager: PilotTrainDataManager):
         self.query_count += 1
         if self.query_count >= self.per_query_count:
             self.query_count = 0
-            self.model.user_model = self.custom_update(self.model.user_model, pilot_data_manager)
+            self.pilot_model.model = self.custom_update(self.pilot_model.model, pilot_data_manager)
+            self.pilot_model.save()
 
     @abstractmethod
     def custom_update(self, user_model, pilot_data_manager: PilotTrainDataManager):
@@ -142,7 +143,7 @@ class PretrainingModelEvent(Event):
 
     def train(self):
         if self.enable_training:
-            self._model.user_model = self._custom_pretrain_model(self._train_data_manager, self._model.user_model)
+            self._model.model = self._custom_pretrain_model(self._train_data_manager, self._model.model)
             self._model.save()
 
     @abstractmethod

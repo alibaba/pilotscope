@@ -12,10 +12,10 @@ class MscnPilotModel(PilotModel):
         self.lero_model_save_dir = "../examples/ExampleData/Mscn/Model"
         self.model_path = os.path.join(self.lero_model_save_dir, self.model_name)
 
-    def _save_user_model(self, user_model):
+    def _save_model(self, user_model):
         user_model.save(self.model_path)
 
-    def _load_user_model(self):
+    def _load_model(self):
         try:
             model = MscnModel()
             model.load(self.model_path)

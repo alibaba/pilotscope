@@ -18,7 +18,7 @@ class LeroCardPushHandler(CardPushHandler):
         self.pilot_data_interactor = PilotDataInteractor(config)
 
     def predict(self, plans):
-        leroModel: LeroModelPairWise = self.model.user_model
+        leroModel: LeroModelPairWise = self.model.model
         feature_generator = leroModel._feature_generator
         best_idx = -1
         best_time = float("inf")

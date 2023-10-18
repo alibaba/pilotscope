@@ -1,29 +1,21 @@
 from abc import ABC, abstractmethod
 
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
-from pilotscope.Common.Cache import Cache
-
 
 class PilotModel(ABC):
     def __init__(self, model_name):
         self.model_name = model_name
-        self.user_model = None
-        self.pilot_model_Cache = Cache(model_name)
+        self.model = None
 
     def save(self):
-        self._save_user_model(self.user_model)
-        self.pilot_model_Cache.save([self.model_name])
+        self._save_model(self.model)
 
     def load(self):
-        self.user_model = self._load_user_model()
-        if self.pilot_model_Cache.exist():
-            res = self.pilot_model_Cache.read()
-            self.model_name = res[0]
+        self.model = self._load_model()
 
     @abstractmethod
-    def _save_user_model(self, user_model):
+    def _save_model(self, user_model):
         pass
 
     @abstractmethod
-    def _load_user_model(self):
+    def _load_model(self):
         pass

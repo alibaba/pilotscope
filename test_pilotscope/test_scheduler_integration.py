@@ -22,10 +22,10 @@ class ExamplePilotModel(PilotModel):
         self.model_save_dir = "../examples/ExampleData/Example/Model"
         self.model_path = os.path.join(self.model_save_dir, self.model_name)
 
-    def _save_user_model(self, user_model):
+    def _save_model(self, user_model):
         self.test_flag = "test_flag"
 
-    def _load_user_model(self):
+    def _load_model(self):
         pass
 
     def predict(self, subquery_2_card):

@@ -58,7 +58,7 @@ class BaoHintPushHandler(HintPushHandler):
         self.bao_hint = self.HintForBao(config.db_type)
 
     def predict(self, plans):
-        return self.model.user_model.predict(plans)
+        return self.model.model.predict(plans)
 
     def acquire_injected_data(self, sql):
         sql = modify_sql_for_spark(self.config, sql)
@@ -83,7 +83,7 @@ class BaoHintPushHandler(HintPushHandler):
                     plans.append(plan)
 
             TimeStatistic.start(ExperimentTimeEnum.PREDICT)
-            est_exe_time = self.model.user_model.predict(plans)
+            est_exe_time = self.model.model.predict(plans)
             TimeStatistic.end(ExperimentTimeEnum.PREDICT)
             print("BAO: ", est_exe_time, flush = True)
             TimeStatistic.end(ExperimentTimeEnum.AI_TASK)

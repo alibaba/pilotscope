@@ -21,7 +21,7 @@ class MscnCardPushHandler(CardPushHandler):
         subquery_2_card = data.subquery_2_card
         subquery = subquery_2_card.keys()
         try:
-            _, preds_unnorm, t_total = self.model.user_model.predict(subquery)
+            _, preds_unnorm, t_total = self.model.model.predict(subquery)
             # print(subquery, preds_unnorm) Mscn can only handler card that is larger than 0, so we add 1 to all
             # cards in training. In prediction we minus it by 1.
             res = {sq: str(max(0.0, pred - 1)) for sq, pred in zip(subquery, preds_unnorm)}

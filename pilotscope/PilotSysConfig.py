@@ -9,7 +9,3 @@ class PilotSysConfig:
 
     # Anchor
     ANCHOR_TRANS_JSON_KEY = "anchor"
-
-    # data
-    DATA_BASE = "../cacheData/"
-    PILOT_MODEL_DATA_BASE = os.path.join(DATA_BASE, "pilotModel")

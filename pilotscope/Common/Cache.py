@@ -6,7 +6,7 @@ from pilotscope.PilotSysConfig import PilotSysConfig
 
 
 class Cache:
-    def __init__(self, name, directory=PilotSysConfig.PILOT_MODEL_DATA_BASE, enable=True):
+    def __init__(self, name, directory, enable=True):
         """
 
         :param name: distinguish the different cache

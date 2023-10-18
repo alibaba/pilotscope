@@ -105,11 +105,11 @@ class BaoPeriodTrainingEvent(PeriodTrainingEvent):
         data = pilot_data_manager.read_all(self.train_data_table)
         # print(data)
         # exit()
-        bao_model = BaoRegression(verbose=True, have_cache_data=self.model.have_cache_data)
+        bao_model = BaoRegression(verbose=True, have_cache_data=self.pilot_model.have_cache_data)
         X = data["physical_plan"].values
-        if self.model.have_cache_data:
+        if self.pilot_model.have_cache_data:
             buffercache = data["buffercache"].values
-            if self.model.have_cache_data:
+            if self.pilot_model.have_cache_data:
                 for i in range(len(X)):
                     X[i] = json.loads(X[i])
                     X[i]["Buffers"] = json.loads(buffercache[i])
