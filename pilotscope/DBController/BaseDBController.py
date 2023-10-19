@@ -1,7 +1,6 @@
 import threading
 from abc import ABC, abstractmethod
 
-from pandas import DataFrame
 from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table, inspect, select, func, Column
 from sqlalchemy_utils import database_exists, create_database
 
@@ -9,28 +8,25 @@ from pilotscope.PilotConfig import PilotConfig
 from pilotscope.Common.Index import Index
 
 
-class BaseDBController(ABC):    
-    def __init__(self, config, echo=True, allow_to_create_db=False):
+class BaseDBController(ABC):
+    def __init__(self, config: PilotConfig, echo=True):
         """ 
 
         :param config: The database configuration information.
         :type config: pilotscope.PilotConfig
         :param echo: if True, the sqlachemy connection pool will log informational output such as when connections are invalidated as well as when connections are recycled to the default log handler, which defaults to sys.stdout for output. defaults to True
         :type echo: bool, optional
-        :param allow_to_create_db: defaults to False
-        :type allow_to_create_db: bool, optional
-        """        
+        """
         self.config = config
-        self.allow_to_create_db = allow_to_create_db
         self.echo = echo
         self.connection_thread = threading.local()
         self._db_init()
 
     def _db_init(self):
         self.engine = self._create_engine()
-        
+
         self.metadata = MetaData()
-        
+
         self.connect_if_loss()
 
     def _create_engine(self):
@@ -40,7 +36,8 @@ class BaseDBController(ABC):
 
         return create_engine(conn_str, echo=self.echo, pool_size=10, pool_recycle=3600,
                              connect_args={
-                                 "options": "-c statement_timeout={}".format(int(self.config.sql_execution_timeout * 1000))},
+                                 "options": "-c statement_timeout={}".format(
+                                     int(self.config.sql_execution_timeout * 1000))},
                              client_encoding='utf8', isolation_level="AUTOCOMMIT")
 
     def get_connection(self):
@@ -48,7 +45,7 @@ class BaseDBController(ABC):
 
         :return: the connection object of sqlalchemy in thread-local data
         :rtype: ``Connection`` of sqlalchemy
-        """        
+        """
         return self.connection_thread.conn
 
     def connect_if_loss(self):
@@ -70,7 +67,7 @@ class BaseDBController(ABC):
 
         :return: if self connected or not
         :rtype: bool
-        """        
+        """
         return hasattr(self.connection_thread, "conn") and self.connection_thread.conn is not None
 
     @abstractmethod
@@ -161,7 +158,7 @@ class BaseDBController(ABC):
         :type primary_key_column: str or None, optional
         :param enable_autoincrement_id_key: If it is True, the primary key will be autoincrement. It is only meaningful when primary_key_column is a string.
         :type enable_autoincrement_id_key: bool, optional
-        """        
+        """
         if not self.exist_table(table_name):
             column_2_type = self._to_db_data_type(column_2_value)
             columns = []
@@ -174,7 +171,6 @@ class BaseDBController(ABC):
             table = Table(table_name, self.metadata, *columns, extend_existing=True)
             table.create(self.engine)
 
-
     def drop_table_if_existence(self, table_name):
         """Try to drop table named ``table_name``
 
@@ -182,23 +178,23 @@ class BaseDBController(ABC):
         :type table_name: str
         """
         if self.exist_table(table_name):
-            Table(table_name, self.metadata, autoload_with = self.engine).drop(self.engine)
-        
+            Table(table_name, self.metadata, autoload_with=self.engine).drop(self.engine)
+
     def exist_table(self, table_name) -> bool:
         """If the table named ``table_name`` exist or not
 
         :return: the the table named ``table_name`` exist, it is return True; otherwise, it is return False
         :rtype: bool
-        """        
+        """
         return self.engine.dialect.has_table(self.get_connection(), table_name)
-    
+
     def get_all_sqla_tables(self):
         self.metadata.reflect(self.engine)
         return self.metadata.tables
-    
+
     def get_all_table_names(self):
         return list(self.get_all_sqla_tables().keys())
-    
+
     def insert(self, table_name, column_2_value: dict):
         """Insert a new row into the table with each column's value set as column_2_value.
 
@@ -206,7 +202,7 @@ class BaseDBController(ABC):
         :type table_name: str
         :param column_2_value: a dict where the keys are column names and the values are the values to be inserted
         :type column_2_value: dict
-        """        
+        """
         table = Table(table_name, self.metadata, autoload_with=self.engine)
         self.execute(table.insert().values(column_2_value))
 
@@ -217,9 +213,9 @@ class BaseDBController(ABC):
         :type table_name: str
         :return: the list of the names of column
         :rtype: list
-        """        
+        """
         return [c.key for c in self.get_sqla_table(table_name).c]
-    
+
     def get_table_row_count(self, table_name):
         """Get the row count of the a table
 
@@ -228,11 +224,11 @@ class BaseDBController(ABC):
         :return: the row count
         :rtype: int
         """
-        table = self.get_sqla_table(table_name)        
+        table = self.get_sqla_table(table_name)
         stmt = select(func.count()).select_from(table)
         result = self.execute(stmt, fetch=True)
         return result[0][0]
-    
+
     def get_column_max(self, table_name, column_name):
         """Get the maximum  of a column
 
@@ -260,7 +256,7 @@ class BaseDBController(ABC):
         stmt = select(func.min(table.c[column_name])).select_from(table)
         result = self.execute(stmt, fetch=True)
         return result[0][0]
-    
+
     def get_index_number(self, table):
         """Get the number of index in the table
 
@@ -268,7 +264,7 @@ class BaseDBController(ABC):
         :type table: str
         :return: the number of index 
         :rtype: int
-        """        
+        """
         inspector = self._create_inspect()
         n = len(inspector.get_indexes(table))
         return n
@@ -280,7 +276,7 @@ class BaseDBController(ABC):
         :type table: str
         :return: a list of pilotscope.common.Index
         :rtype: list
-        """        
+        """
         inspector = self._create_inspect()
         db_indexes = inspector.get_indexes(table)
 
@@ -294,7 +290,7 @@ class BaseDBController(ABC):
 
         :return: a list of pilotscope.common.Index
         :rtype: list
-        """        
+        """
         inspector = self._create_inspect()
         indexes = []
         for table in inspector.get_table_names():

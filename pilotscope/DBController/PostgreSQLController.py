@@ -1,16 +1,13 @@
 import os
 import re
-from abc import ABC
 
-from sqlalchemy import MetaData, Table, Column, text, inspect
+from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
-from typing_extensions import deprecated
 
-from pilotscope.PilotConfig import PostgreSQLConfig
-from pilotscope.Common.Util import pilotscope_exit
+from pilotscope.Common.Index import Index
 from pilotscope.DBController.BaseDBController import BaseDBController
 from pilotscope.Exception.Exception import DBStatementTimeoutException, DatabaseCrashException, DatabaseStartException
-from pilotscope.Common.Index import Index
+from pilotscope.PilotConfig import PostgreSQLConfig
 
 
 class PostgreSQLController(BaseDBController):
@@ -25,8 +22,8 @@ class PostgreSQLController(BaseDBController):
         self.disconnect()
         type(self).instances.remove(self)
 
-    def __init__(self, config, echo=True, allow_to_create_db=False, enable_simulate_index=False):
-        super().__init__(config, echo, allow_to_create_db)
+    def __init__(self, config: PostgreSQLConfig, echo=True, enable_simulate_index=False):
+        super().__init__(config, echo)
         self.config: PostgreSQLConfig = config
 
         self.enable_simulate_index = enable_simulate_index

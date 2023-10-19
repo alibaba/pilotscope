@@ -1,13 +1,13 @@
 import sys
+
 sys.path.append("../")
 import unittest
 
-from pilotscope.Common.Drawer import Drawer
 from pilotscope.Common.Util import pilotscope_exit
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
+from algorithm_examples.utils import load_test_sql
+from algorithm_examples.Mscn.MscnPresetScheduler import get_mscn_preset_scheduler
 
-from examples.utils import load_sql,load_test_sql
-from examples.Mscn.MscnPresetScheduler import get_mscn_preset_scheduler
 
 class MscnTest(unittest.TestCase):
     def setUp(self):

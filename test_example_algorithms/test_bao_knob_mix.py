@@ -1,22 +1,22 @@
 import sys
 
 sys.path.append("../")
-sys.path.append("../examples/Bao/source")
+sys.path.append("../algorithm_examples/Bao/source")
 
 from pilotscope.Common.Drawer import Drawer
 from pilotscope.Common.TimeStatistic import TimeStatistic
-from examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
+from algorithm_examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
 import unittest
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.Common.Util import pilotscope_exit
 from pilotscope.PilotConfig import PostgreSQLConfig
 from pilotscope.PilotEnum import *
 from pilotscope.PilotScheduler import PilotScheduler
-from examples.Bao.BaoParadigmHintAnchorHandler import BaoHintPushHandler
-from examples.Bao.BaoPilotModel import BaoPilotModel
-from examples.Bao.EventImplement import BaoPretrainingModelEvent
-from examples.KnobTuning.EventImplement import KnobPeriodicDbControllerEvent
-from examples.utils import load_test_sql
+from algorithm_examples.Bao.BaoParadigmHintAnchorHandler import BaoHintPushHandler
+from algorithm_examples.Bao.BaoPilotModel import BaoPilotModel
+from algorithm_examples.Bao.EventImplement import BaoPretrainingModelEvent
+from algorithm_examples.KnobTuning.EventImplement import KnobPeriodicModelUpdateEvent
+from algorithm_examples.utils import load_test_sql
 
 
 class BaoTest(unittest.TestCase):
@@ -52,18 +52,17 @@ class BaoTest(unittest.TestCase):
 
             # core
             scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
-            scheduler.register_anchor_handler(bao_handler)
-            scheduler.register_collect_data(table_name_for_store_data=self.test_data_table, pull_execution_time=True,
-                                            pull_physical_plan=True, pull_buffer_cache=self.used_cache)
+            scheduler.register_custom_handlers([bao_handler])
+            scheduler.register_required_data(table_name_for_store_data=self.test_data_table, pull_execution_time=True,
+                                             pull_physical_plan=True, pull_buffer_cache=self.used_cache)
 
             pretraining_event = BaoPretrainingModelEvent(config, bao_pilot_model, self.pretraining_data_table,
                                                          enable_collection=True,
                                                          enable_training=True)
-            scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
-            periodic_db_controller_event = KnobPeriodicDbControllerEvent(config, 200,
-                                                                         llamatune_config_file="../examples/KnobTuning/llamatune/configs/llama_config.ini",
-                                                                         exec_in_init=True, optimizer_type="smac")
-            scheduler.register_event(EventEnum.PERIODIC_DB_CONTROLLER_EVENT, periodic_db_controller_event)
+            periodic_db_controller_event = KnobPeriodicModelUpdateEvent(config, 200,
+                                                                        llamatune_config_file="../algorithm_examples/KnobTuning/llamatune/configs/llama_config.ini",
+                                                                        execute_before_first_query=True, optimizer_type="smac")
+            scheduler.register_events([pretraining_event, periodic_db_controller_event])
             # start
             scheduler.init()
             TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo + "1", config.db))

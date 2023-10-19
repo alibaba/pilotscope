@@ -1,24 +1,24 @@
-import unittest
 import sys
+import unittest
+
 sys.path.append("../")
-sys.path.append("../examples/Index/index_selection_evaluation")
+sys.path.append("../algorithm_examples/Index/index_selection_evaluation")
 from pilotscope.Common.Drawer import Drawer
 from pilotscope.Common.TimeStatistic import TimeStatistic
 from pilotscope.Common.Util import pilotscope_exit
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
-from pilotscope.PilotEnum import DatabaseEnum, ExperimentTimeEnum, EventEnum
-from pilotscope.PilotScheduler import PilotScheduler
-from examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
-from examples.utils import load_test_sql
-from examples.Index.IndexPresetScheduler import get_index_preset_scheduler
+from pilotscope.PilotEnum import DatabaseEnum, ExperimentTimeEnum
+from algorithm_examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
+from algorithm_examples.utils import load_test_sql
+from algorithm_examples.Index.IndexPresetScheduler import get_index_preset_scheduler
+
 
 class IndexTest(unittest.TestCase):
     def setUp(self):
         self.config: PilotConfig = PostgreSQLConfig()
-        self.config.db = "stats"
-        # self.config.db = "stats_tiny"
+        self.config.db = "stats_tiny"
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
-        self.algo = "extend"        
+        self.algo = "extend"
 
     def test_index(self):
         try:

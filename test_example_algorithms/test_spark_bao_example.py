@@ -1,14 +1,14 @@
 import sys
 
-sys.path.append("../examples/Bao/source")
+sys.path.append("../algorithm_examples/Bao/source")
 sys.path.append("../")
 from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
 from SparkPlanCompress import SparkPlanCompress
 from pilotscope.Common.Drawer import Drawer
 from pilotscope.Common.TimeStatistic import TimeStatistic
 from pilotscope.Common.dotDrawer import PlanDotDrawer
-from examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
-from examples.Bao.source.model import BaoRegression
+from algorithm_examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
+from algorithm_examples.Bao.source.model import BaoRegression
 
 import unittest
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
@@ -17,10 +17,10 @@ from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig, SparkConfig
 from pilotscope.PilotEnum import *
 from pilotscope.PilotScheduler import PilotScheduler
-from examples.Bao.BaoParadigmHintAnchorHandler import BaoHintPushHandler, modify_sql_for_spark
-from examples.Bao.BaoPilotModel import BaoPilotModel
-from examples.Bao.EventImplement import BaoPretrainingModelEvent
-from examples.utils import load_test_sql, to_tree_json
+from algorithm_examples.Bao.BaoParadigmHintAnchorHandler import BaoHintPushHandler, modify_sql_for_spark
+from algorithm_examples.Bao.BaoPilotModel import BaoPilotModel
+from algorithm_examples.Bao.EventImplement import BaoPretrainingModelEvent
+from algorithm_examples.utils import load_test_sql, to_tree_json
 
 
 class SparkBaoTest(unittest.TestCase):
@@ -61,15 +61,15 @@ class SparkBaoTest(unittest.TestCase):
 
             # core
             scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
-            scheduler.register_anchor_handler(bao_handler)
-            scheduler.register_collect_data(table_name_for_store_data=self.test_data_table,
-                                            pull_execution_time=True, pull_physical_plan=True,
-                                            pull_buffer_cache=self.used_cache)
+            scheduler.register_custom_handlers([bao_handler])
+            scheduler.register_required_data(table_name_for_store_data=self.test_data_table,
+                                             pull_execution_time=True, pull_physical_plan=True,
+                                             pull_buffer_cache=self.used_cache)
 
             pretraining_event = BaoPretrainingModelEvent(config, bao_pilot_model, self.pretraining_data_table,
                                                          enable_collection=True,
                                                          enable_training=True)
-            scheduler.register_event(EventEnum.PRETRAINING_EVENT, pretraining_event)
+            scheduler.register_events([pretraining_event])
             # start
             scheduler.init()
 

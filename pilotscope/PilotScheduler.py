@@ -17,7 +17,8 @@ class PilotScheduler:
         self.config = config
         self.table_name_for_store_data = None
         self.pilot_data_manager: PilotTrainDataManager = PilotTrainDataManager(self.config)
-        self.type_2_event = {}
+        self.db_controller = DBControllerFactory.get_db_controller(self.config)
+        self.events = []
         self.user_tasks: List[BasePushHandler] = []
         self.data_interactor = PilotDataInteractor(self.config)
 
@@ -49,58 +50,18 @@ class PilotScheduler:
 
         return None
 
-    def _post_process(self, data: PilotTransData):
-        TimeStatistic.start(ExperimentTimeEnum.WRITE_TABLE)
-        self._store_collected_data_into_table(data)
-        TimeStatistic.end(ExperimentTimeEnum.WRITE_TABLE)
-        self._deal_execution_end_events()
+    def register_custom_handlers(self, handlers: List[BaseAnchorHandler]):
+        if not self._is_valid_custom_handlers(handlers):
+            raise RuntimeError("pilotscope is not allowed to register identical class type for custom handler")
 
-    def _store_collected_data_into_table(self, data: PilotTransData):
-        pull_anchors = extract_handlers(self.data_interactor.get_all_handlers(), True)
-        column_2_value = {}
-        for anchor in pull_anchors:
-            if isinstance(anchor, BasePullHandler):
-                anchor.prepare_data_for_writing(column_2_value, data)
-            else:
-                raise RuntimeError
-        self.pilot_data_manager.save_data(self.table_name_for_store_data, column_2_value)
+        if not isinstance(handlers, List):
+            handlers = [handlers]
+        self.user_tasks += handlers
 
-    def _deal_initial_events(self):
-        pretraining_thread = None
-        for event_type, event in self.type_2_event.items():
-            if event_type == EventEnum.PRETRAINING_EVENT:
-                event: PretrainingModelEvent = event
-                pretraining_thread = event.async_start()
-            elif event_type == EventEnum.PERIODIC_COLLECTION_EVENT:
-                pass
-            elif event_type == EventEnum.PERIODIC_DB_CONTROLLER_EVENT:
-                event: PeriodicDbControllerEvent = event
-                event.update()
-
-        # wait until finishing pretraining
-        if pretraining_thread is not None and self.config.pretraining_model == TrainSwitchMode.WAIT:
-            pretraining_thread.join()
-        pass
-
-    def _deal_execution_end_events(self):
-        for event_type, event in self.type_2_event.items():
-            if event_type == EventEnum.PERIOD_TRAIN_EVENT:
-                event: PeriodTrainingEvent = event
-                event.update(self.pilot_data_manager)
-            elif event_type == EventEnum.PERIODIC_COLLECTION_EVENT:
-                event: PeriodCollectionDataEvent = event
-                event.update()
-            elif event_type == EventEnum.PERIODIC_DB_CONTROLLER_EVENT:
-                event: PeriodicDbControllerEvent = event
-                event.update()
-
-    def register_anchor_handler(self, anchor: BaseAnchorHandler):
-        self.user_tasks.append(anchor)
-
-    def register_collect_data(self, table_name_for_store_data, pull_execution_time=False, pull_logical_plan=False,
-                              pull_physical_plan=False, pull_real_node_card=False, pull_real_node_cost=False,
-                              pull_subquery_2_cards=False, pull_buffer_cache=False, pull_estimated_cost=False,
-                              pull_records=False):
+    def register_required_data(self, table_name_for_store_data, pull_execution_time=False, pull_logical_plan=False,
+                               pull_physical_plan=False, pull_real_node_card=False, pull_real_node_cost=False,
+                               pull_subquery_2_cards=False, pull_buffer_cache=False, pull_estimated_cost=False,
+                               pull_records=False):
 
         if pull_execution_time:
             self.data_interactor.pull_execution_time()
@@ -122,5 +83,49 @@ class PilotScheduler:
             self.data_interactor.pull_record()
         self.table_name_for_store_data = table_name_for_store_data
 
-    def register_event(self, event_type: EventEnum, event: Event):
-        self.type_2_event[event_type] = event
+    def register_events(self, events: List[Event]):
+        if not isinstance(events, List):
+            events = [events]
+        self.events += events
+
+    def _post_process(self, data: PilotTransData):
+        TimeStatistic.start(ExperimentTimeEnum.WRITE_TABLE)
+        self._store_collected_data_into_table(data)
+        TimeStatistic.end(ExperimentTimeEnum.WRITE_TABLE)
+        self._deal_execution_end_events()
+
+    def _store_collected_data_into_table(self, data: PilotTransData):
+        pull_anchors = extract_handlers(self.data_interactor.get_all_handlers(), True)
+        column_2_value = {}
+        for anchor in pull_anchors:
+            if isinstance(anchor, BasePullHandler):
+                anchor.prepare_data_for_writing(column_2_value, data)
+            else:
+                raise RuntimeError
+        self.pilot_data_manager.save_data(self.table_name_for_store_data, column_2_value)
+
+    def _deal_initial_events(self):
+        pretraining_thread = None
+        for event in self.events:
+            if isinstance(event, PretrainingModelEvent):
+                event: PretrainingModelEvent = event
+                pretraining_thread = event.async_start()
+            elif isinstance(event, PeriodicModelUpdateEvent):
+                event: PeriodicModelUpdateEvent = event
+                event.process(self.db_controller, self.pilot_data_manager)
+
+        # wait until finishing pretraining
+        if pretraining_thread is not None and self.config.pretraining_model == TrainSwitchMode.WAIT:
+            pretraining_thread.join()
+        pass
+
+    def _deal_execution_end_events(self):
+        for event in self.events:
+            if isinstance(event, PeriodicModelUpdateEvent):
+                event: PeriodicModelUpdateEvent = event
+                event.update(self.db_controller, self.pilot_data_manager)
+
+    def _is_valid_custom_handlers(self, handlers):
+        # return false, if there is identical class typy for the elements in handlers
+        deduplicated_size = len(set([type(handler) for handler in handlers]))
+        return deduplicated_size == len(handlers)

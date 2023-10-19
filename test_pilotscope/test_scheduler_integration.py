@@ -1,17 +1,16 @@
-import unittest
 import os
+import unittest
 
 from pilotscope.Anchor.BaseAnchor.BasePushHandler import CardPushHandler
 from pilotscope.DBController import BaseDBController
 from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
+from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
-from pilotscope.PilotEnum import EventEnum
-from pilotscope.PilotEvent import PeriodicDbControllerEvent
+from pilotscope.PilotEvent import PeriodicModelUpdateEvent
 from pilotscope.PilotModel import PilotModel
 from pilotscope.PilotScheduler import PilotScheduler
-from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.PilotTransData import PilotTransData
 
 
@@ -19,7 +18,7 @@ class ExamplePilotModel(PilotModel):
 
     def __init__(self, model_name):
         super().__init__(model_name)
-        self.model_save_dir = "../examples/ExampleData/Example/Model"
+        self.model_save_dir = "../algorithm_examples/ExampleData/Example/Model"
         self.model_path = os.path.join(self.model_save_dir, self.model_name)
 
     def _save_model(self, user_model):
@@ -48,8 +47,9 @@ class ExampleCardPushHandler(CardPushHandler):
         return self.model.predict(data.subquery_2_card)
 
 
-class ExamplePeriodicDbControllerEvent(PeriodicDbControllerEvent):
-    def _custom_update(self, db_controller: BaseDBController, training_data_manager: PilotTrainDataManager):
+class ExamplePeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
+    def custom_model_update(self, pilot_model: PilotModel, db_controller: BaseDBController,
+                            pilot_data_manager: PilotTrainDataManager):
         print("IN ExamplePeriodicDbControllerEvent")
 
 
@@ -70,14 +70,14 @@ class MyTestCase(unittest.TestCase):
         model.load()
 
         handler = ExampleCardPushHandler(model, config)
-        scheduler.register_anchor_handler(handler)
-        event = ExamplePeriodicDbControllerEvent(config, 2, True)
-        scheduler.register_event(EventEnum.PERIODIC_DB_CONTROLLER_EVENT, event)
+        scheduler.register_custom_handlers([handler])
+        event = ExamplePeriodicModelUpdateEvent(config, 2, True)
+        scheduler.register_events([event])
 
         test_scheduler_table = "test_scheduler_table"
-        scheduler.register_collect_data(test_scheduler_table, pull_buffer_cache=True, pull_estimated_cost=True,
-                                        pull_execution_time=True, pull_logical_plan=True, pull_physical_plan=True,
-                                        pull_records=True, pull_subquery_2_cards=True)
+        scheduler.register_required_data(test_scheduler_table, pull_buffer_cache=True, pull_estimated_cost=True,
+                                         pull_execution_time=True, pull_logical_plan=True, pull_physical_plan=True,
+                                         pull_records=True, pull_subquery_2_cards=True)
         scheduler.init()
         data = scheduler.simulate_db_console(self.sql)
         print(data)

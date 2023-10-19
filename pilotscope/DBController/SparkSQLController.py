@@ -163,6 +163,7 @@ class SparkTable:
         if persist:
             self.persist(engine)
 
+
 class SparkIO:
     def __init__(self, datasource_type: SparkSQLDataSourceEnum, engine, **datasource_conn_info) -> None:
         self.reader = None
@@ -266,8 +267,8 @@ class SparkSQLController(BaseDBController):
     # def __del__(self):
     #    type(self).instances.remove(self)
 
-    def __init__(self, config: SparkConfig, echo=False, allow_to_create_db=False):
-        super().__init__(config, echo, allow_to_create_db)
+    def __init__(self, config: SparkConfig, echo=False):
+        super().__init__(config, echo)
 
     def _db_init(self):
         self.name_2_table = {}
@@ -455,13 +456,13 @@ class SparkSQLController(BaseDBController):
         return json.loads(plan.toJSON())[0]
 
     def get_estimated_cost(self, sql) -> Tuple[int]:
-        raise NotImplementedError("Spark SQL does not support cost estimation.You can use row count or sizeByte instead.")
+        raise NotImplementedError(
+            "Spark SQL does not support cost estimation.You can use row count or sizeByte instead.")
         plan = self._logicalPlan(self.execute(sql)._jdf.queryExecution())
         cost_str = plan.stats().simpleString()
         pattern = re.compile(r"sizeInBytes=([0-9.]+) B, rowCount=([0-9]+)")
         res = pattern.search(cost_str)
         return res.groups()[0], res.groups()[1]
-
 
     # done
     def write_knob_to_file(self, knobs):

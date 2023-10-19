@@ -2,12 +2,12 @@ import sys
 sys.path.append("../")
 import unittest
 from pilotscope.Common.TimeStatistic import TimeStatistic
-from examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
+from algorithm_examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
 from pilotscope.Common.Drawer import Drawer
 from pilotscope.Common.Util import pilotscope_exit
 from pilotscope.PilotEnum import DatabaseEnum, EventEnum, ExperimentTimeEnum
 from pilotscope.PilotScheduler import PilotScheduler
-from examples.utils import load_sql
+from algorithm_examples.utils import load_sql
 import unittest
 
 from pilotscope.DBController.SparkSQLController import SparkSQLController, SparkConfig, SUCCESS, FAILURE, SparkSQLDataSourceEnum
@@ -15,9 +15,9 @@ from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PilotConfig
 
 from pilotscope.PilotConfig import PilotConfig, SparkConfig, PostgreSQLConfig
-from examples.utils import load_sql, load_test_sql
+from algorithm_examples.utils import load_sql, load_test_sql
 
-from examples.KnobTuning.KnobPresetScheduler import get_knob_spark_preset_scheduler
+from algorithm_examples.KnobTuning.KnobPresetScheduler import get_knob_spark_preset_scheduler
 
 class KnobTest(unittest.TestCase):
     def setUp(self):

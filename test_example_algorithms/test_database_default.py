@@ -5,7 +5,7 @@ sys.path.append("../")
 from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
 from pilotscope.Common.Drawer import Drawer
 from pilotscope.Common.TimeStatistic import TimeStatistic
-from examples.ExampleConfig import get_time_statistic_img_path
+from algorithm_examples.ExampleConfig import get_time_statistic_img_path
 
 import unittest
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
@@ -14,8 +14,8 @@ from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig, SparkConfig
 from pilotscope.PilotEnum import *
 from pilotscope.PilotScheduler import PilotScheduler
-from examples.utils import load_test_sql
-from examples.ExampleConfig import get_time_statistic_xlsx_file_path
+from algorithm_examples.utils import load_test_sql
+from algorithm_examples.ExampleConfig import get_time_statistic_xlsx_file_path
 
 
 class MyTestCase(unittest.TestCase):
@@ -34,7 +34,7 @@ class MyTestCase(unittest.TestCase):
         # core
         scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
 
-        scheduler.register_collect_data(self.pg_test_data_table, pull_execution_time=True)
+        scheduler.register_required_data(self.pg_test_data_table, pull_execution_time=True)
 
         # start
         scheduler.init()
@@ -81,7 +81,7 @@ class MyTestCase(unittest.TestCase):
         # core
         scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
         scheduler.pilot_data_manager = PilotTrainDataManager(PostgreSQLConfig())  # hack
-        scheduler.register_collect_data(self.spark_test_data_table, pull_execution_time=True)
+        scheduler.register_required_data(self.spark_test_data_table, pull_execution_time=True)
 
         scheduler.init()
         sqls = load_test_sql(config.db)

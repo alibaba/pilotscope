@@ -15,100 +15,49 @@ class Event(ABC):
         self.config = config
 
 
-class PeriodTrainingEvent(Event, ABC):
-    def __init__(self, config, per_query_count, model: PilotModel):
+class QueryFinishEvent(Event, ABC):
+    """
+     THe process function will be called when "interval_count" query is finished.
+    """
+
+    def __init__(self, config, interval_count=1):
         super().__init__(config)
-        self.per_query_count = per_query_count
-        self.query_count = 0
-        self.pilot_model = model
+        self.interval_count = interval_count
+        self.query_execution_count = 0
 
-    def update(self, pilot_data_manager: PilotTrainDataManager):
-        self.query_count += 1
-        if self.query_count >= self.per_query_count:
-            self.query_count = 0
-            self.pilot_model.model = self.custom_update(self.pilot_model.model, pilot_data_manager)
-            self.pilot_model.save()
+    def update(self, db_controller: BaseDBController, pilot_data_manager: PilotTrainDataManager):
+        """
+        This function will be called when a query is finished.
+        It will call process function when "interval_count" query is finished.
+        :return:
+        """
+        self.query_execution_count += 1
+        if self.query_execution_count >= self.interval_count:
+            self.query_execution_count = 0
+            self.process(db_controller, pilot_data_manager)
 
     @abstractmethod
-    def custom_update(self, user_model, pilot_data_manager: PilotTrainDataManager):
+    def process(self, db_controller: BaseDBController, pilot_data_manager: PilotTrainDataManager):
         pass
 
 
-class PeriodCollectionDataEvent(Event):
+class PeriodicModelUpdateEvent(QueryFinishEvent, ABC):
+    """
+    The user can inherit this class to implement a periodic model update event.
+    """
 
-    def __init__(self, config, seconds):
-        super().__init__(config)
-        self._table_name = self.get_table_name()
-        self._seconds = seconds
-        self._training_data_manager = PilotTrainDataManager(config)
-        self._scheduler = scheduler = BackgroundScheduler()
+    def __init__(self, config, interval_count, pilot_model: PilotModel, execute_before_first_query=True):
+        super().__init__(config, interval_count)
+        self.pilot_model = pilot_model
+        self.execute_before_first_query = execute_before_first_query
 
-        scheduler.add_job(self._trigger, "interval", seconds=self._seconds)
-
-    def start(self):
-        self._scheduler.start()
-
-    def _trigger(self):
-        column_2_value = self.custom_collect()
-        self._training_data_manager.save_data(self._table_name, column_2_value)
-
-    def stop(self):
-        self._scheduler.shutdown()
+    def process(self, db_controller: BaseDBController, pilot_data_manager: PilotTrainDataManager):
+        self.pilot_model.model = self.custom_model_update(self.pilot_model.model, pilot_data_manager)
+        self.pilot_model.save()
 
     @abstractmethod
-    def get_table_name(self):
-        pass
-
-    @abstractmethod
-    def custom_collect(self) -> dict:
-        pass
-
-
-class PeriodPerCountCollectionDataEvent(Event):
-
-    def __init__(self, save_table_name, config, per_query_count):
-        super().__init__(config)
-        self._training_data_manager = PilotTrainDataManager(config)
-        self.per_query_count = per_query_count
-        self.query_count = 0
-        self._table_name = save_table_name
-
-    def update(self):
-        self.query_count += 1
-        if self.query_count >= self.per_query_count:
-            self.query_count = 0
-            self._trigger()
-
-    def _trigger(self):
-        column_2_value = self.custom_collect()
-        self._training_data_manager.save_data_batch(self._table_name, column_2_value)
-
-    @abstractmethod
-    def custom_collect(self) -> dict:
-        pass
-
-
-class ContinuousCollectionDataEvent(Event):
-    def __init__(self, config):
-        super().__init__(config)
-        self._table_name = self.get_table_name()
-        self._training_data_manager = PilotTrainDataManager(config)
-
-    def start(self):
-        while self.has_next():
-            column_2_value = self.next()
-            self._training_data_manager.save_data(self._table_name, column_2_value)
-
-    @abstractmethod
-    def get_table_name(self):
-        pass
-
-    @abstractmethod
-    def has_next(self):
-        pass
-
-    @abstractmethod
-    def next(self) -> dict:
+    def custom_model_update(self, pilot_model: PilotModel, db_controller: BaseDBController,
+                            pilot_data_manager: PilotTrainDataManager):
         pass
 
 
@@ -152,23 +101,4 @@ class PretrainingModelEvent(Event):
 
     @abstractmethod
     def _custom_pretrain_model(self, train_data_manager: PilotTrainDataManager, existed_user_model):
-        pass
-
-
-class PeriodicDbControllerEvent(Event):
-    def __init__(self, config, per_query_count, exec_in_init=True):
-        super().__init__(config)
-        self.per_query_count = per_query_count
-        self._cur_query_count = per_query_count if exec_in_init else 0
-        self._db_controller = DBControllerFactory.get_db_controller(config)
-        self._training_data_manager = PilotTrainDataManager(config)
-
-    def update(self):
-        self._cur_query_count += 1
-        if self._cur_query_count >= self.per_query_count:
-            self._cur_query_count = 0
-            self._custom_update(self._db_controller, self._training_data_manager)
-
-    @abstractmethod
-    def _custom_update(self, db_controller: BaseDBController, training_data_manager: PilotTrainDataManager):
         pass

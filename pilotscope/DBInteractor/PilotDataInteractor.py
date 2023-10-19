@@ -25,8 +25,8 @@ class PilotDataInteractor:
     """The core module for interacting with DBMS and handling push-and-pull operators
     """
 
-    def __init__(self, config: PilotConfig, db_controller: BaseDBController = None) -> None:
-        self.db_controller = DBControllerFactory.get_db_controller(config) if db_controller is None else db_controller
+    def __init__(self, config: PilotConfig, enable_simulate_index=False) -> None:
+        self.db_controller = DBControllerFactory.get_db_controller(config, enable_simulate_index=enable_simulate_index)
         self.anchor_to_handlers = {}
         self.config = config
         self.port = None

@@ -32,7 +32,7 @@ def extract_handlers(handlers, extract_pull_anchor):
 
 
 def pilotscope_exit(e=None):
-    print("Exit pilotscope as exiting program or exception.")
+    print("Terminate pilotscope either at the end of the program or in case of an exception.")
     if e is not None:
         print(e)
     for http in all_https:

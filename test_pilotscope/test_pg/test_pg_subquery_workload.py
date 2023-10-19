@@ -9,7 +9,7 @@ from pilotscope.DBController import PostgreSQLController
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 import sys
 sys.path.append("../..")
-from examples.utils import load_test_sql
+from algorithm_examples.utils import load_test_sql
 from sqlglot import errors, parse_one
 
 class MyTestCase(unittest.TestCase):

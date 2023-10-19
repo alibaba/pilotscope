@@ -1,6 +1,6 @@
 import sys
 sys.path.append("../")
-sys.path.append("../examples/Lero/source")
+sys.path.append("../algorithm_examples/Lero/source")
 import unittest
 
 from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
@@ -12,12 +12,12 @@ from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
 from pilotscope.PilotEnum import DatabaseEnum, EventEnum
 from pilotscope.PilotModel import PilotModel
 from pilotscope.PilotScheduler import PilotScheduler
-from examples.Lero.EventImplement import LeroPeriodTrainingEvent, \
-    LeroDynamicCollectEventPeriod
-from examples.Lero.LeroParadigmCardAnchorHandler import LeroCardPushHandler
-from examples.Lero.LeroPilotModel import LeroPilotModel
-from examples.utils import load_test_sql
-from examples.Lero.LeroPresetScheduler import get_lero_dynamic_preset_scheduler
+from algorithm_examples.Lero.EventImplement import LeroPeriodicModelUpdateEvent, \
+    LeroPeriodicCollectEvent
+from algorithm_examples.Lero.LeroParadigmCardAnchorHandler import LeroCardPushHandler
+from algorithm_examples.Lero.LeroPilotModel import LeroPilotModel
+from algorithm_examples.utils import load_test_sql
+from algorithm_examples.Lero.LeroPresetScheduler import get_lero_dynamic_preset_scheduler
 
 class LeroTest(unittest.TestCase):
     def setUp(self):
