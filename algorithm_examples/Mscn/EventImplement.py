@@ -5,7 +5,7 @@ from algorithm_examples.Mscn.source.mscn_utils import load_tokens, parse_queries
 from algorithm_examples.utils import load_training_sql
 from pilotscope.DBController.BaseDBController import BaseDBController
 from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotEvent import PretrainingModelEvent
 from pilotscope.PilotModel import PilotModel
@@ -23,7 +23,7 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
         self.pilot_data_interactor = PilotDataInteractor(self.config)
         self.training_data_file = training_data_file
 
-    def iterative_data_collection(self, db_controller: BaseDBController, train_data_manager: PilotTrainDataManager):
+    def iterative_data_collection(self, db_controller: BaseDBController, train_data_manager: DataManager):
         self.sqls = load_training_sql(self.config.db)
         column_2_value_list = []
         for sql in self.sqls:
@@ -43,7 +43,7 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
         return self.data_saving_table
 
     def custom_model_training(self, bind_model, db_controller: BaseDBController,
-                              train_data_manager: PilotTrainDataManager):
+                              train_data_manager: DataManager):
         if not self.training_data_file is None:
             tokens, labels = load_tokens(self.training_data_file, self.training_data_file + ".token")
             schema = load_schema(self.pilot_data_interactor.db_controller)

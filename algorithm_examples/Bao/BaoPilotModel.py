@@ -1,6 +1,6 @@
 import os
 
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.PilotModel import PilotModel
 from algorithm_examples.Bao.source.model import BaoRegression
 
@@ -14,10 +14,10 @@ class BaoPilotModel(PilotModel):
         self.have_cache_data = have_cache_data
         self.is_spark = is_spark
 
-    def train(self, pilot_data_manager: PilotTrainDataManager):
+    def train(self, data_manager: DataManager):
         print("enter LeroPilotModel.train")
 
-    def update(self, pilot_data_manager: PilotTrainDataManager):
+    def update(self, data_manager: DataManager):
         print("enter LeroPilotModel.update")
 
     def _save_model(self, user_model):

@@ -1,6 +1,6 @@
 import os
 
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.PilotModel import PilotModel
 from model import LeroModelPairWise
 
@@ -12,10 +12,10 @@ class LeroPilotModel(PilotModel):
         self.lero_model_save_dir = "../algorithm_examples/ExampleData/Lero/Model"
         self.model_path = os.path.join(self.lero_model_save_dir, self.model_name)
 
-    def train(self, pilot_data_manager: PilotTrainDataManager):
+    def train(self, data_manager: DataManager):
         print("enter LeroPilotModel.train")
 
-    def update(self, pilot_data_manager: PilotTrainDataManager):
+    def update(self, data_manager: DataManager):
         print("enter LeroPilotModel.update")
 
     def _save_model(self, user_model):

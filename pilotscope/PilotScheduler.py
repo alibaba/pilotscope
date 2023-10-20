@@ -16,7 +16,7 @@ class PilotScheduler:
     def __init__(self, config: PilotConfig) -> None:
         self.config = config
         self.table_name_for_store_data = None
-        self.pilot_data_manager: PilotTrainDataManager = PilotTrainDataManager(self.config)
+        self.data_manager: DataManager = DataManager(self.config)
         self.db_controller = DBControllerFactory.get_db_controller(self.config)
         self.events = []
         self.user_tasks: List[BasePushHandler] = []
@@ -102,7 +102,7 @@ class PilotScheduler:
                 anchor.prepare_data_for_writing(column_2_value, data)
             else:
                 raise RuntimeError
-        self.pilot_data_manager.save_data(self.table_name_for_store_data, column_2_value)
+        self.data_manager.save_data(self.table_name_for_store_data, column_2_value)
 
     def _deal_initial_events(self):
         pretraining_thread = None
@@ -113,10 +113,10 @@ class PilotScheduler:
             elif isinstance(event, PeriodicModelUpdateEvent):
                 event: PeriodicModelUpdateEvent = event
                 if event.execute_before_first_query:
-                    event.process(self.db_controller, self.pilot_data_manager)
+                    event.process(self.db_controller, self.data_manager)
             elif isinstance(event, WorkloadStartEvent):
                 event: WorkloadStartEvent = event
-                event.update(self.db_controller, self.pilot_data_manager)
+                event.update(self.db_controller, self.data_manager)
 
         # wait until finishing pretraining
         if pretraining_thread is not None and self.config.pretraining_model == TrainSwitchMode.WAIT:
@@ -127,7 +127,7 @@ class PilotScheduler:
         for event in self.events:
             if isinstance(event, QueryFinishEvent):
                 event: QueryFinishEvent = event
-                event.update(self.db_controller, self.pilot_data_manager)
+                event.update(self.db_controller, self.data_manager)
 
     def _is_valid_custom_handlers(self, handlers):
         # return false, if there is identical class typy for the elements in handlers

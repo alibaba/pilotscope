@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append("../")
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
 from pilotscope.PilotEnum import EventEnum, AllowedPullDataEnum
@@ -58,7 +58,7 @@ def get_knob_spark_preset_scheduler(config: PilotConfig) -> PilotScheduler:
 
     # core
     scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
-    scheduler.pilot_data_manager = PilotTrainDataManager(PostgreSQLConfig())  # hack
+    scheduler.data_manager = DataManager(PostgreSQLConfig())  # hack
     scheduler.register_required_data("llamatune_data_spark", pull_execution_time=True)
     # allow to pretrain model
     periodic_db_controller_event = KnobPeriodicModelUpdateEvent(config, 2000,

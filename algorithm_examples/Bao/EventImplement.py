@@ -4,7 +4,7 @@ from pandas import DataFrame
 from algorithm_examples.Bao.source.SparkPlanCompress import SparkPlanCompress
 from pilotscope.DBController.BaseDBController import BaseDBController
 
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotEvent import PeriodicModelUpdateEvent, PretrainingModelEvent
@@ -31,7 +31,7 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
     def load_sql(self):
         return load_training_sql(self.config.db)[0:10]  # only for development test
 
-    def iterative_data_collection(self,db_controller: BaseDBController, train_data_manager: PilotTrainDataManager):
+    def iterative_data_collection(self, db_controller: BaseDBController, train_data_manager: DataManager):
         # self.load_sql()
         column_2_value_list = []
 
@@ -59,7 +59,7 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
         return column_2_value_list, True if self.cur_sql_idx >= len(self.sqls) else False
 
     def custom_model_training(self, bind_model, db_controller: BaseDBController,
-                              train_data_manager: PilotTrainDataManager):
+                              train_data_manager: DataManager):
         data: DataFrame = train_data_manager.read_all(self.data_saving_table)
         bao_model = BaoRegression(verbose=True, have_cache_data=self._model.have_cache_data,
                                   is_spark=self.config.db_type == DatabaseEnum.SPARK)
@@ -103,8 +103,8 @@ class BaoPeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
         super().__init__(config, per_query_count, pilot_model)
         self.train_data_table = train_data_table
 
-    def custom_model_update(self, pilot_model:PilotModel, db_controller: BaseDBController, pilot_data_manager: PilotTrainDataManager):
-        data = pilot_data_manager.read_all(self.train_data_table)
+    def custom_model_update(self, pilot_model: PilotModel, db_controller: BaseDBController, data_manager: DataManager):
+        data = data_manager.read_all(self.train_data_table)
         # print(data)
         # exit()
         bao_model = BaoRegression(verbose=True, have_cache_data=self.pilot_model.have_cache_data)

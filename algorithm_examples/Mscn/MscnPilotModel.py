@@ -1,6 +1,6 @@
 import os
 
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.PilotModel import PilotModel
 from algorithm_examples.Mscn.source.mscn_model import MscnModel
 

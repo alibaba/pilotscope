@@ -3,7 +3,7 @@ import math
 
 from pandas import DataFrame
 
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from feature import *
 from model import LeroModel, LeroModelPairWise
 
@@ -127,7 +127,7 @@ def training_pairwise_pilot_score(lero_model, X1, X2):
     return lero_model
 
 
-def _load_pairwise_plans_from_pilot(pilot_dada_dao: PilotTrainDataManager):
+def _load_pairwise_plans_from_pilot(pilot_dada_dao: DataManager):
     pass
     # X1, X2 = [], []
     # data: DataFrame = pilot_dada_dao.read_all("lero")

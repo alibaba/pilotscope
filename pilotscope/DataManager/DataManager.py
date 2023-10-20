@@ -11,7 +11,7 @@ from pilotscope.PilotSysConfig import PilotSysConfig
 from pilotscope.Common.Util import is_number
 
 
-class PilotTrainDataManager:
+class DataManager:
 
     def __init__(self, config: PilotConfig) -> None:
         self.config = deepcopy(config)

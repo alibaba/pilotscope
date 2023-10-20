@@ -3,7 +3,7 @@ sys.path.append("../")
 sys.path.append("../algorithm_examples/Lero/source")
 import unittest
 
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.Common.Drawer import Drawer
 from pilotscope.Common.Util import pilotscope_exit

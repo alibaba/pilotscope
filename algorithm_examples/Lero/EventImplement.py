@@ -7,7 +7,7 @@ from algorithm_examples.Lero.source.train import training_pairwise_pilot_score, 
 from algorithm_examples.utils import load_training_sql
 from pilotscope.DBController.BaseDBController import BaseDBController
 from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotEvent import PeriodicModelUpdateEvent, PretrainingModelEvent, QueryFinishEvent
 from pilotscope.PilotModel import PilotModel
@@ -50,7 +50,7 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
     def load_sql(self):
         self.sqls = load_training_sql(self.config.db)[0:100]
 
-    def iterative_data_collection(self,db_controller: BaseDBController, train_data_manager: PilotTrainDataManager):
+    def iterative_data_collection(self, db_controller: BaseDBController, train_data_manager: DataManager):
         print("start to collect data fro pretraining")
         self.load_sql()
         factors = [0.1, 1, 10]
@@ -81,7 +81,7 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
         return column_2_value_list, True
 
     def custom_model_training(self, bind_model, db_controller: BaseDBController,
-                              train_data_manager: PilotTrainDataManager):
+                              train_data_manager: DataManager):
         data: DataFrame = train_data_manager.read_all(self.data_saving_table)
         plans1, plans2 = extract_plan_pairs(data)
         lero_model = training_pairwise_pilot_score(bind_model, plans1, plans2)
@@ -94,9 +94,9 @@ class LeroPeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
         self.train_data_table = train_data_table
 
     def custom_model_update(self, pilot_model: PilotModel, db_controller: BaseDBController,
-                            pilot_data_manager: PilotTrainDataManager):
+                            data_manager: DataManager):
         print("LeroPeriodTrainingEvent!!!")
-        data = pilot_data_manager.read_update(self.train_data_table)
+        data = data_manager.read_update(self.train_data_table)
         plans1, plans2 = extract_plan_pairs(data)
         lero_model = training_pairwise_pilot_score(pilot_model, plans1, plans2)
         return lero_model
@@ -114,7 +114,7 @@ class LeroPeriodicCollectEvent(QueryFinishEvent):
         self.offset += 1
         return sqls
 
-    def process(self, db_controller: BaseDBController, pilot_data_manager: PilotTrainDataManager):
+    def process(self, db_controller: BaseDBController, data_manager: DataManager):
         print("start to collect data for dynamic training")
         factors = [0.1, 1, 10]
         column_2_value_list = []
@@ -141,4 +141,4 @@ class LeroPeriodicCollectEvent(QueryFinishEvent):
                 column_2_value["time"] = data.execution_time
                 column_2_value["scale"] = f
                 column_2_value_list.append(column_2_value)
-        pilot_data_manager.save_data_batch(self._table_name, column_2_value_list)
+        data_manager.save_data_batch(self._table_name, column_2_value_list)

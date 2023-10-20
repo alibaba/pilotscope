@@ -7,7 +7,7 @@ import pandas as pd
 from algorithm_examples.utils import load_training_sql
 from pilotscope.Common.TimeStatistic import TimeStatistic
 from pilotscope.DBController.BaseDBController import BaseDBController
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.PilotEnum import ExperimentTimeEnum
 from pilotscope.PilotEvent import PeriodicModelUpdateEvent
 from pilotscope.PilotModel import PilotModel
@@ -106,7 +106,7 @@ class KnobPeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
         return load_training_sql(self.config.db)
 
     def custom_model_update(self, pilot_model: PilotModel, db_controller: BaseDBController,
-                            pilot_data_manager: PilotTrainDataManager):
+                            data_manager: DataManager):
         TimeStatistic.start(ExperimentTimeEnum.FIND_KNOB)
         db_controller.recover_config()
         db_controller.restart()

@@ -2,7 +2,7 @@ import unittest
 
 from pilotscope.DBController.PostgreSQLController import PostgreSQLController
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.PilotEnum import DatabaseEnum
 
 
@@ -14,7 +14,7 @@ class MyTestCase(unittest.TestCase):
         self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         # self.config.db = "PilotScopeMeta"
         # self.controller = PostgreSQLController(self.config, allow_to_create_db=True)
-        self.train_data_manager = PilotTrainDataManager(self.config)
+        self.train_data_manager = DataManager(self.config)
         self.table_name = "lero"
 
     def test_0_create_table(self):

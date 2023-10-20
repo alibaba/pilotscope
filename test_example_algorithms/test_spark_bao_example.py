@@ -2,7 +2,7 @@ import sys
 
 sys.path.append("../algorithm_examples/Bao/source")
 sys.path.append("../")
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from SparkPlanCompress import SparkPlanCompress
 from pilotscope.Common.Drawer import Drawer
 from pilotscope.Common.TimeStatistic import TimeStatistic

@@ -8,7 +8,7 @@ from pilotscope.Anchor.BaseAnchor.BasePushHandler import CardPushHandler
 sys.path.append("../algorithm_examples/Bao/source")
 sys.path.append("../")
 
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.Common.Drawer import Drawer
 from pilotscope.Common.TimeStatistic import TimeStatistic
 from pilotscope.Common.dotDrawer import PlanDotDrawer
@@ -87,13 +87,13 @@ class BaoTest(unittest.TestCase):
             pilotscope_exit()
 
     def test_draw_plan(self):
-        train_data_manager = PilotTrainDataManager(self.config)
+        train_data_manager = DataManager(self.config)
         df = train_data_manager.read_all(self.pretraining_data_table)
         res = PlanDotDrawer.get_plan_dot_str(df["plan"][2])
         pass
 
     def test_compare_for_experiment(self):
-        train_data_manager = PilotTrainDataManager(self.config)
+        train_data_manager = DataManager(self.config)
         df_bao = train_data_manager.read_all(self.test_data_table)
         df_pg = train_data_manager.read_all(self.pg_test_data_table)
         df = DataFrame(data={

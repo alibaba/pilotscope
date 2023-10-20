@@ -4,7 +4,7 @@ import unittest
 from pilotscope.Anchor.BaseAnchor.BasePushHandler import CardPushHandler
 from pilotscope.DBController import BaseDBController
 from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
@@ -49,7 +49,7 @@ class ExampleCardPushHandler(CardPushHandler):
 
 class ExamplePeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
     def custom_model_update(self, pilot_model: PilotModel, db_controller: BaseDBController,
-                            pilot_data_manager: PilotTrainDataManager):
+                            data_manager: DataManager):
         print("IN ExamplePeriodicDbControllerEvent")
 
 
@@ -71,7 +71,7 @@ class MyTestCase(unittest.TestCase):
 
         handler = ExampleCardPushHandler(model, config)
         scheduler.register_custom_handlers([handler])
-        event = ExamplePeriodicModelUpdateEvent(config, 2, True)
+        event = ExamplePeriodicModelUpdateEvent(config, 2, execute_before_first_query=True)
         scheduler.register_events([event])
 
         test_scheduler_table = "test_scheduler_table"

@@ -8,7 +8,7 @@ from pilotscope.Common.Index import Index as PilotIndex
 from pilotscope.Common.TimeStatistic import TimeStatistic
 from pilotscope.DBController.BaseDBController import BaseDBController
 from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.PilotEnum import ExperimentTimeEnum
 from pilotscope.PilotEvent import PeriodicModelUpdateEvent
 from pilotscope.PilotModel import PilotModel
@@ -47,7 +47,7 @@ class IndexPeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
         return sqls
 
     def custom_model_update(self, pilot_model: PilotModel, db_controller: BaseDBController,
-                            pilot_data_manager: PilotTrainDataManager):
+                            data_manager: DataManager):
         TimeStatistic.start(ExperimentTimeEnum.FIND_INDEX)
         db_controller.drop_all_indexes()
         sqls = self._load_sql()

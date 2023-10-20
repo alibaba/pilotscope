@@ -2,7 +2,7 @@ import sys
 
 sys.path.append("../")
 
-from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
+from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.Common.Drawer import Drawer
 from pilotscope.Common.TimeStatistic import TimeStatistic
 from algorithm_examples.ExampleConfig import get_time_statistic_img_path
@@ -80,7 +80,7 @@ class MyTestCase(unittest.TestCase):
 
         # core
         scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
-        scheduler.pilot_data_manager = PilotTrainDataManager(PostgreSQLConfig())  # hack
+        scheduler.data_manager = DataManager(PostgreSQLConfig())  # hack
         scheduler.register_required_data(self.spark_test_data_table, pull_execution_time=True)
 
         scheduler.init()
@@ -97,7 +97,7 @@ class MyTestCase(unittest.TestCase):
         Drawer.draw_bar(name_2_value, get_time_statistic_img_path("spark", self.db), is_rotation=True)
 
     def test_2_compare_performance(self):
-        data_manager = PilotTrainDataManager(PostgreSQLConfig())
+        data_manager = DataManager(PostgreSQLConfig())
         pg_results = list(data_manager.read_all(self.pg_test_data_table)["execution_time"])
         algo_results = list(data_manager.read_all(self.spark_test_data_table)[
                                 "execution_time"])  # Modify this to what you want to compare other
