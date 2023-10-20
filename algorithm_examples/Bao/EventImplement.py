@@ -20,9 +20,9 @@ from pilotscope.PilotEnum import DatabaseEnum
 
 class BaoPretrainingModelEvent(PretrainingModelEvent):
 
-    def __init__(self, config: PilotConfig, bind_model: PilotModel, save_table_name, enable_collection=True,
+    def __init__(self, config: PilotConfig, bind_model: PilotModel, data_saving_table, enable_collection=True,
                  enable_training=True):
-        super().__init__(config, bind_model, save_table_name, enable_collection, enable_training)
+        super().__init__(config, bind_model, data_saving_table, enable_collection, enable_training)
         self.pilot_data_interactor = PilotDataInteractor(self.config)
         self.bao_hint = BaoHintPushHandler.HintForBao(config.db_type)
         self.sqls = self.load_sql()
@@ -31,7 +31,7 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
     def load_sql(self):
         return load_training_sql(self.config.db)[0:10]  # only for development test
 
-    def _custom_collect_data(self):
+    def iterative_data_collection(self,db_controller: BaseDBController, train_data_manager: PilotTrainDataManager):
         # self.load_sql()
         column_2_value_list = []
 
@@ -58,8 +58,9 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
         self.cur_sql_idx += 1
         return column_2_value_list, True if self.cur_sql_idx >= len(self.sqls) else False
 
-    def _custom_pretrain_model(self, train_data_manager: PilotTrainDataManager, existed_user_model):
-        data: DataFrame = train_data_manager.read_all(self.save_table_name)
+    def custom_model_training(self, bind_model, db_controller: BaseDBController,
+                              train_data_manager: PilotTrainDataManager):
+        data: DataFrame = train_data_manager.read_all(self.data_saving_table)
         bao_model = BaoRegression(verbose=True, have_cache_data=self._model.have_cache_data,
                                   is_spark=self.config.db_type == DatabaseEnum.SPARK)
         new_plans, new_times = self.filter(data["plan"].values, data["time"].values)

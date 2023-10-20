@@ -41,6 +41,24 @@ class QueryFinishEvent(Event, ABC):
         pass
 
 
+class WorkloadStartEvent(Event, ABC):
+    """
+    The process function will be called before start to deal with first SQL query of a workload.
+    """
+
+    def __init__(self, config, enable=True):
+        super().__init__(config)
+        self.already_been_called = not enable
+
+    def update(self, db_controller: BaseDBController, pilot_data_manager: PilotTrainDataManager):
+        self.already_been_called = True
+        self.process(db_controller, pilot_data_manager)
+
+    @abstractmethod
+    def process(self, db_controller: BaseDBController, pilot_data_manager: PilotTrainDataManager):
+        pass
+
+
 class PeriodicModelUpdateEvent(QueryFinishEvent, ABC):
     """
     The user can inherit this class to implement a periodic model update event.
@@ -53,7 +71,8 @@ class PeriodicModelUpdateEvent(QueryFinishEvent, ABC):
 
     def process(self, db_controller: BaseDBController, pilot_data_manager: PilotTrainDataManager):
         self.pilot_model.model = self.custom_model_update(self.pilot_model.model, pilot_data_manager)
-        self.pilot_model.save()
+        if self.pilot_model is not None:
+            self.pilot_model.save()
 
     @abstractmethod
     def custom_model_update(self, pilot_model: PilotModel, db_controller: BaseDBController,
@@ -61,16 +80,15 @@ class PeriodicModelUpdateEvent(QueryFinishEvent, ABC):
         pass
 
 
-class PretrainingModelEvent(Event):
-    def __init__(self, config: PilotConfig, bind_model: PilotModel, save_table_name, enable_collection=True,
+class PretrainingModelEvent(Event, ABC):
+    def __init__(self, config: PilotConfig, bind_model: PilotModel, data_saving_table, enable_collection=True,
                  enable_training=True):
         super().__init__(config)
         self.config = config
         self._model: PilotModel = bind_model
-        self._train_data_manager = PilotTrainDataManager(config)
         self.enable_collection = enable_collection
         self.enable_training = enable_training
-        self.save_table_name = save_table_name
+        self.data_saving_table = data_saving_table
 
     def async_start(self):
         t = ValueThread(target=self._run, name="pretraining_async_start")
@@ -79,26 +97,29 @@ class PretrainingModelEvent(Event):
         return t
 
     def _run(self):
-        self.collect_and_write()
-        self.train()
+        db_controller = DBControllerFactory.get_db_controller(self.config)
+        data_manager = PilotTrainDataManager(self.config)
+        self.collect_and_store_data(db_controller, data_manager)
+        self.model_training(db_controller, data_manager)
 
-    def collect_and_write(self):
+    def collect_and_store_data(self, db_controller: BaseDBController, data_manager: PilotTrainDataManager):
         is_terminate = False
         if self.enable_collection:
             while not is_terminate:
-                column_2_value_list, is_terminate = self._custom_collect_data()
-                table = self.save_table_name
-                self._train_data_manager.save_data_batch(table, column_2_value_list)
+                column_2_value_list, is_terminate = self.iterative_data_collection(db_controller, data_manager)
+                table = self.data_saving_table
+                data_manager.save_data_batch(table, column_2_value_list)
 
-    def train(self):
+    def model_training(self, db_controller: BaseDBController, train_data_manager: PilotTrainDataManager):
         if self.enable_training:
-            self._model.model = self._custom_pretrain_model(self._train_data_manager, self._model.model)
+            self._model.model = self.custom_model_training(self._model.model, db_controller, train_data_manager)
             self._model.save()
 
     @abstractmethod
-    def _custom_collect_data(self):
+    def iterative_data_collection(self, db_controller: BaseDBController, train_data_manager: PilotTrainDataManager):
         pass
 
     @abstractmethod
-    def _custom_pretrain_model(self, train_data_manager: PilotTrainDataManager, existed_user_model):
+    def custom_model_training(self, bind_model, db_controller: BaseDBController,
+                              train_data_manager: PilotTrainDataManager):
         pass

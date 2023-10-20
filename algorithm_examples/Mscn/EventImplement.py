@@ -3,6 +3,7 @@ from pandas import DataFrame
 from algorithm_examples.Mscn.source.mscn_model import MscnModel
 from algorithm_examples.Mscn.source.mscn_utils import load_tokens, parse_queries, load_schema
 from algorithm_examples.utils import load_training_sql
+from pilotscope.DBController.BaseDBController import BaseDBController
 from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.DataManager.PilotTrainDataManager import PilotTrainDataManager
 from pilotscope.PilotConfig import PilotConfig
@@ -13,16 +14,16 @@ from pilotscope.PilotTransData import PilotTransData
 
 class MscnPretrainingModelEvent(PretrainingModelEvent):
 
-    def __init__(self, config: PilotConfig, bind_model: PilotModel, save_table_name, enable_collection=True,
+    def __init__(self, config: PilotConfig, bind_model: PilotModel, data_saving_table, enable_collection=True,
                  enable_training=True, training_data_file=None):
-        super().__init__(config, bind_model, save_table_name, enable_collection, enable_training)
+        super().__init__(config, bind_model, data_saving_table, enable_collection, enable_training)
         self.sqls = []
         self.config.set_once_request_timeout(60)
         self.config.set_sql_execution_timeout(60)
         self.pilot_data_interactor = PilotDataInteractor(self.config)
         self.training_data_file = training_data_file
 
-    def _custom_collect_data(self):
+    def iterative_data_collection(self, db_controller: BaseDBController, train_data_manager: PilotTrainDataManager):
         self.sqls = load_training_sql(self.config.db)
         column_2_value_list = []
         for sql in self.sqls:
@@ -39,9 +40,10 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
         return column_2_value_list, True
 
     def _get_table_name(self):
-        return self.save_table_name
+        return self.data_saving_table
 
-    def _custom_pretrain_model(self, train_data_manager: PilotTrainDataManager, existed_user_model):
+    def custom_model_training(self, bind_model, db_controller: BaseDBController,
+                              train_data_manager: PilotTrainDataManager):
         if not self.training_data_file is None:
             tokens, labels = load_tokens(self.training_data_file, self.training_data_file + ".token")
             schema = load_schema(self.pilot_data_interactor.db_controller)

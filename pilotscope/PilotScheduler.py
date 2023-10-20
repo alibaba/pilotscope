@@ -112,7 +112,11 @@ class PilotScheduler:
                 pretraining_thread = event.async_start()
             elif isinstance(event, PeriodicModelUpdateEvent):
                 event: PeriodicModelUpdateEvent = event
-                event.process(self.db_controller, self.pilot_data_manager)
+                if event.execute_before_first_query:
+                    event.process(self.db_controller, self.pilot_data_manager)
+            elif isinstance(event, WorkloadStartEvent):
+                event: WorkloadStartEvent = event
+                event.update(self.db_controller, self.pilot_data_manager)
 
         # wait until finishing pretraining
         if pretraining_thread is not None and self.config.pretraining_model == TrainSwitchMode.WAIT:
@@ -121,8 +125,8 @@ class PilotScheduler:
 
     def _deal_execution_end_events(self):
         for event in self.events:
-            if isinstance(event, PeriodicModelUpdateEvent):
-                event: PeriodicModelUpdateEvent = event
+            if isinstance(event, QueryFinishEvent):
+                event: QueryFinishEvent = event
                 event.update(self.db_controller, self.pilot_data_manager)
 
     def _is_valid_custom_handlers(self, handlers):
