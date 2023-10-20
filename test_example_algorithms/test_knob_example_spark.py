@@ -26,7 +26,7 @@ class KnobTest(unittest.TestCase):
         # self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.config.sql_execution_timeout = 120
         self.config.once_request_timeout = 120
-        self.config.set_db("stats_tiny")
+        self.config.db="stats_tiny"
     
     def test_knob(self):
         config = self.config

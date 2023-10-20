@@ -18,8 +18,8 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
                  enable_training=True, training_data_file=None):
         super().__init__(config, bind_model, data_saving_table, enable_collection, enable_training)
         self.sqls = []
-        self.config.set_once_request_timeout(60)
-        self.config.set_sql_execution_timeout(60)
+        self.config.once_request_timeout = 60
+        self.config.sql_execution_timeout = 60
         self.pilot_data_interactor = PilotDataInteractor(self.config)
         self.training_data_file = training_data_file
 

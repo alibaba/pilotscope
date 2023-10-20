@@ -11,7 +11,6 @@ class MyTestCase(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         super().__init__(methodName)
         self.config = PostgreSQLConfig()
-        self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         # self.config.db = "PilotScopeMeta"
         # self.controller = PostgreSQLController(self.config, allow_to_create_db=True)
         self.train_data_manager = DataManager(self.config)

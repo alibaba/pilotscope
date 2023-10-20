@@ -15,7 +15,6 @@ class LeroTest(unittest.TestCase):
     def setUp(self):
         self.config: PilotConfig = PostgreSQLConfig()
         self.config.db = "stats_tiny"
-        self.config.set_db_type(DatabaseEnum.POSTGRESQL)
 
     def test_lero(self):
         try:

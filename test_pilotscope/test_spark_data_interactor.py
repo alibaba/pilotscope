@@ -26,7 +26,6 @@ class MyTestCase(unittest.TestCase):
             "spark.sql.cbo.enabled": True,
             "spark.sql.cbo.joinReorder.enabled": True
         })
-        self.config.set_db_type(DatabaseEnum.SPARK)
 
         self.data_interactor = PilotDataInteractor(self.config)
         self.sql = "select * from badges limit 10"

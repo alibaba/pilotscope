@@ -16,7 +16,6 @@ class KnobTest(unittest.TestCase):
     def setUp(self):
         self.config: PilotConfig = PostgreSQLConfig()
         self.config.db = "stats_tiny"
-        self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.config.sql_execution_timeout = 300000
         self.config.once_request_timeout = 300000
         self.algo = "smac"

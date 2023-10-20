@@ -34,8 +34,6 @@ class BaoTest(unittest.TestCase):
         # self.config.db = "statsfull"
         self.config.db = "stats_tiny"
 
-        self.config.set_db_type(DatabaseEnum.POSTGRESQL)
-
         self.used_cache = False
         if self.used_cache:
             self.model_name = "bao_model_wc"

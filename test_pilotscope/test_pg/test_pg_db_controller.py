@@ -14,7 +14,6 @@ class MyTestCase(unittest.TestCase):
     def setUpClass(cls):
         cls.config = PostgreSQLConfig()
         cls.config.db = "stats_tiny"
-        cls.config.set_db_type(DatabaseEnum.POSTGRESQL)
         cls.table_name = "lero"
         cls.db_controller: PostgreSQLController = DBControllerFactory.get_db_controller(cls.config)
         cls.sql = "select * from badges limit 10;"

@@ -58,7 +58,7 @@ class MyTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.config = PostgreSQLConfig()
-        cls.config.set_db("stats_tiny")
+        cls.config.db = "stats_tiny"
         cls.sql = "select date from badges where date=1406838696"
 
     def test_scheduler(self):
@@ -82,7 +82,7 @@ class MyTestCase(unittest.TestCase):
         data = scheduler.simulate_db_console(self.sql)
         print(data)
 
-        config.set_db("PilotScopeUserData")
+        config.db = "PilotScopeUserData"
         db_controller = DBControllerFactory.get_db_controller(config, echo=True)
         res = db_controller.get_table_row_count(test_scheduler_table)
         self.assertAlmostEqual(res, 1)

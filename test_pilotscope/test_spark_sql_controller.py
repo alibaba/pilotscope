@@ -37,7 +37,6 @@ class MyTestCase(unittest.TestCase):
             "spark.sql.pilotscope.enabled": True,
             "spark.executor.memory": "20g"
         })
-        self.config.set_db_type(DatabaseEnum.SPARK)
         self.table_name = "lero"
         self.db_controller: SparkSQLController = DBControllerFactory.get_db_controller(self.config)
         self.sql = "select * from badges limit 10;"

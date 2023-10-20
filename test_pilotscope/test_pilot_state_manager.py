@@ -14,7 +14,6 @@ class MyTestCase(unittest.TestCase):
     def setUp(self):
         self.config = PostgreSQLConfig()
         self.config.db = "stats_tiny"
-        self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.data_interactor = PilotDataInteractor(self.config)
         self.table = "badges"
         self.indexable_column = "date"

@@ -23,7 +23,6 @@ class LeroTest(unittest.TestCase):
     def setUp(self):
         self.config: PilotConfig = PostgreSQLConfig()
         self.config.db = "stats_tiny"
-        self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.model_name = "lero_pair"
 
     def test_lero_dynamic(self):

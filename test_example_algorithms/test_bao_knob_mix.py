@@ -25,7 +25,6 @@ class BaoTest(unittest.TestCase):
         # self.config.db = "imdbfull"
         self.config.db = "stats_tiny"
 
-        self.config.set_db_type(DatabaseEnum.POSTGRESQL)
 
         self.used_cache = False
         if self.used_cache:

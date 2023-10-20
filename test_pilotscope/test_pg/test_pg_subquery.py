@@ -17,7 +17,6 @@ class MyTestCase(unittest.TestCase):
     def setUp(self):
         self.config = PostgreSQLConfig()
         self.config.db = "imdb_tiny"
-        self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.data_interactor = PilotDataInteractor(self.config)
         self.db_controller: PostgreSQLController = DBControllerFactory.get_db_controller(self.config) 
     

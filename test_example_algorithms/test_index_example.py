@@ -17,7 +17,6 @@ class IndexTest(unittest.TestCase):
     def setUp(self):
         self.config: PilotConfig = PostgreSQLConfig()
         self.config.db = "stats_tiny"
-        self.config.set_db_type(DatabaseEnum.POSTGRESQL)
         self.algo = "extend"
 
     def test_index(self):
