@@ -88,7 +88,9 @@ def evaluate_dbms_conf(spaces, executor, storage, columns, sample, state=None):
     )
     try:
         perf_stats = executor.evaluate_configuration(dbms_info, state.benchmark_info)
-    except:
+    except Exception as e:
+        print(e)
+        # raise e
         perf_stats = None
     logger.info(f'Performance Statistics:\n{perf_stats}')
 

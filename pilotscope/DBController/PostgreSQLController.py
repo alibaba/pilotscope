@@ -303,6 +303,11 @@ class PostgreSQLController(BaseDBController):
         with open(self.config.db_config_path, "w") as f:
             f.write(db_config_file)
 
+    def backup_config(self):
+        with open(self.config.db_config_path, "r") as f:
+            with open(self.config.backup_db_config_path, "w") as w:
+                w.write(f.read())
+
     def get_table_column_name_all_schema(self, table_name):
         sql = "SELECT column_name FROM information_schema.columns WHERE table_name = '{}';".format(table_name)
         return [x[0] for x in self.execute(sql, fetch=True)]

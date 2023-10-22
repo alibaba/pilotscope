@@ -45,10 +45,10 @@ class PostgreSQLConfig(PilotConfig):
         self.pwd = pwd
 
         # for local postgres
-        self.pg_ctl = "pg_ctl"
-        self.pgdata = "~"
-        self.db_config_path = "/var/lib/pgsql/13.1/data/postgresql.conf"
-        self.backup_db_config_path = "postgresql-13.1.conf"
+        self.pg_ctl = None
+        self.pgdata = None
+        self.db_config_path = None
+        self.backup_db_config_path = None
 
     def set_knob_config(self, pg_ctl, pgdata, db_config_path, backup_db_config_path):
         """Set value for local PostgreSQL. They influence the start, stop, changing config file, etc. If you do not need these functions, it is not necessary to set these values.

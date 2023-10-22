@@ -18,6 +18,7 @@ def get_knob_preset_scheduler(config: PilotConfig) -> PilotScheduler:
 
     # core
     scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
+    scheduler.db_controller.backup_config()
 
     # allow to pretrain model
     periodic_db_controller_event = KnobPeriodicModelUpdateEvent(config, 200,

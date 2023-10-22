@@ -3,7 +3,7 @@ import sys
 sys.path.append("../")
 import unittest
 from pilotscope.Common.TimeStatistic import TimeStatistic
-from algorithm_examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
+from algorithm_examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path, example_backup_db_config_path, example_db_config_path, example_pg_ctl, example_pgdata
 from pilotscope.Common.Drawer import Drawer
 from pilotscope.Common.Util import pilotscope_exit
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
@@ -15,6 +15,7 @@ from algorithm_examples.KnobTuning.KnobPresetScheduler import get_knob_preset_sc
 class KnobTest(unittest.TestCase):
     def setUp(self):
         self.config: PilotConfig = PostgreSQLConfig()
+        self.config.set_knob_config(example_pg_ctl,example_pgdata,example_db_config_path,example_backup_db_config_path)
         self.config.db = "stats_tiny"
         self.config.sql_execution_timeout = 300000
         self.config.once_request_timeout = 300000
