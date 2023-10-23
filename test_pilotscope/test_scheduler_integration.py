@@ -89,7 +89,7 @@ class MyTestCase(unittest.TestCase):
 
         scheduler.simulate_db_console(self.sql)
 
-        db_controller.drop_table_if_existence(test_scheduler_table)
+        db_controller.drop_table_if_exist(test_scheduler_table)
 
 
 if __name__ == '__main__':

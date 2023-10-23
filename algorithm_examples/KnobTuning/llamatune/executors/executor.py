@@ -17,8 +17,8 @@ from sklearn.preprocessing import StandardScaler
 
 from pilotscope.Exception.Exception import DatabaseCrashException
 from algorithm_examples.utils import load_sql
-from algorithm_examples.ExampleConfig import example_backup_db_config_path, example_db_config_path, example_pg_ctl, example_pgdata
-
+from algorithm_examples.ExampleConfig import example_backup_db_config_path, example_db_config_path, example_pg_ctl, \
+    example_pgdata
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
@@ -248,7 +248,7 @@ class SysmlExecutor(ExecutorInterface):
         self.sqls_file_path = kwargs["sqls_file_path"]
         # self.timeout_per_sql=int(kwargs["timeout_per_sql"]) # ms
         config = PostgreSQLConfig()
-        config.set_knob_config(example_pg_ctl,example_pgdata,example_db_config_path,example_backup_db_config_path)
+        config.set_knob_config(example_pg_ctl, example_pgdata, example_db_config_path, example_backup_db_config_path)
         config.db = kwargs["db_name"]
         config.once_request_timeout = 120
         config.sql_execution_timeout = 120

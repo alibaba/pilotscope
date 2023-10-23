@@ -6,7 +6,6 @@ import unittest
 
 from pilotscope.Common.Util import pilotscope_exit
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
-from pilotscope.PilotEnum import DatabaseEnum, EventEnum
 from algorithm_examples.utils import load_test_sql
 from algorithm_examples.Lero.LeroPresetScheduler import get_lero_preset_scheduler
 

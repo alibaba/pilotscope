@@ -1,9 +1,6 @@
 import sys
-import time
 
 from pandas import DataFrame
-
-from pilotscope.Anchor.BaseAnchor.BasePushHandler import CardPushHandler
 
 sys.path.append("../algorithm_examples/Bao/source")
 sys.path.append("../")
@@ -17,8 +14,7 @@ from algorithm_examples.ExampleConfig import get_time_statistic_img_path, get_ti
 import unittest
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.Common.Util import pilotscope_exit
-from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
-from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
+from pilotscope.PilotConfig import PostgreSQLConfig
 from pilotscope.PilotEnum import *
 from pilotscope.PilotScheduler import PilotScheduler
 from algorithm_examples.Bao.BaoParadigmHintAnchorHandler import BaoHintPushHandler
@@ -30,8 +26,6 @@ from algorithm_examples.utils import load_test_sql
 class BaoTest(unittest.TestCase):
     def setUp(self):
         self.config: PostgreSQLConfig = PostgreSQLConfig()
-        # self.config.db = "imdbfull"
-        # self.config.db = "statsfull"
         self.config.db = "stats_tiny"
 
         self.used_cache = False

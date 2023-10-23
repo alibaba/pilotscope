@@ -29,10 +29,10 @@ class MyTestCase(unittest.TestCase):
         self.db_controller.create_table_if_absences(table, example_data)
         #KNOWN ISSUE: Although create_table_if_absences can handle dict and list, insert can not handle them
         # self.db_controller.insert(table,example_data)
-        self.db_controller.drop_table_if_existence(table)
+        self.db_controller.drop_table_if_exist(table)
         self.db_controller.create_table_if_absences(table, {"col_1":1, "col_2":1}, primary_key_column="col_1")
         self.assertTrue(self.db_controller.exist_table(table))
-        self.db_controller.drop_table_if_existence(table)
+        self.db_controller.drop_table_if_exist(table)
 
     def test_get_table_column_name(self):
         res = self.db_controller.get_table_column_name(self.table)
@@ -102,7 +102,7 @@ class MyTestCase(unittest.TestCase):
         self.db_controller.create_table_if_absences(test_table, {"col":1})
         self.assertTrue(self.db_controller.exist_table(test_table))
         # self.assertTrue(test_table in self.db_controller.name_2_table)
-        self.db_controller.drop_table_if_existence(test_table)
+        self.db_controller.drop_table_if_exist(test_table)
         self.assertFalse(self.db_controller.exist_table(test_table))
     # def test_recover_imdb_index(self):
     #     # self.config.db = "imdbfull"
@@ -133,7 +133,7 @@ class MyTestCase(unittest.TestCase):
         
     @classmethod
     def tearDownClass(cls):
-        cls.db_controller.drop_table_if_existence(cls.test_table)
+        cls.db_controller.drop_table_if_exist(cls.test_table)
 
 
 if __name__ == '__main__':

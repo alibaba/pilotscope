@@ -99,23 +99,6 @@ class BaseDBController(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
-                                 enable_autoincrement_id_key=True):
-        pass
-
-    @abstractmethod
-    def insert(self, table_name, column_2_value: dict):
-        pass
-
-    @abstractmethod
-    def get_table_row_count(self, table_name):
-        pass
-
-    @abstractmethod
-    def exist_table(self, table_name) -> bool:
-        pass
-
-    @abstractmethod
     def create_index(self, index):
         pass
 
@@ -150,15 +133,22 @@ class BaseDBController(ABC):
                                  enable_autoincrement_id_key=True):
         """Create a table according to parameters if absences
 
-        :param table_name: the name of the table you want to create
-        :type table_name: str
-        :param column_2_value: a dict, whose keys is the names of columns and values repersent data type. The values is arbitrary, we only use the type of values. 
-        :type column_2_value: dict
-        :param primary_key_column: If ``primary_key_column`` is a string, the column named ``primary_key_column`` will be the primary key of the new table. If it is None, there will be no primary key.
-        :type primary_key_column: str or None, optional
-        :param enable_autoincrement_id_key: If it is True, the primary key will be autoincrement. It is only meaningful when primary_key_column is a string.
-        :type enable_autoincrement_id_key: bool, optional
-        """
+             :param table_name: the name of the table you want to create
+             :type table_name: str
+             :param column_2_value: a dict, whose keys is the names of columns and values represent data type.
+             The values is arbitrary, we only use the type of values.
+             :type column_2_value: dict
+             :param primary_key_column: If ``primary_key_column`` is a string, the column named ``primary_key_column``
+             will be the primary key of the new table. If it is None, there will be no primary key.
+             :type primary_key_column: str or None, optional
+             :param enable_autoincrement_id_key: If it is True, the primary key will be autoincrement.
+             It is only meaningful when primary_key_column is a string.
+             :type enable_autoincrement_id_key: bool, optional
+             """
+
+        if primary_key_column is not None and primary_key_column not in column_2_value:
+            raise RuntimeError("the primary key column {} is not in column_2_value".format(primary_key_column))
+
         if not self.exist_table(table_name):
             column_2_type = self._to_db_data_type(column_2_value)
             columns = []
@@ -171,7 +161,7 @@ class BaseDBController(ABC):
             table = Table(table_name, self.metadata, *columns, extend_existing=True)
             table.create(self.engine)
 
-    def drop_table_if_existence(self, table_name):
+    def drop_table_if_exist(self, table_name):
         """Try to drop table named ``table_name``
 
         :param table_name: the name of the table
