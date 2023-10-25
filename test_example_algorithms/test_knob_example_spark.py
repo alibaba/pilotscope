@@ -37,7 +37,7 @@ class KnobTest(unittest.TestCase):
         for i, sql in enumerate(sqls):
             print("current is the {}-th sql, and it is {}".format(i, sql))
             TimeStatistic.start(ExperimentTimeEnum.PIPE_END_TO_END)
-            scheduler.simulate_db_console(sql)
+            scheduler.execute(sql)
             TimeStatistic.end(ExperimentTimeEnum.PIPE_END_TO_END)
             TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo, config.db))
             # TimeStatistic.print()

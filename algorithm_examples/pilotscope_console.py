@@ -57,7 +57,7 @@ def mute_console_output_decorator(func):
 
 def get_postgres_default_scheduler(config):
     assert isinstance(config, PostgreSQLConfig)
-    return SchedulerFactory.get_pilot_scheduler(config)
+    return SchedulerFactory.create_scheduler(config)
 
 def get_spark_default_scheduler(config):
     assert isinstance(config, SparkConfig)
@@ -80,7 +80,7 @@ def get_spark_default_scheduler(config):
         "spark.sql.cbo.enabled":True,
         "spark.sql.cbo.joinReorder.enabled":True
     })
-    return SchedulerFactory.get_pilot_scheduler(config)
+    return SchedulerFactory.create_scheduler(config)
 
 class PilotConsole:
 
@@ -144,9 +144,9 @@ class PilotConsole:
         sql = " ".join(args)
         data = None
         if not self.echo:
-            func = mute_console_output_decorator(self.scheduler.simulate_db_console)
+            func = mute_console_output_decorator(self.scheduler.execute)
         else:
-            func = self.scheduler.simulate_db_console
+            func = self.scheduler.execute
         try:
             data = func(sql)
         except:

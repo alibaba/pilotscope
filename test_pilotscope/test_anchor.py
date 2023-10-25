@@ -13,8 +13,8 @@ class MyTestCase(unittest.TestCase):
         super().__init__(methodName)
         self.config = PostgreSQLConfig()
         self.config.db = "stats_tiny"
-        self.config.set_knob_config(example_pg_ctl, example_pgdata, example_db_config_path,
-                                    example_backup_db_config_path)
+        self.config.enable_deep_control(example_pg_ctl, example_pgdata, example_db_config_path,
+                                        example_backup_db_config_path)
         self.data_interactor = PilotDataInteractor(self.config)
         self.sql = "select count(*) from posts as p, postlinks as pl, posthistory as ph where p.id = pl.postid and pl.postid = ph.postid and p.creationdate>=1279570117 and ph.creationdate>=1279585800 and p.score < 50;"
 

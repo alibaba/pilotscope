@@ -41,7 +41,7 @@ class QueryFinishEvent(Event, ABC):
         pass
 
 
-class WorkloadStartEvent(Event, ABC):
+class WorkloadBeforeEvent(Event, ABC):
     """
     The process function will be called before start to deal with first SQL query of a workload.
     """
@@ -64,10 +64,10 @@ class PeriodicModelUpdateEvent(QueryFinishEvent, ABC):
     The user can inherit this class to implement a periodic model update event.
     """
 
-    def __init__(self, config, interval_count, pilot_model: PilotModel = None, execute_before_first_query=True):
+    def __init__(self, config, interval_count, pilot_model: PilotModel = None, execute_on_init=True):
         super().__init__(config, interval_count)
         self.pilot_model = pilot_model
-        self.execute_before_first_query = execute_before_first_query
+        self.execute_before_first_query = execute_on_init
 
     def process(self, db_controller: BaseDBController, data_manager: DataManager):
         model = self.custom_model_update(self.pilot_model, db_controller, data_manager)
@@ -122,5 +122,5 @@ class PretrainingModelEvent(Event, ABC):
 
     @abstractmethod
     def custom_model_training(self, bind_model, db_controller: BaseDBController,
-                              train_data_manager: DataManager):
+                              data_manager: DataManager):
         pass

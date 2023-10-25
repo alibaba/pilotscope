@@ -25,7 +25,7 @@ class PilotScheduler:
     def init(self):
         self._deal_initial_events()
 
-    def simulate_db_console(self, sql):
+    def execute(self, sql):
         data_interactor = self.data_interactor
 
         # add recordPullAnchor
@@ -114,8 +114,8 @@ class PilotScheduler:
                 event: PeriodicModelUpdateEvent = event
                 if event.execute_before_first_query:
                     event.process(self.db_controller, self.data_manager)
-            elif isinstance(event, WorkloadStartEvent):
-                event: WorkloadStartEvent = event
+            elif isinstance(event, WorkloadBeforeEvent):
+                event: WorkloadBeforeEvent = event
                 event.update(self.db_controller, self.data_manager)
 
         # wait until finishing pretraining

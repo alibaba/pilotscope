@@ -25,7 +25,7 @@ from algorithm_examples.utils import load_test_sql
 
 class BaoTest(unittest.TestCase):
     def setUp(self):
-        self.config: PostgreSQLConfig = PostgreSQLConfig()
+        self.config: PostgreSQLConfig = PostgreSQLConfig(host="localhost", port="5432", user="postgres", pwd="postgres")
         self.config.db = "stats_tiny"
 
         self.used_cache = False
@@ -52,7 +52,7 @@ class BaoTest(unittest.TestCase):
             bao_handler = BaoHintPushHandler(bao_pilot_model, config)
 
             # core
-            scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
+            scheduler: PilotScheduler = SchedulerFactory.create_scheduler(config)
             scheduler.register_custom_handlers([bao_handler])
             scheduler.register_required_data(self.test_data_table, pull_physical_plan=True, pull_execution_time=True,
                                              pull_buffer_cache=self.used_cache)
@@ -69,7 +69,7 @@ class BaoTest(unittest.TestCase):
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, total is {}".format(i, len(sqls)))
                 TimeStatistic.start(ExperimentTimeEnum.SQL_END_TO_END)
-                scheduler.simulate_db_console(sql)
+                scheduler.execute(sql)
                 TimeStatistic.end(ExperimentTimeEnum.SQL_END_TO_END)
             TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo, config.db))
             name_2_value = TimeStatistic.get_average_data()

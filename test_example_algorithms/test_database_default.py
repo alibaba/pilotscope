@@ -32,7 +32,7 @@ class MyTestCase(unittest.TestCase):
         config.print()
 
         # core
-        scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
+        scheduler: PilotScheduler = SchedulerFactory.create_scheduler(config)
 
         scheduler.register_required_data(self.pg_test_data_table, pull_execution_time=True)
 
@@ -43,7 +43,7 @@ class MyTestCase(unittest.TestCase):
         sqls = load_test_sql(config.db)
         for i, sql in enumerate(sqls):
             print("current is the {}-th sql, and it is {}".format(i, sql))
-            scheduler.simulate_db_console(sql)
+            scheduler.execute(sql)
         TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path("pg", config.db))
         name_2_value = TimeStatistic.get_average_data()
         Drawer.draw_bar(name_2_value, get_time_statistic_img_path("pg", self.db), is_rotation=True)
@@ -79,7 +79,7 @@ class MyTestCase(unittest.TestCase):
         })
 
         # core
-        scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
+        scheduler: PilotScheduler = SchedulerFactory.create_scheduler(config)
         scheduler.data_manager = DataManager(PostgreSQLConfig())  # hack
         scheduler.register_required_data(self.spark_test_data_table, pull_execution_time=True)
 
@@ -88,7 +88,7 @@ class MyTestCase(unittest.TestCase):
         for i, sql in enumerate(sqls):
             print("current is the {}-th sql, and it is {}".format(i, sql))
             TimeStatistic.start(ExperimentTimeEnum.PIPE_END_TO_END)
-            scheduler.simulate_db_console(sql)
+            scheduler.execute(sql)
             TimeStatistic.end(ExperimentTimeEnum.PIPE_END_TO_END)
             # TimeStatistic.print()
             print("{}-th sql OK".format(i), flush=True)

@@ -81,8 +81,8 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
         return column_2_value_list, True
 
     def custom_model_training(self, bind_model, db_controller: BaseDBController,
-                              train_data_manager: DataManager):
-        data: DataFrame = train_data_manager.read_all(self.data_saving_table)
+                              data_manager: DataManager):
+        data: DataFrame = data_manager.read_all(self.data_saving_table)
         plans1, plans2 = extract_plan_pairs(data)
         lero_model = training_pairwise_pilot_score(bind_model, plans1, plans2)
         return lero_model

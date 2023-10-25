@@ -26,7 +26,7 @@ class LeroTest(unittest.TestCase):
             sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, and it is {}".format(i, sql))
-                scheduler.simulate_db_console(sql)
+                scheduler.execute(sql)
         finally:
             pilotscope_exit()
 

@@ -60,7 +60,7 @@ class SparkBaoTest(unittest.TestCase):
             bao_handler = BaoHintPushHandler(bao_pilot_model, config)
 
             # core
-            scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
+            scheduler: PilotScheduler = SchedulerFactory.create_scheduler(config)
             scheduler.register_custom_handlers([bao_handler])
             scheduler.register_required_data(table_name_for_store_data=self.test_data_table,
                                              pull_execution_time=True, pull_physical_plan=True,
@@ -79,7 +79,7 @@ class SparkBaoTest(unittest.TestCase):
                 sql = modify_sql_for_spark(config, sql)
                 print("current is the {}-th sql, total is {}".format(i, len(sqls)))
                 TimeStatistic.start(ExperimentTimeEnum.SQL_END_TO_END)
-                scheduler.simulate_db_console(sql)
+                scheduler.execute(sql)
                 TimeStatistic.end(ExperimentTimeEnum.SQL_END_TO_END)
                 TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo, config.db))
             name_2_value = TimeStatistic.get_average_data()

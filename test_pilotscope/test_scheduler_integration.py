@@ -63,7 +63,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_scheduler(self):
         config = self.config
-        scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
+        scheduler: PilotScheduler = SchedulerFactory.create_scheduler(config)
         model = ExamplePilotModel("test_model")
         model.save()
         model = ExamplePilotModel("test_model")
@@ -71,7 +71,7 @@ class MyTestCase(unittest.TestCase):
 
         handler = ExampleCardPushHandler(model, config)
         scheduler.register_custom_handlers([handler])
-        event = ExamplePeriodicModelUpdateEvent(config, 2, execute_before_first_query=True)
+        event = ExamplePeriodicModelUpdateEvent(config, 2, execute_on_init=True)
         scheduler.register_events([event])
 
         test_scheduler_table = "test_scheduler_table"
@@ -79,7 +79,7 @@ class MyTestCase(unittest.TestCase):
                                          pull_execution_time=True, pull_logical_plan=True, pull_physical_plan=True,
                                          pull_records=True, pull_subquery_2_cards=True)
         scheduler.init()
-        data = scheduler.simulate_db_console(self.sql)
+        data = scheduler.execute(self.sql)
         print(data)
 
         config.db = "PilotScopeUserData"
@@ -87,7 +87,7 @@ class MyTestCase(unittest.TestCase):
         res = db_controller.get_table_row_count(test_scheduler_table)
         self.assertAlmostEqual(res, 1)
 
-        scheduler.simulate_db_console(self.sql)
+        scheduler.execute(self.sql)
 
         db_controller.drop_table_if_exist(test_scheduler_table)
 

@@ -50,7 +50,7 @@ class BaoTest(unittest.TestCase):
             bao_handler = BaoHintPushHandler(bao_pilot_model, config)
 
             # core
-            scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
+            scheduler: PilotScheduler = SchedulerFactory.create_scheduler(config)
             scheduler.register_custom_handlers([bao_handler])
             scheduler.register_required_data(table_name_for_store_data=self.test_data_table, pull_execution_time=True,
                                              pull_physical_plan=True, pull_buffer_cache=self.used_cache)
@@ -60,7 +60,7 @@ class BaoTest(unittest.TestCase):
                                                          enable_training=True)
             periodic_db_controller_event = KnobPeriodicModelUpdateEvent(config, 200,
                                                                         llamatune_config_file="../algorithm_examples/KnobTuning/llamatune/configs/llama_config.ini",
-                                                                        execute_before_first_query=True, optimizer_type="smac")
+                                                                        execute_on_init=True, optimizer_type="smac")
             scheduler.register_events([pretraining_event, periodic_db_controller_event])
             # start
             scheduler.init()
@@ -71,7 +71,7 @@ class BaoTest(unittest.TestCase):
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, total is {}".format(i, len(sqls)))
                 TimeStatistic.start(ExperimentTimeEnum.SQL_END_TO_END)
-                scheduler.simulate_db_console(sql)
+                scheduler.execute(sql)
                 TimeStatistic.end(ExperimentTimeEnum.SQL_END_TO_END)
                 TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo + "2", config.db))
             name_2_value = TimeStatistic.get_average_data()

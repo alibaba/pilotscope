@@ -50,7 +50,7 @@ class PostgreSQLConfig(PilotConfig):
         self.db_config_path = None
         self.backup_db_config_path = None
 
-    def set_knob_config(self, pg_ctl, pgdata, db_config_path, backup_db_config_path):
+    def enable_deep_control(self, pg_ctl, pgdata, db_config_path, backup_db_config_path):
         """Set value for local PostgreSQL. They influence the start, stop, changing config file, etc. If you do not need these functions, it is not necessary to set these values.
 
         :param pg_ctl: the directory of pg_ctl

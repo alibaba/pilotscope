@@ -96,9 +96,9 @@ def llamatune(conf):
 
 
 class KnobPeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
-    def __init__(self, config, per_query_count, llamatune_config_file, execute_before_first_query=True,
+    def __init__(self, config, per_query_count, llamatune_config_file, execute_on_init=True,
                  optimizer_type="smac"):
-        super().__init__(config, per_query_count, execute_before_first_query=execute_before_first_query)
+        super().__init__(config, per_query_count, execute_on_init=execute_on_init)
         self.optimizer_type = optimizer_type
         self.llamatune_config_file = llamatune_config_file
 

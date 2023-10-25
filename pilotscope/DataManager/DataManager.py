@@ -35,7 +35,7 @@ class DataManager:
             self.create_table_if_absence(table_name, column_2_value)
             self.db_controller.insert(table_name, column_2_value)
 
-    def drop_table_is_exist(self, table_name):
+    def drop_table_if_exist(self, table_name):
         if self.exist_table(table_name):
             self.db_controller.drop_table_if_exist(table_name)
             self.table_visited_tracker.delete_visited_record(table_name)

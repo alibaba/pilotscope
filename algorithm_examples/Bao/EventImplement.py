@@ -59,8 +59,8 @@ class BaoPretrainingModelEvent(PretrainingModelEvent):
         return column_2_value_list, True if self.cur_sql_idx >= len(self.sqls) else False
 
     def custom_model_training(self, bind_model, db_controller: BaseDBController,
-                              train_data_manager: DataManager):
-        data: DataFrame = train_data_manager.read_all(self.data_saving_table)
+                              data_manager: DataManager):
+        data: DataFrame = data_manager.read_all(self.data_saving_table)
         bao_model = BaoRegression(verbose=True, have_cache_data=self._model.have_cache_data,
                                   is_spark=self.config.db_type == DatabaseEnum.SPARK)
         new_plans, new_times = self.filter(data["plan"].values, data["time"].values)

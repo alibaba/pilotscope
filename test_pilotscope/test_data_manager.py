@@ -17,7 +17,7 @@ class MyTestCase(unittest.TestCase):
         self.test_table_name = "data_manager_test_table"
 
     def test_drop_table(self):
-        self.data_manager.drop_table_is_exist(self.test_table_name)
+        self.data_manager.drop_table_if_exist(self.test_table_name)
         self.assertFalse(self.data_manager.exist_table(self.test_table_name))
 
     def test_create_table(self):

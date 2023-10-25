@@ -16,8 +16,8 @@ from algorithm_examples.KnobTuning.KnobPresetScheduler import get_knob_preset_sc
 class KnobTest(unittest.TestCase):
     def setUp(self):
         self.config: PostgreSQLConfig = PostgreSQLConfig()
-        self.config.set_knob_config(example_pg_ctl, example_pgdata, example_db_config_path,
-                                    example_backup_db_config_path)
+        self.config.enable_deep_control(example_pg_ctl, example_pgdata, example_db_config_path,
+                                        example_backup_db_config_path)
         self.config.db = "stats_tiny"
         self.config.sql_execution_timeout = 300000
         self.config.once_request_timeout = 300000
@@ -31,7 +31,7 @@ class KnobTest(unittest.TestCase):
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, and it is {}".format(i, sql))
                 TimeStatistic.start(ExperimentTimeEnum.PIPE_END_TO_END)
-                scheduler.simulate_db_console(sql)
+                scheduler.execute(sql)
                 TimeStatistic.end(ExperimentTimeEnum.PIPE_END_TO_END)
                 TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo, self.config.db))
                 print("{}-th sql OK".format(i), flush=True)

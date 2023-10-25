@@ -28,7 +28,7 @@ def get_lero_preset_scheduler(config, enable_collection, enable_training) -> Pil
     lero_handler = LeroCardPushHandler(lero_pilot_model, config)
 
     # core
-    scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
+    scheduler: PilotScheduler = SchedulerFactory.create_scheduler(config)
     scheduler.register_custom_handlers([lero_handler])
     scheduler.register_required_data(test_data_table, pull_execution_time=True, pull_physical_plan=True)
 
@@ -59,7 +59,7 @@ def get_lero_dynamic_preset_scheduler(config) -> PilotScheduler:
 
     # core
     training_data_save_table = "{}_data_table".format(model_name)
-    scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
+    scheduler: PilotScheduler = SchedulerFactory.create_scheduler(config)
     scheduler.register_custom_handlers([lero_handler])
     scheduler.register_required_data(training_data_save_table, pull_execution_time=True, pull_physical_plan=True)
 

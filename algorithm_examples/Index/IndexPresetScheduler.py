@@ -16,10 +16,10 @@ def get_index_preset_scheduler(config: PilotConfig) -> PilotScheduler:
     config.print()
 
     # core
-    scheduler: PilotScheduler = SchedulerFactory.get_pilot_scheduler(config)
+    scheduler: PilotScheduler = SchedulerFactory.create_scheduler(config)
 
     # allow to pretrain model
-    periodic_model_update_event = IndexPeriodicModelUpdateEvent(config, 200, execute_before_first_query=True)
+    periodic_model_update_event = IndexPeriodicModelUpdateEvent(config, 200, execute_on_init=True)
     scheduler.register_events([periodic_model_update_event])
     scheduler.register_required_data(test_data_table, pull_execution_time=True)
 
