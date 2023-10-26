@@ -39,9 +39,6 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
             column_2_value_list.append(column_2_value)
         return column_2_value_list, True
 
-    def _get_table_name(self):
-        return self.data_saving_table
-
     def custom_model_training(self, bind_model, db_controller: BaseDBController,
                               data_manager: DataManager):
         if not self.training_data_file is None:
@@ -50,7 +47,7 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
             model = MscnModel()
             model.fit(tokens, labels + 1, schema)
         else:
-            data: DataFrame = data_manager.read_all(self._get_table_name())
+            data: DataFrame = data_manager.read_all(self.data_saving_table)
             tables, joins, predicates = parse_queries(data["query"].values)
             schema = load_schema(self.pilot_data_interactor.db_controller)
             model = MscnModel()

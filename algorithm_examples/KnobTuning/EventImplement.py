@@ -102,9 +102,6 @@ class KnobPeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
         self.optimizer_type = optimizer_type
         self.llamatune_config_file = llamatune_config_file
 
-    def _load_sql(self):
-        return load_training_sql(self.config.db)
-
     def custom_model_update(self, pilot_model: PilotModel, db_controller: BaseDBController,
                             data_manager: DataManager):
         TimeStatistic.start(ExperimentTimeEnum.FIND_KNOB)
