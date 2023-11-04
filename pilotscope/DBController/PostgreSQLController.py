@@ -38,8 +38,10 @@ class PostgreSQLController(BaseDBController):
         extensions = self.get_available_extensions()
         if "pg_buffercache" not in extensions:
             self.execute("create extension pg_buffercache")
-        if "pilotscope" not in extensions:
-            self.execute("create extension pilotscope")
+        if "pg_hint_plan" not in extensions:
+            self.execute("create extension pg_hint_plan")
+        # if "pilotscope" not in extensions:
+        #     self.execute("create extension pilotscope")
         if self.enable_simulate_index and "hypopg" not in extensions:
             self.execute("create extension hypopg")
 

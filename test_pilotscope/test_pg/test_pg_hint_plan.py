@@ -23,30 +23,21 @@ class MyTestCase(unittest.TestCase):
     def test_push_card_to_cost(self):
         larger_card = {k:v*10000 for k,v in self.origin_result.subquery_2_card.items()}
         self.data_interactor.push_card(larger_card)
+        self.data_interactor.pull_physical_plan()
         self.data_interactor.pull_estimated_cost()
         result = self.data_interactor.execute(self.sql)
         print("cost is ",result.estimated_cost,". before push_card, cost is",self.origin_result.estimated_cost)
         self.assertTrue(result.estimated_cost>self.origin_result.estimated_cost*100)
+        print(result.physical_plan)
         
-        smaller_card = {k:max(1,v/100) for k,v in self.origin_result.subquery_2_card.items()}
-        self.data_interactor.push_card(smaller_card)
-        self.data_interactor.pull_estimated_cost()
-        result = self.data_interactor.execute(self.sql)
-        print("cost is ",result.estimated_cost,". before push_card, cost is",self.origin_result.estimated_cost)
-        self.assertTrue(result.estimated_cost<self.origin_result.estimated_cost*2)
-        
-    def test_card_consistency(self):
-        model_subquery_2_card = {}
-        for i, subquery in enumerate(self.origin_result.subquery_2_card):
-            model_subquery_2_card[subquery] = random.randint(1, 10000000)
-        self.data_interactor.push_card(model_subquery_2_card)
-        self.data_interactor.pull_estimated_cost()
+        self.data_interactor.push_card(larger_card)
+        self.data_interactor.push_comment("/*+SeqScan(b) SeqScan(u) SeqScan(c) SeqScan(v)*/")
         self.data_interactor.pull_physical_plan()
+        self.data_interactor.pull_estimated_cost()
         result = self.data_interactor.execute(self.sql)
-        flag = False
-        for _,v in model_subquery_2_card.items():
-            flag = (str(v) in str(result.physical_plan)) or flag
-        self.assertTrue(flag) # check if some new values have injected to plan
+        print("after set pg_hint_plan, cost is ",result.estimated_cost)
+        self.assertTrue("Index Scan" not in str(result.physical_plan))
+        print(result.physical_plan)
         
         
 

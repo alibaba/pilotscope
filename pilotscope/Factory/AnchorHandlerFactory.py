@@ -65,6 +65,8 @@ class AnchorHandlerFactory:
             return IndexPushHandler(config)
         elif anchor == AnchorEnum.KNOB_PUSH_ANCHOR:
             return KnobPushHandler(config)
+        elif anchor == AnchorEnum.COMMENT_PUSH_ANCHOR:
+            return CommentPushHandler(config)
         # fetch
         elif anchor == AnchorEnum.RECORD_PULL_ANCHOR:
             from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLRecordPullHandler

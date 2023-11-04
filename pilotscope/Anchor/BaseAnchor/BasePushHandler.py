@@ -119,6 +119,17 @@ class HintPushHandler(BasePushHandler):
         pass
 
 
+class CommentPushHandler(BasePushHandler):
+
+    def __init__(self, config, comment_str = "") -> None:
+        super().__init__(config)
+        self.anchor_name = AnchorEnum.COMMENT_PUSH_ANCHOR.name
+        self.comment_str = comment_str
+
+    def add_trans_params(self, params: dict):
+        # the empty function is meaningful for removing all params from superclass.
+        pass
+
 class KnobPushHandler(BasePushHandler):
 
     def __init__(self, config, key_2_value_for_knob: dict = None) -> None:
