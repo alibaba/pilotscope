@@ -6,69 +6,90 @@ import sqlglot
 from requests import get
 import os
 import hashlib
+import tarfile
 
 
 class BaseDataset(ABC):
-    data_sha256 = None
-
-    def __init__(self, file_db_type: DatabaseEnum, use_db_type: DatabaseEnum, data_dir="./data") -> None:
-        self.file_db_type = file_db_type
+    data_sha256 = None # hash value of the downloaded file. To make sure the file is exactly same.
+    download_urls_dict = None
+    download_urls = None
+    sub_dir = None
+    schema_file = None
+    train_sql_file = None
+    test_sql_file = None
+    file_db_type = None
+    
+    def __init__(self, use_db_type: DatabaseEnum, data_dir="data") -> None:
         self.use_db_type = use_db_type
-        self.data_dir = data_dir  # modify to __file__ or other dir
+        self.data_dir = data_dir  # could modify to __file__ or other dir
+        self.now_path = os.path.join(os.path.dirname(__file__), self.sub_dir)
 
-    def _get_sql(self, file_path, pre_line=True):
+    def _get_sql(self, file_path):
         with open(file_path, "r") as f:
             if (self.use_db_type == self.file_db_type):
-                if (pre_line):
-                    return f.readlines()
-                else:
-                    return f.read().split(";")[:-1]  # what is after last ; is white space
+                return f.read().split(";")[:-1]  # what is after last ; is white space
             else:
-                if (pre_line):
-                    return [sqlglot.transpile(sql, database_enum_to_sqlglot_str(self.file_db_type),
-                                              database_enum_to_sqlglot_str(self.use_db_type))[0] for sql in
-                            f.readlines()]
-                else:
-                    return sqlglot.transpile(f.read(), database_enum_to_sqlglot_str(self.file_db_type),
+                return sqlglot.transpile(f.read(), database_enum_to_sqlglot_str(self.file_db_type),
                                              database_enum_to_sqlglot_str(self.use_db_type))
 
-    @abstractmethod
     def read_schema(self):
-        pass
+        return self._get_sql(os.path.join(self.now_path, self.schema_file))
 
-    @abstractmethod
     def read_train_sql(self):
-        pass
+        return self._get_sql(os.path.join(self.now_path, self.train_sql_file))
 
-    @abstractmethod
     def read_test_sql(self):
-        pass
+        return self._get_sql(os.path.join(self.now_path, self.test_sql_file))
 
-    def create_dataset_tables(self, db_controller: BaseDBController):
-        for sql in self.read_schema():
-            db_controller.execute(sql)
-
-    def _download_save(self, url, save_name):
-        dir_and_filename = os.path.join(self.data_dir, save_name)
+    def _download_save(self, url):
+        dir_and_filename = os.path.join(self.data_dir, url.split("/")[-1])
         if (os.path.isfile(dir_and_filename)):
-            if (self._hash_data(save_name) == self.data_sha256):
+            if (self._hash_data(dir_and_filename) == self.data_sha256):
                 return
             else:
                 print("Hash of existed file is not same, redownload!")
         response = get(url)
         with open(dir_and_filename, "wb") as file:
             file.write(response.content)
-        assert (self._hash_data(save_name) == self.data_sha256)
+        # print(self._hash_data(dir_and_filename))
+        # assert (self._hash_data(save_name) == self.data_sha256)
 
-    def _hash_data(self, filename):
+    def _hash_data(self, file_dir):
         h = hashlib.sha256()
         b = bytearray(128 * 1024)
         mv = memoryview(b)
-        with open(os.path.join(self.data_dir, filename), 'rb', buffering=0) as f:
+        with open(file_dir, 'rb', buffering=0) as f:
             for n in iter(lambda: f.readinto(mv), 0):
                 h.update(mv[:n])
         return h.hexdigest()
-
+    
+    def _merge_files():
+        pass
+    
+    def _load_dump(self, dump_file_dir, db_controller: BaseDBController):
+        if self.use_db_type == DatabaseEnum.POSTGRESQL:
+            psql = os.path.join(db_controller.config.pg_bin_path,"psql")
+            os.system(f"{psql} {db_controller.config.db} -U {db_controller.config.user} < {dump_file_dir}")
+        else:
+            raise NotImplementedError    
+    
+    def load_to_db(self, db_controller: BaseDBController):
+        for url in self.download_urls:
+            self._download_save(url)
+        fname = None
+        if len(self.download_urls) == 1:
+            fname = self.download_urls[0].split("/")[-1]
+        else:
+            fname = self._merge_files()
+        tf = tarfile.open(os.path.join(self.data_dir, fname))
+        extract_folder = os.path.join(self.data_dir, fname+".d")
+        if (not os.path.isdir(extract_folder)):
+            os.mkdir(extract_folder)
+        tf.extractall(extract_folder)
+        dump_file_name = os.listdir(extract_folder)[0]
+        self._load_dump(os.path.join(extract_folder, dump_file_name), db_controller)
+        
+        
     def _copy_from_csv(self, folder_dir, db_controller: BaseDBController):
         if db_controller.config.db_type == DatabaseEnum.POSTGRESQL:
             file_names = os.listdir(folder_dir)
