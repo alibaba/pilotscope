@@ -91,3 +91,80 @@ def deprecated(func):
         return func(*args, **kwargs)
 
     return wrapper
+
+
+
+# Modified from https://github.com/pfl-cs/ALECE/blob/main/src/benchmark/p_error_cmp.py
+def plan_to_pg_hint(plan_obj, scan_hint_list, join_hint_list):
+    FEATURE_LIST = ['Node Type', 'Startup Cost',
+                    'Total Cost', 'Plan Rows', 'Plan Width']
+    LABEL_LIST = ['Actual Startup Time', 'Actual Total Time', 'Actual Self Time']
+
+    UNKNOWN_OP_TYPE = "Unknown"
+    SCAN_TYPES = ["Seq Scan", "Index Scan", "Index Only Scan", 'Bitmap Heap Scan']
+    JOIN_TYPES = ["Nested Loop", "Hash Join", "Merge Join"]
+    OTHER_TYPES = ['Bitmap Index Scan']
+    OP_TYPES = [UNKNOWN_OP_TYPE, "Hash", "Materialize", "Sort", "Aggregate", "Incremental Sort", "Limit"] \
+               + SCAN_TYPES + JOIN_TYPES + OTHER_TYPES
+
+    node_type = plan_obj['Node Type']
+    tables = None
+    if "Plans" in plan_obj:
+        children = plan_obj["Plans"]
+
+        left_tables = []
+        right_tables = []
+        if len(children) == 2:
+            left_tables = plan_to_pg_hint(children[0], scan_hint_list, join_hint_list)
+            right_tables = plan_to_pg_hint(children[1], scan_hint_list, join_hint_list)
+            tables = (left_tables, right_tables)
+        else:
+            assert len(children) == 1
+            left_tables = plan_to_pg_hint(children[0], scan_hint_list, join_hint_list)
+            tables = left_tables
+
+        if node_type in JOIN_TYPES:
+            join_hint_list.append(node_type.replace(" ", "").replace("Nested", "Nest") + "(" + \
+                                  str(tables).replace("'", "").replace(",", " ").replace("(", "").replace(")",
+                                                                                                          "") + ")")
+
+        if node_type == "Bitmap Heap Scan":
+            assert 'Alias' in plan_obj
+            assert len(left_tables) == 0 and len(right_tables) == 0
+            assert len(children) == 1
+            bitmap_idx_scan = children[0]
+            index_name = None
+            if "Index Name" in bitmap_idx_scan:
+                index_name = bitmap_idx_scan["Index Name"]
+
+            table_name = plan_obj['Alias']
+            tables = table_name
+            scan_hint_list.append("BitmapScan(" + table_name + ("" if index_name is None else " " + index_name) + ")")
+
+
+    else:
+        if node_type == "Bitmap Index Scan":
+            return []
+
+        assert node_type in SCAN_TYPES
+        assert 'Alias' in plan_obj
+        index_name = None
+        if "Index Name" in plan_obj:
+            index_name = plan_obj["Index Name"]
+        table_name = plan_obj['Alias']
+        tables = table_name
+        scan_hint_list.append(
+            node_type.replace(" ", "") + "(" + table_name + ("" if index_name is None else " " + index_name) + ")")
+
+    return tables
+
+
+def get_pg_hints(plan_obj):
+    scan_hint_list, join_hint_list = [], []
+    tables = plan_to_pg_hint(plan_obj["Plan"], scan_hint_list, join_hint_list)
+    hint_str = "/*+\n"
+    hint_str += "\n".join(scan_hint_list) + "\n"
+    hint_str += "\n".join(join_hint_list) + "\n"
+    hint_str += "Leading(" + str(tables).replace("'", "").replace(",", " ") + ")\n"
+    hint_str += "*/\n"
+    return hint_str
