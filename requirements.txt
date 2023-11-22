@@ -55,6 +55,7 @@ Pygments==2.14.0
 pynisher==1.0.8
 pyparsing==3.0.9
 pyrfr==0.9.0
+pyspark==3.5.0
 python-dateutil==2.8.2
 pytz==2022.7.1
 PyYAML==6.0.1

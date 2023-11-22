@@ -22,6 +22,7 @@ class BasePullHandler(BaseAnchorHandler):
          collect data when submitting SQl query to execute. The second method called "outer" collect data with
          another new execution for current SQL query, which is often used when database provide an easy-to-use and
          low-cost API for the data collection.
+
         :param db_controller:
         :param sql:
         :param pilot_comment:
@@ -34,6 +35,7 @@ class BasePullHandler(BaseAnchorHandler):
     def prepare_data_for_writing(self, column_2_value, data: PilotTransData):
         """
         Add the collected data into the "column_2_value" from input parameter "data".
+        
         :param column_2_value: Saving the data expected to be written into database.
         :param data: All collected data in the execution process of current SQL query.
         :return:

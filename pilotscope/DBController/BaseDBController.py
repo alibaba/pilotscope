@@ -16,6 +16,7 @@ class BaseDBController(ABC):
         :type config: pilotscope.PilotConfig
         :param echo: if True, the sqlachemy connection pool will log informational output such as when connections are invalidated as well as when connections are recycled to the default log handler, which defaults to sys.stdout for output. defaults to True
         :type echo: bool, optional
+
         """
         self.config = config
         self.echo = echo
@@ -41,10 +42,13 @@ class BaseDBController(ABC):
                              client_encoding='utf8', isolation_level="AUTOCOMMIT")
 
     def get_connection(self):
-        """Get the connection of DBController
+        """
+        
+        Get the connection of DBController
 
         :return: the connection object of sqlalchemy in thread-local data
         :rtype: ``Connection`` of sqlalchemy
+
         """
         return self.connection_thread.conn
 
@@ -63,10 +67,13 @@ class BaseDBController(ABC):
             self.connection_thread.conn = None
 
     def is_connect(self):
-        """If self have connected, return True. Otherwise, return False. Note that if the DBMS is stopped from outside, the return value of this function will not change.
+        """
+        
+        If self have connected, return True. Otherwise, return False. Note that if the DBMS is stopped from outside, the return value of this function will not change.
 
         :return: if self connected or not
         :rtype: bool
+
         """
         return hasattr(self.connection_thread, "conn") and self.connection_thread.conn is not None
 
@@ -122,8 +129,15 @@ class BaseDBController(ABC):
     def get_index_byte(self, index_name):
         pass
 
-    @abstractmethod
     def get_estimated_cost(self, sql):
+        """
+        Calculate and return the estimated cost of executing the given SQL query.
+
+        :param sql: The SQL query for which to calculate the estimated cost.
+        :type sql: str
+        :return: The estimated cost of executing the SQL query.
+        :rtype: float
+        """
         pass
 
     def _create_inspect(self):
@@ -131,20 +145,20 @@ class BaseDBController(ABC):
 
     def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
                                  enable_autoincrement_id_key=True):
-        """Create a table according to parameters if absences
+        """
 
-             :param table_name: the name of the table you want to create
-             :type table_name: str
-             :param column_2_value: a dict, whose keys is the names of columns and values represent data type.
-             The values is arbitrary, we only use the type of values.
-             :type column_2_value: dict
-             :param primary_key_column: If ``primary_key_column`` is a string, the column named ``primary_key_column``
-             will be the primary key of the new table. If it is None, there will be no primary key.
-             :type primary_key_column: str or None, optional
-             :param enable_autoincrement_id_key: If it is True, the primary key will be autoincrement.
-             It is only meaningful when primary_key_column is a string.
-             :type enable_autoincrement_id_key: bool, optional
-             """
+        Create a table according to parameters if absences
+
+        :param table_name: the name of the table you want to create
+        :type table_name: str
+        :param column_2_value: a dict, whose keys is the names of columns and values represent data type. The values is arbitrary, we only use the type of values.
+        :type column_2_value: dict
+        :param primary_key_column: If ``primary_key_column`` is a string, the column named ``primary_key_column`` will be the primary key of the new table. If it is None, there will be no primary key.
+        :type primary_key_column: str or None, optional
+        :param enable_autoincrement_id_key: If it is True, the primary key will be autoincrement. It is only meaningful when primary_key_column is a string.
+        :type enable_autoincrement_id_key: bool, optional
+
+        """
 
         if primary_key_column is not None and primary_key_column not in column_2_value:
             raise RuntimeError("the primary key column {} is not in column_2_value".format(primary_key_column))
@@ -162,19 +176,25 @@ class BaseDBController(ABC):
             table.create(self.engine)
 
     def drop_table_if_exist(self, table_name):
-        """Try to drop table named ``table_name``
+        """
+        
+        Try to drop table named ``table_name``
 
         :param table_name: the name of the table
         :type table_name: str
+
         """
         if self.exist_table(table_name):
             Table(table_name, self.metadata, autoload_with=self.engine).drop(self.engine)
 
     def exist_table(self, table_name) -> bool:
-        """If the table named ``table_name`` exist or not
+        """
+        
+        If the table named ``table_name`` exist or not
 
         :return: the the table named ``table_name`` exist, it is return True; otherwise, it is return False
         :rtype: bool
+
         """
         return self.engine.dialect.has_table(self.get_connection(), table_name)
 
@@ -186,33 +206,42 @@ class BaseDBController(ABC):
         return list(self.get_all_sqla_tables().keys())
 
     def insert(self, table_name, column_2_value: dict):
-        """Insert a new row into the table with each column's value set as column_2_value.
+        """
+        
+        Insert a new row into the table with each column's value set as column_2_value.
 
         :param table_name: the name of the table
         :type table_name: str
         :param column_2_value: a dict where the keys are column names and the values are the values to be inserted
         :type column_2_value: dict
+
         """
         table = Table(table_name, self.metadata, autoload_with=self.engine)
         self.execute(table.insert().values(column_2_value))
 
     def get_table_column_name(self, table_name):
-        """Get all column names of a table
+        """
+        
+        Get all column names of a table
 
         :param table_name: the names of the table 
         :type table_name: str
         :return: the list of the names of column
         :rtype: list
+
         """
         return [c.key for c in self.get_sqla_table(table_name).c]
 
     def get_table_row_count(self, table_name):
-        """Get the row count of the a table
+        """
+        
+        Get the row count of the a table
 
         :param table_name: the name of the table 
         :type table_name: str
         :return: the row count
         :rtype: int
+
         """
         table = self.get_sqla_table(table_name)
         stmt = select(func.count()).select_from(table)
@@ -220,13 +249,17 @@ class BaseDBController(ABC):
         return result[0][0]
 
     def get_column_max(self, table_name, column_name):
-        """Get the maximum  of a column
+        """
+        
+        Get the maximum  of a column
 
         :param table_name: the name of the table that the column belongs to
         :type table_name: str
         :param column_name: the name of the column
         :type column_name: str
+
         :return: the maximum, type of which is same as the data of the column
+
         """
         table = self.get_sqla_table(table_name)
         stmt = select(func.max(table.c[column_name])).select_from(table)
@@ -234,13 +267,17 @@ class BaseDBController(ABC):
         return result[0][0]
 
     def get_column_min(self, table_name, column_name):
-        """Get the minimum of a column
+        """
+        
+        Get the minimum of a column
 
         :param table_name: the name of the table that the column belongs to
         :type table_name: str
         :param column_name: the name of the column
         :type column_name: str
+
         :return: the maximum, type of which is same as the data of the column
+
         """
         table = self.get_sqla_table(table_name)
         stmt = select(func.min(table.c[column_name])).select_from(table)
@@ -248,24 +285,32 @@ class BaseDBController(ABC):
         return result[0][0]
 
     def get_index_number(self, table):
-        """Get the number of index in the table
+        """
+        
+        Get the number of index in the table
 
         :param table: name of the table
         :type table: str
+
         :return: the number of index 
         :rtype: int
+
         """
         inspector = self._create_inspect()
         n = len(inspector.get_indexes(table))
         return n
 
     def get_existed_index(self, table):
-        """Get all indexes of a table
+        """
+        
+        Get all indexes of a table
 
         :param table: the name of the table
         :type table: str
+
         :return: a list of pilotscope.common.Index
         :rtype: list
+
         """
         inspector = self._create_inspect()
         db_indexes = inspector.get_indexes(table)
@@ -276,10 +321,13 @@ class BaseDBController(ABC):
         return indexes
 
     def get_all_indexes(self):
-        """Get all indexes of all table
+        """
+        
+        Get all indexes of all table
 
         :return: a list of pilotscope.common.Index
         :rtype: list
+
         """
         inspector = self._create_inspect()
         indexes = []
@@ -290,12 +338,16 @@ class BaseDBController(ABC):
         return indexes
 
     def get_sqla_table(self, table_name):
-        """Get sqlachemy ``Table`` object of a table
+        """
+        
+        Get sqlachemy ``Table`` object of a table
 
         :param table_name: the name of the table
         :type table_name: str
+        
         :return: the sqlachemy ``Table`` object of the table
         :rtype: Table of sqlachemy
+
         """
         # update info of existed tables
         return Table(table_name, self.metadata, autoload_with=self.engine)
