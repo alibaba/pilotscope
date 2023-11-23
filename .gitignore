@@ -1,0 +1,14 @@
+*.o
+*.so
+*.bpkg
+*.pyc
+*.so
+*.Po
+*.a
+*.so
+*.so.**
+*.pc
+**/objfiles.txt
+config.log
+config.status
+GNUmakefile
