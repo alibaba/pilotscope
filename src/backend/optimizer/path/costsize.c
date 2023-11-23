@@ -97,6 +97,14 @@
 #include "utils/spccache.h"
 #include "utils/tuplesort.h"
 
+/** modification start **/
+#include "pilotscope/subplanquery.h"
+#include "pilotscope/pilotscope_config.h"
+#include "pilotscope/anchor2struct.h"
+#include "pilotscope/hashtable.h"
+#include "pilotscope/utils.h"
+#include "time.h"
+/** modification end **/
 
 #define LOG2(x)  (log(x) / 0.693147180559945)
 
@@ -4625,6 +4633,26 @@ approx_tuple_count(PlannerInfo *root, JoinPath *path, List *quals)
 	return clamp_row_est(tuples);
 }
 
+/** modification start **/
+// get subquery and card
+void save_subquery_and_card(double nrows)
+{
+		int curr_subquery_length = 0;
+		int curr_card_length = 0;
+
+		realloc_string_array_object(pilot_trans_data->subquery,subquery_count+1);
+		realloc_string_array_object(pilot_trans_data->card,subquery_count+1);
+		
+		//store  subquery 
+		store_string(sub_query->data,pilot_trans_data->subquery[subquery_count]);
+
+		// store card
+		store_string_for_num(nrows,pilot_trans_data->card[subquery_count]);
+
+		// update subquery num
+		++subquery_count;
+}
+/** modification end **/
 
 /*
  * set_baserel_size_estimates
@@ -4643,7 +4671,7 @@ void
 set_baserel_size_estimates(PlannerInfo *root, RelOptInfo *rel)
 {
 	double		nrows;
-
+	
 	/* Should only be applied to base relations */
 	Assert(rel->relid > 0);
 
@@ -4653,6 +4681,42 @@ set_baserel_size_estimates(PlannerInfo *root, RelOptInfo *rel)
 							   0,
 							   JOIN_INNER,
 							   NULL);
+	/** modification start **/
+	// get single-table subquery
+	if(subquery_card_pull_anchor!= NULL && subquery_card_pull_anchor->enable==1)
+	{
+		// start time
+		clock_t starttime = start_to_record_time();
+
+		// get subquery
+		get_single_rel(root, rel);
+		save_subquery_and_card(nrows);
+
+		// end time
+		subquerycardfetcher_time += end_time(starttime);
+
+	}
+
+	// set single-table subquery card
+	if(card_push_anchor != NULL && card_push_anchor->enable == 1)
+	{
+		// start time
+		clock_t starttime = start_to_record_time();
+
+		// get subquery
+		get_single_rel(root, rel);
+
+		// set subquery of card if subquery exist in hash_table
+		char* row_from_push_anchor = get_card_from_push_anchor(table, sub_query->data);
+		if(row_from_push_anchor != NULL)
+		{
+			nrows = atof(row_from_push_anchor);
+		}
+
+		// end time
+		cardreplace_time += end_time(starttime);
+	}
+	/** modification end **/
 
 	rel->rows = clamp_row_est(nrows);
 
@@ -4724,15 +4788,15 @@ set_joinrel_size_estimates(PlannerInfo *root, RelOptInfo *rel,
 						   RelOptInfo *inner_rel,
 						   SpecialJoinInfo *sjinfo,
 						   List *restrictlist)
-{
-	rel->rows = calc_joinrel_size_estimate(root,
-										   rel,
-										   outer_rel,
-										   inner_rel,
-										   outer_rel->rows,
-										   inner_rel->rows,
-										   sjinfo,
-										   restrictlist);
+{	
+			rel->rows = calc_joinrel_size_estimate(root,
+											rel,
+											outer_rel,
+											inner_rel,
+											outer_rel->rows,
+											inner_rel->rows,
+											sjinfo,
+											restrictlist);
 }
 
 /*
@@ -4924,6 +4988,43 @@ calc_joinrel_size_estimate(PlannerInfo *root,
 			nrows = 0;			/* keep compiler quiet */
 			break;
 	}
+
+	/** modification start **/
+	// get multi-table subquery
+	if(subquery_card_pull_anchor != NULL && subquery_card_pull_anchor->enable==1)
+	{	
+		// start time
+		clock_t starttime = start_to_record_time();
+
+		// get subquery
+		get_join_rel(root, joinrel, outer_rel, inner_rel, sjinfo, restrictlist);
+		save_subquery_and_card(nrows);
+
+		// end time
+		subquerycardfetcher_time += end_time(starttime);
+	}
+
+	// set multi-table subquery card
+	if(card_push_anchor != NULL && card_push_anchor->enable == 1)
+	{
+		// start time
+		clock_t starttime = start_to_record_time();
+	
+		// get subquery
+		get_join_rel(root, joinrel, outer_rel, inner_rel, sjinfo, restrictlist);
+
+		// set subquery of card
+		char* row_from_push_anchor = get_card_from_push_anchor(table, sub_query->data);
+		if(row_from_push_anchor != NULL)
+		{
+			nrows = atof(row_from_push_anchor);
+		}
+
+		// end time
+		cardreplace_time += end_time(starttime);
+	}
+	/** modification end **/
+
 
 	return clamp_row_est(nrows);
 }

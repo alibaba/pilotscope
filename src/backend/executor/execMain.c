@@ -64,7 +64,9 @@
 #include "utils/rls.h"
 #include "utils/ruleutils.h"
 #include "utils/snapmgr.h"
-
+/** modification start **/
+#include "pilotscope/anchor2struct.h"
+/** modification end **/
 
 /* Hooks for plugins to get control in ExecutorStart/Run/Finish/End */
 ExecutorStart_hook_type ExecutorStart_hook = NULL;
@@ -146,6 +148,39 @@ ExecutorStart(QueryDesc *queryDesc, int eflags)
 		(*ExecutorStart_hook) (queryDesc, eflags);
 	else
 		standard_ExecutorStart(queryDesc, eflags);
+	/** modification start **/
+	/*
+     * execution_time_pull_anchor is first processd here and will be processed secondly in pilotscope_hook_ExecutorEnd.
+     *
+     * First, a variable named oldcxt of type MemoryContext is defined to store the current memory context. Then, the 
+     * code switches the memory context to queryDesc->estate->es_query_cxt, which is the memory context used by the query 
+     * execution plan. After switching the memory context, the code uses InstrAlloc() function to allocate a timer for 
+     * each node in the query execution plan, which can be used to measure the execution time. Finally, the code switches 
+     * the memory context back to the original context stored in oldcxt. 
+     * 
+     * The timer need some memory, in order to avoid frequently allocations and free, pg uses memorytext to do it.
+     * 
+     * Also, we will record the time we deal with ExecutionTimePullAnchor.
+     */
+	if (execution_time_pull_anchor != NULL && execution_time_pull_anchor->enable == 1)
+	{
+        // start time
+        clock_t starttime = start_to_record_time();
+
+        // set timer
+		if (queryDesc->totaltime == NULL)
+		{
+            //set_timer_for_exeution_time_fetch_anchor(queryDesc);
+			MemoryContext oldcxt;
+			oldcxt = MemoryContextSwitchTo(queryDesc->estate->es_query_cxt);
+			queryDesc->totaltime = InstrAlloc(1, INSTRUMENT_ALL);
+			MemoryContextSwitchTo(oldcxt);
+		}
+
+        // end time
+        executiontimefetch_time += end_time(starttime);
+	}
+	/** modification end **/
 }
 
 void
@@ -461,6 +496,53 @@ standard_ExecutorFinish(QueryDesc *queryDesc)
 void
 ExecutorEnd(QueryDesc *queryDesc)
 {
+	/** modification start **/
+	/*
+     * execution_time_pull_anchor is secondly processed here in order to get the execution time recorded 
+     * by timer set before. Also, we will record the time we deal with execution_time_pull_anchor.
+     */
+    if(execution_time_pull_anchor != NULL && execution_time_pull_anchor->enable == 1)
+    {
+        // start time
+        clock_t starttime = start_to_record_time();
+
+        // get execution time
+		InstrEndLoop(queryDesc->totaltime);
+        double	totaltime = queryDesc->totaltime->total;
+
+        // store execution time
+        store_string_for_num(totaltime,pilot_trans_data->execution_time);
+
+        // update anchor num
+        elog(INFO,"The execution time of query is %s s!",pilot_trans_data->execution_time);
+        elog(INFO,"execution_time_pull_anchor done!");
+    
+        change_flag_for_anchor(execution_time_pull_anchor->enable);
+
+        // end time
+        executiontimefetch_time += end_time(starttime);
+
+        // add anchor time
+        // avoid redefinition cause by "#define"
+
+        add_anchor_time(execution_time_pull_anchor->name,executiontimefetch_time);
+        
+       /*
+        * This is the second time we try to end anchors. Because just execution_time_pull_anchor and record_pull_anchor 
+        * need to execute the query plan, we will end anchors in pilotscope_hook_planner before executing if there is no 
+        * execution_time_pull_anchor or record_pull_anchor in json.
+        * 
+        * We will end the anchors if "anchor_num == 0" or there is just record_pull_anchor unprocessed.
+        * The record_pull_anchor is specially dealt with because we can only process it just by the end of
+        * life cycle of input sql. There is no proper room to judge it in our regular process. In end_anchor, we will
+        * decide whether to send and whether to terminate.
+        */
+        if(anchor_num == 0 || (anchor_num == 1 && record_pull_anchor != NULL && record_pull_anchor->enable == 1))
+        {   
+            end_anchor();
+        }
+    }
+	/** modification end **/
 	if (ExecutorEnd_hook)
 		(*ExecutorEnd_hook) (queryDesc);
 	else

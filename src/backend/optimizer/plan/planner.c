@@ -65,6 +65,8 @@
 #include "utils/selfuncs.h"
 #include "utils/syscache.h"
 
+#include "pilotscope/anchor2struct.h"
+/** modification end **/
 /* GUC parameters */
 double		cursor_tuple_fraction = DEFAULT_CURSOR_TUPLE_FRACTION;
 int			force_parallel_mode = FORCE_PARALLEL_OFF;
@@ -267,12 +269,63 @@ PlannedStmt *
 planner(Query *parse, const char *query_string, int cursorOptions,
 		ParamListInfo boundParams)
 {
+	/** modification start **/
+	/*
+     * Parse json here 
+     */
+    parse_json(query_string);
+	/** modification end **/
 	PlannedStmt *result;
 
 	if (planner_hook)
 		result = (*planner_hook) (parse, query_string, cursorOptions, boundParams);
 	else
 		result = standard_planner(parse, query_string, cursorOptions, boundParams);
+	/** modification start **/
+	if(anchor_num != 0)
+	{
+		/*
+			* After the above anchors are processed, it will arrive at the post-processing stage,
+			* where we will make set 'enable' to 0 、reduce anchor_num by 1 and store the time of processing
+			* each anchor.
+			* 
+			* The anchor_time_num is the num of anchors needing to record time, it is a little different from
+			* anchor_num, since the RecordPullAnchor is hard to get anchor time(the time is sended back and the 
+			* program will go on to get record.) In addition, the anchor_time_num acts as the serial number
+			*  of 'pilot_trans_data->anchor_times'.
+			*/
+		if(card_push_anchor != NULL && card_push_anchor->enable == 1)
+		{ 
+			elog(INFO,"card_push_anchor done!");
+			change_flag_for_anchor(card_push_anchor->enable);
+
+			// add anchor time
+			add_anchor_time(card_push_anchor->name,cardreplace_time);
+		}
+
+		if(subquery_card_pull_anchor != NULL && subquery_card_pull_anchor->enable == 1)
+		{ 
+			pilot_trans_data->subquery_num = subquery_count;
+			elog(INFO,"The number of subqueries is %d",pilot_trans_data->subquery_num);
+			elog(INFO,"subquery_card_pull_anchor done!");
+			change_flag_for_anchor(subquery_card_pull_anchor->enable);
+			
+			// add anchor time
+			add_anchor_time(subquery_card_pull_anchor->name,subquerycardfetcher_time);
+		}
+
+		/*
+			* We will end the anchors if "anchor_num == 0" or there is just record_pull_anchor unprocessed.
+			* The record_pull_anchor is specially dealt with because we can only process it just by the end of
+			* life cycle of input sql. There is no proper room to judge in our regular process. In end_anchor, we will
+			* decide whether to send and whether to terminate.
+			*/
+		if(anchor_num == 0 || (anchor_num == 1 && record_pull_anchor != NULL && record_pull_anchor->enable == 1))
+		{   
+			end_anchor();
+		}
+	}
+	/** modification end **/
 	return result;
 }
 
