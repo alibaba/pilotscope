@@ -1,9 +1,7 @@
 import unittest
-
 from algorithm_examples.ExampleConfig import example_pg_bin, example_pgdata
 from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PostgreSQLConfig
-from pilotscope.PilotEnum import DatabaseEnum
 
 
 class MyTestCase(unittest.TestCase):
