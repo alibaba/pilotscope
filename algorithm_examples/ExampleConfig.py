@@ -10,7 +10,5 @@ def get_time_statistic_img_path(algo_name, workload_name):
     return "{}_{}".format(algo_name, workload_name)
 
 
-example_pg_ctl = "pg_ctl"
-example_pgdata = "~"
-example_db_config_path = "/var/lib/pgsql/13.1/data/postgresql.conf"
-example_backup_db_config_path = "postgresql-13.1.conf"
+example_pg_bin = "/usr/local/pgsql/13.1/bin/"
+example_pgdata = "/var/lib/pgsql/13.1/data/"

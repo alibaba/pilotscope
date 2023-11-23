@@ -45,27 +45,25 @@ class PostgreSQLConfig(PilotConfig):
         self.pwd = pwd
 
         # for local postgres
-        self.pg_ctl = None
+        self.pg_bin_path = None
         self.pgdata = None
-        self.db_config_path = None
-        self.backup_db_config_path = None
 
-    def enable_deep_control(self, pg_ctl, pgdata, db_config_path, backup_db_config_path):
+    def enable_deep_control(self, pg_bin_path, pgdata):
         """Set value for local PostgreSQL. They influence the start, stop, changing config file, etc. If you do not need these functions, it is not necessary to set these values.
 
-        :param pg_ctl: the directory of pg_ctl
-        :type pg_ctl: str
+        :param pg_bin_path: the directory of binary file of postgresql, i.e. the path of 'postres', 'pg_ctl' etc.
+        :type pg_bin_path: str
         :param pgdata: location of the database storage area
         :type pgdata: str
-        :param db_config_path: location of the database config file
-        :type db_config_path: str
-        :param backup_db_config_path: location of the backup of the database config file, you could copy the default config file to anothor directory and fill the directory here.
-        :type backup_db_config_path: str
         """
-        self.pg_ctl = pg_ctl
+        self.pg_bin_path = pg_bin_path
         self.pgdata = pgdata
-        self.db_config_path = db_config_path
-        self.backup_db_config_path = backup_db_config_path
+        self.backup_db_config_path = os.path.join(pgdata, "pilotscope_postgresql_backup.conf")
+        self.db_config_path = os.path.join(pgdata, "postgresql.conf")
+        with open(self.db_config_path, "r") as f:
+            with open(self.backup_db_config_path, "w") as w:
+                w.write(f.read())
+        self.pg_ctl = os.path.join(pg_bin_path, "pg_ctl")
 
 
 class SparkConfig(PilotConfig):
