@@ -7,6 +7,11 @@ from pilotscope.Common.TimeStatistic import TimeStatistic
 from pilotscope.Common.Util import json_str_to_json_obj
 import sys
 import os
+from pilotscope.PilotEnum import DatabaseEnum
+from pilotscope.Dataset.ImdbDataset import ImdbDataset
+from pilotscope.Dataset.StatsDataset import StatsDataset
+from pilotscope.Dataset.StatsTinyDataset import StatsTinyDataset
+from pilotscope.Dataset.TpcdsDataset import TpcdsDataset
 
 def get_path(sql_file):
     my_path = os.path.abspath(__file__)
@@ -14,26 +19,26 @@ def get_path(sql_file):
 
 def load_training_sql(db):
     if "stats_tiny" == db.lower():
-        return load_sql(get_path("stats_train_time2int.txt"))
+        return StatsTinyDataset(DatabaseEnum.POSTGRESQL).read_train_sql()
     elif "stats" in db.lower():
-        return load_sql(get_path("stats_train.txt"))
+        return StatsDataset(DatabaseEnum.POSTGRESQL).read_train_sql()
     elif "imdb" in db:
-        return load_sql(get_path("job_train_ascii.txt"))
+        return ImdbDataset(DatabaseEnum.POSTGRESQL).read_train_sql()
     elif "tpcds" in db.lower():
-        return load_sql(get_path("tpcds_train_sql.txt"))
+        return TpcdsDataset(DatabaseEnum).read_train_sql()
     else:
         raise NotImplementedError
 
 
 def load_test_sql(db):
     if "stats_tiny" == db.lower():
-        return load_sql(get_path("stats_test_time2int.txt"))
-    elif "stats" in db:
-        return load_sql(get_path("stats_test.txt"))
+        return StatsTinyDataset(DatabaseEnum.POSTGRESQL).read_test_sql()
+    elif "stats" in db.lower():
+        return StatsDataset(DatabaseEnum.POSTGRESQL).read_test_sql()
     elif "imdb" in db:
-        return load_sql(get_path("job_test.txt"))
+        return ImdbDataset(DatabaseEnum.POSTGRESQL).read_test_sql()
     elif "tpcds" in db.lower():
-        return load_sql(get_path("tpcds_test_sql.txt"))
+        return TpcdsDataset(DatabaseEnum).read_test_sql()
     else:
         raise NotImplementedError
 

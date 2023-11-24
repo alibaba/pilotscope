@@ -1,6 +1,9 @@
 import unittest
 from pilotscope.Dataset.ImdbDataset import ImdbDataset
 from pilotscope.Dataset.StatsDataset import StatsDataset
+from pilotscope.Dataset.StatsTinyDataset import StatsTinyDataset
+from pilotscope.Dataset.ImdbTinyDataset import ImdbTinyDataset
+from pilotscope.Dataset.TpcdsDataset import TpcdsDataset
 from pilotscope.Dataset.BaseDataset import BaseDataset
 from pilotscope.PilotEnum import DatabaseEnum
 
@@ -36,8 +39,14 @@ class MyTestCase(unittest.TestCase):
             self.assertTrue(self.db_controller.exist_table(table))
             self.db_controller.drop_table_if_exist(table)
 
+    def test_load_to_db_from_local(self):
+        ds =StatsTinyDataset(DatabaseEnum.POSTGRESQL)
+        ds.load_to_db(self.db_controller)
+        for table in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:
+            self.assertTrue(self.db_controller.exist_table(table))
+            self.db_controller.drop_table_if_exist(table)
+
     def test_get_sql(self):
-        
         ds = ImdbDataset(DatabaseEnum.POSTGRESQL)
         test_dataset(ds)
         ds = ImdbDataset(DatabaseEnum.SPARK)
@@ -45,6 +54,14 @@ class MyTestCase(unittest.TestCase):
         ds = StatsDataset(DatabaseEnum.POSTGRESQL)
         test_dataset(ds)
         ds = StatsDataset(DatabaseEnum.SPARK)
+        test_dataset(ds)
+        ds = StatsTinyDataset(DatabaseEnum.POSTGRESQL)
+        test_dataset(ds)
+        ds = ImdbTinyDataset(DatabaseEnum.POSTGRESQL)
+        test_dataset(ds)
+        ds = TpcdsDataset(DatabaseEnum.POSTGRESQL)
+        test_dataset(ds)
+        ds = TpcdsDataset(DatabaseEnum.SPARK)
         test_dataset(ds)
 
 

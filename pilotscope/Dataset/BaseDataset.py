@@ -11,7 +11,7 @@ import tarfile
 
 class BaseDataset(ABC):
     data_sha256 = None # hash value of the downloaded file. To make sure the file is exactly same.
-    download_urls_dict = None
+    data_location_dict = None
     download_urls = None
     sub_dir = None
     schema_file = None
@@ -41,18 +41,28 @@ class BaseDataset(ABC):
     def read_test_sql(self):
         return self._get_sql(os.path.join(self.now_path, self.test_sql_file))
 
-    def _download_save(self, url):
-        dir_and_filename = os.path.join(self.data_dir, url.split("/")[-1])
-        if (os.path.isfile(dir_and_filename)):
-            if (self._hash_data(dir_and_filename) == self.data_sha256):
-                return
+    def _download_dataset(self, urls):
+        merged_fname = urls[0].split("/")[-1].split(".")[0]+".tar.gz"
+        merged_file_dir = os.path.join(self.data_dir, merged_fname)
+        if (os.path.isfile(merged_file_dir) and self._hash_data(merged_file_dir) == self.data_sha256):
+            return merged_fname
+        fnames = []
+        for url in urls:
+            fnames.append(self._download_save(url))
+        self._merge_files(fnames, merged_fname)
+        if (os.path.isfile(merged_fname)):
+            if (self._hash_data(merged_fname) == self.data_sha256):
+                return merged_fname
             else:
                 print("Hash of existed file is not same, redownload!")
+                return self._download_dataset(self.download_urls)
+
+    def _download_save(self, url):
+        dir_and_filename = os.path.join(self.data_dir, url.split("/")[-1])
         response = get(url)
         with open(dir_and_filename, "wb") as file:
             file.write(response.content)
-        # print(self._hash_data(dir_and_filename))
-        # assert (self._hash_data(save_name) == self.data_sha256)
+        return dir_and_filename
 
     def _hash_data(self, file_dir):
         h = hashlib.sha256()
@@ -63,8 +73,14 @@ class BaseDataset(ABC):
                 h.update(mv[:n])
         return h.hexdigest()
     
-    def _merge_files():
-        pass
+    def _merge_files(self, fnames, merged_fname):
+        if len(fnames) == 1:
+            return
+        else:
+            with open(merged_fname,"wb") as writer:
+                for fname in fnames:
+                    with open(fname, "rb") as f:
+                        writer.write(f.read())
     
     def _load_dump(self, dump_file_dir, db_controller: BaseDBController):
         if self.use_db_type == DatabaseEnum.POSTGRESQL:
@@ -74,13 +90,7 @@ class BaseDataset(ABC):
             raise NotImplementedError    
     
     def load_to_db(self, db_controller: BaseDBController):
-        for url in self.download_urls:
-            self._download_save(url)
-        fname = None
-        if len(self.download_urls) == 1:
-            fname = self.download_urls[0].split("/")[-1]
-        else:
-            fname = self._merge_files()
+        fname = self._download_dataset(self.download_urls)
         tf = tarfile.open(os.path.join(self.data_dir, fname))
         extract_folder = os.path.join(self.data_dir, fname+".d")
         if (not os.path.isdir(extract_folder)):
