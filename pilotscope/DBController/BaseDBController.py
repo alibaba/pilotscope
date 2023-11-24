@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table, inspect, select, func, Column
 from sqlalchemy_utils import database_exists, create_database
 
-from pilotscope.PilotConfig import PilotConfig
 from pilotscope.Common.Index import Index
+from pilotscope.PilotConfig import PilotConfig
 
 
 class BaseDBController(ABC):
@@ -38,16 +38,16 @@ class BaseDBController(ABC):
         conn_str = self._create_conn_str()
 
         if not database_exists(conn_str):
-            create_database(conn_str, encoding="SQL_ASCII")
+            create_database(conn_str, encoding="utf8")
 
+        # return create_engine(conn_str, echo=self.echo, pool_size=10, pool_recycle=3600,
+        #                      connect_args={
+        #                          "options": "-c statement_timeout={},'connect_timeout': {}".format(
+        #                              # int(self.config.sql_execution_timeout * 1000))},
+        #                              1, 2)},
+        #                      client_encoding='utf8', isolation_level="AUTOCOMMIT")
         return create_engine(conn_str, echo=self.echo, pool_size=10, pool_recycle=3600,
-
-                            connect_args={
-                                "options": "-c statement_timeout={}".format(
-                                    int(self.config.sql_execution_timeout * 1000))
-                            },
-
-                            client_encoding='utf8', isolation_level="AUTOCOMMIT")
+                             client_encoding='utf8', isolation_level="AUTOCOMMIT")
 
     def get_connection(self):
         """

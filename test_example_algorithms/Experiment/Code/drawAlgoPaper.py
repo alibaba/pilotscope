@@ -20,19 +20,37 @@ class MyTestCase(unittest.TestCase):
         self.scale_ratio = 1.05
         self.min_ratio = 0.01
 
+    # def test_drawLegend(self):
+    #     names = [db_algo_names[0],
+    #              right_bar_names[0],
+    #              db_algo_names[1],
+    #              right_bar_names[1],
+    #              db_algo_names[2],
+    #              right_bar_names[2],
+    #              " ",
+    #              right_bar_names[3]]
+    #     colors = [name_2_color[n.lower()] for n in names]
+    #     hatches = ["", "/", "", "/", "", "/", "", "/"]
+    #     file_name = "performance_legend"
+    #     self.colors2legend_bar(colors, names, hatches, file_name)
+
     def test_drawLegend(self):
         names = [db_algo_names[0],
+                 db_algo_names[8],
                  right_bar_names[0],
                  db_algo_names[1],
+                 db_algo_names[9],
                  right_bar_names[1],
                  db_algo_names[2],
+                 db_algo_names[10],
                  right_bar_names[2],
+                 " ",
                  " ",
                  right_bar_names[3]]
         colors = [name_2_color[n.lower()] for n in names]
-        hatches = ["", "/", "", "/", "", "/", "", "/"]
+        hatches = ["", "o", "/", "", "o", "/", "", "o", "/", "", "", "/"]
         file_name = "performance_legend"
-        self.colors2legend_bar(colors, names, hatches, file_name)
+        self.colors2legend_bar(colors, names, hatches, file_name,ncol=4)
 
     def test_drawLegend_spark(self):
         names = [db_algo_names[8],
@@ -144,7 +162,7 @@ class MyTestCase(unittest.TestCase):
         left_values = [752, 261, 261]
         right_values = [73, 325, 12, 86]
         self.draw_bar_chart(self.left_x, left_values, self.r_x, right_values, "{}_{}".format(algo, db),
-                            left_y_max=800)
+                            left_y_max=800, enable_left_hatch=True)
 
     def test_knob_tpcds(self):
         db = "tpcds"
@@ -152,7 +170,8 @@ class MyTestCase(unittest.TestCase):
         self.left_x[0] = db_algo_names[8]
         left_values = [411, 261, 261]
         right_values = [0, 0.22, 0.0023, 0]
-        self.draw_bar_chart(self.left_x, left_values, self.r_x, right_values, "{}_{}".format(algo, db), left_y_max=800)
+        self.draw_bar_chart(self.left_x, left_values, self.r_x, right_values, "{}_{}".format(algo, db), left_y_max=800,
+                            enable_left_hatch=True)
 
     def test_qo_knob_stats_no_overhead(self):
         db = "stats"
@@ -234,7 +253,7 @@ class MyTestCase(unittest.TestCase):
         return list(df.columns), list(value)
 
     def draw_bar_chart(self, left_x, left_values: list, right_x, right_values: list, file,
-                       bar_width=0.12, left_y_max=None, enable_right=True):
+                       bar_width=0.12, left_y_max=None, enable_right=True, enable_left_hatch=False):
         gap = 0.5
         left_y_label = "End To End Time(s)"
         right_y_label = "Overhead Time(s)"
@@ -247,7 +266,8 @@ class MyTestCase(unittest.TestCase):
         x = list(range(0, len(left_x)))
         # 添加pilot 的时间作为堆叠
         # ax.bar(x[0:1], end_to_end_time, color=to_rgb_tuple(name_2_color[pilot_scope_col_name.lower()]))
-        ax.bar(x, left_values, color=colors)
+        hatch = "o" if enable_left_hatch else ""
+        ax.bar(x, left_values, color=colors, hatch=hatch)
         # ax.bar([1, 2, 3, 4], data_left_stacked, color='g', bottom=data_left)
         ax.set_ylabel(left_y_label, fontsize=cur_font_size)
         ax.set_ylim(None, left_y_max)

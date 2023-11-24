@@ -38,8 +38,8 @@ class PostgreSQLController(BaseDBController):
         extensions = self.get_available_extensions()
         if "pg_buffercache" not in extensions:
             self.execute("create extension pg_buffercache")
-        if "pilotscope" not in extensions:
-            self.execute("create extension pilotscope")
+        if "pg_hint_plan" not in extensions:
+            self.execute("create extension pg_hint_plan")
         if self.enable_simulate_index and "hypopg" not in extensions:
             self.execute("create extension hypopg")
 
@@ -58,9 +58,8 @@ class PostgreSQLController(BaseDBController):
         return extensions
 
     def _create_conn_str(self):
-        # default postgresql://postgres@localhost:5432/stats
-        return "{}://{}@{}:{}/{}".format("postgresql", self.config.user, self.config.host, self.config.port,
-                                         self.config.db)
+        return "{}://{}:{}@{}:{}/{}?{}".format("postgresql", self.config.user, self.config.pwd, self.config.host,
+                                               self.config.port, self.config.db, "connect_timeout=2")
 
     def execute(self, sql, fetch=False, fetch_column_name=False):
         row = None

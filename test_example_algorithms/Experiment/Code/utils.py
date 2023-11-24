@@ -34,8 +34,11 @@ name_2_color = {
     "pilotscope+postgresql": "rgb(47,127,193)",
     db_algo_names[1].lower(): "rgb(47,127,193)",
     db_algo_names[9].lower(): "rgb(47,127,193)",
+    db_algo_names[8].lower(): "rgb(216,56,58)",
+    # db_algo_names[9].lower(): "rgb(47,127,193)",
     "postgresql": "rgb(20,81,124)",
     db_algo_names[2].lower(): "rgb(20,81,124)",
+    db_algo_names[10].lower(): "rgb(20,81,124)",
     db_algo_names[10].lower(): "rgb(20,81,124)",
     db_algo_names[11].lower(): "rgb(92,147,148)",
 
