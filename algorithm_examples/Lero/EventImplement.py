@@ -2,7 +2,7 @@ import json
 
 from pandas import DataFrame
 
-from algorithm_examples.Lero.LeroParadigmCardAnchorHandler import scale_card
+from algorithm_examples.Lero.LeroPilotAdapter import CardsPickerModel
 from algorithm_examples.Lero.source.train import training_pairwise_pilot_score, get_training_pair
 from algorithm_examples.utils import load_training_sql
 from pilotscope.DBController.BaseDBController import BaseDBController
@@ -53,8 +53,7 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
     def iterative_data_collection(self, db_controller: BaseDBController, train_data_manager: DataManager):
         print("start to collect data fro pretraining")
         self.load_sql()
-        factors = [0.1, 1, 10]
-        # factors = [10]
+
         column_2_value_list = []
 
         for i, sql in enumerate(self.sqls):
@@ -64,19 +63,24 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
             if data is None:
                 continue
             subquery_2_card = data.subquery_2_card
-            for f in factors:
+            cards_picker = CardsPickerModel(subquery_2_card.keys(), subquery_2_card.values())
+            scale_subquery_2_card = subquery_2_card
+            finish = False
+            while(not finish):
                 column_2_value = {}
-                scale_subquery_2_card = scale_card(subquery_2_card, f)
                 self.pilot_data_interactor.push_card(scale_subquery_2_card)
                 self.pilot_data_interactor.pull_physical_plan()
                 self.pilot_data_interactor.pull_execution_time()
                 data: PilotTransData = self.pilot_data_interactor.execute(sql)
                 if data is None:
                     continue
+                plan = data.physical_plan
+                cards_picker.replace(plan)
                 column_2_value["sql"] = sql
-                column_2_value["plan"] = data.physical_plan
+                column_2_value["plan"] = plan
                 column_2_value["time"] = data.execution_time
-                column_2_value["scale"] = f
+                finish, new_cards = cards_picker.get_cards()
+                scale_subquery_2_card = {sq : new_card for sq, new_card in zip(subquery_2_card.keys(), new_cards)}
                 column_2_value_list.append(column_2_value)
         return column_2_value_list, True
 
@@ -116,7 +120,6 @@ class LeroPeriodicCollectEvent(QueryFinishEvent):
 
     def process(self, db_controller: BaseDBController, data_manager: DataManager):
         print("start to collect data for dynamic training")
-        factors = [0.1, 1, 10]
         column_2_value_list = []
         sqls = self.load_per_sqls()
         data_interactor = PilotDataInteractor(self.config)
@@ -127,18 +130,23 @@ class LeroPeriodicCollectEvent(QueryFinishEvent):
             if data is None:
                 continue
             subquery_2_card = data.subquery_2_card
-            for f in factors:
+            cards_picker = CardsPickerModel(subquery_2_card.keys(), subquery_2_card.values())
+            scale_subquery_2_card = subquery_2_card
+            finish = False
+            while(not finish):
                 column_2_value = {}
-                scale_subquery_2_card = scale_card(subquery_2_card, f)
                 data_interactor.push_card(scale_subquery_2_card)
                 data_interactor.pull_physical_plan()
                 data_interactor.pull_execution_time()
                 data: PilotTransData = data_interactor.execute(sql)
                 if data is None:
                     continue
+                plan = data.physical_plan
+                cards_picker.replace(plan)
                 column_2_value["sql"] = sql
                 column_2_value["plan"] = data.physical_plan
                 column_2_value["time"] = data.execution_time
-                column_2_value["scale"] = f
+                finish, new_cards = cards_picker.get_cards()
+                scale_subquery_2_card = {sq : new_card for sq, new_card in zip(subquery_2_card.keys(), new_cards)}
                 column_2_value_list.append(column_2_value)
         data_manager.save_data_batch(self._table_name, column_2_value_list)

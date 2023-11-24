@@ -37,21 +37,24 @@ class PilotConfig:
 
 
 class PostgreSQLConfig(PilotConfig):
-    def __init__(self, host="localhost", port="5432", user="postgres", pwd="") -> None:
+    def __init__(self, host="localhost", port="5432", user="postgres", pwd="postgres") -> None:
         super().__init__(db_type=DatabaseEnum.POSTGRESQL)
         self.host = host
         self.port = port
         self.user = user
         self.pwd = pwd
 
-        # for local postgres
+        # for deep control
         self.pg_bin_path = None
         self.pgdata = None
+        self.pg_ctl = None
+        self.db_config_path = None
+        self.backup_db_config_path = None
 
     def enable_deep_control(self, pg_bin_path, pgdata):
         """Set value for local PostgreSQL. They influence the start, stop, changing config file, etc. If you do not need these functions, it is not necessary to set these values.
 
-        :param pg_bin_path: the directory of binary file of postgresql, i.e. the path of 'postres', 'pg_ctl' etc.
+        :param pg_bin_path: the directory of binary file of postgresql, i.e. the path of 'postgres', 'pg_ctl' etc.
         :type pg_bin_path: str
         :param pgdata: location of the database storage area
         :type pgdata: str

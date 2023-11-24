@@ -34,7 +34,8 @@ class PilotDataInteractor:
         self.data_fetcher: InteractorReceiver = InteractorReceiverFactory.get_data_fetcher(config)
 
     def execute_batch(self, sqls, is_reset=True) -> List[Optional[PilotTransData]]:
-        """Execute sqls sequentially
+        """
+        Execute sqls sequentially.
 
         :param sqls: list of string, whose items are sqls 
         :type sqls: list
@@ -52,7 +53,8 @@ class PilotDataInteractor:
         return datas
 
     def execute_parallel(self, sqls, parallel_num=10, is_reset=True):
-        """Execute sqls parallel
+        """
+        Execute sqls parallel.
 
         :param sqls: list of string, whose items are sqls 
         :type sqls: list
@@ -81,13 +83,14 @@ class PilotDataInteractor:
         return results
 
     def execute(self, sql, is_reset=True) -> Optional[PilotTransData]:
-        """Execute this SQL and finish all registered push-and-pull operators before.
+        """
+        Execute this SQL and finish all registered push-and-pull operators before.
 
         :param sql: sql statement
         :type sql: str
         :param is_reset: If it is True, all anchors will be removed after execution
         :type is_reset: bool, optional
-        :return: If no exceptions, it returns a ``PilotTransData`` representing extended result; otherwise, it returns None. 
+        :return: If no exceptions, it returns a `PilotTransData` representing extended result; otherwise, it returns None. 
         :rtype: Optional[PilotTransData]
         """
         try:
@@ -150,6 +153,12 @@ class PilotDataInteractor:
             raise e
 
     def get_all_handlers(self):
+        """
+        Retrieves all handler objects.
+
+        :return: A list of handler objects.
+        :rtype: list
+        """
         return self.anchor_to_handlers.values()
 
     def _add_execution_time_from_python(self, data: PilotTransData, python_sql_execution_time):
@@ -171,30 +180,42 @@ class PilotDataInteractor:
             TimeStatistic.add_time(ExperimentTimeEnum.SQL_TOTAL_TIME, self.config.sql_execution_timeout)
 
     def is_need_to_receive_data(self, anchor_2_handlers):
+        """
+        Determines if data needs to be received based on the presence of anchors.
+
+        :param anchor_2_handlers: A dictionary mapping anchors to their handlers, e.g. {RECORD_PULL_ANCHOR: handler}
+        :type anchor_2_handlers: dict
+
+        :return: True if there are remaining anchors that require data to be received, otherwise False.
+        :rtype: bool
+        """
         filter_anchor_2_handlers = self._remove_outer_fetch_anchor(
             extract_anchor_handlers(anchor_2_handlers, is_fetch_anchor=True))
         if AnchorEnum.RECORD_PULL_ANCHOR in filter_anchor_2_handlers:
             filter_anchor_2_handlers.pop(AnchorEnum.RECORD_PULL_ANCHOR)
-
-        # for experiment need, Pilotscope_SparkSQL will send http_time and parser_time via http, so we comment this
-        # the execution time is not needed to be received for spark
-        # if self.config.db_type == DatabaseEnum.SPARK:
-        #     if AnchorEnum.EXECUTION_TIME_PULL_ANCHOR in filter_anchor_2_handlers:
-        #         filter_anchor_2_handlers.pop(AnchorEnum.EXECUTION_TIME_PULL_ANCHOR)
-
         return len(filter_anchor_2_handlers) > 0
 
     def is_execute_comment_sql(self, anchor_2_handlers):
+        """
+        Checks if there is a need to execute comment SQL based on filtered anchors.
+
+        :param anchor_2_handlers: A dictionary containing the mapping of anchors to their handlers, e.g. {RECORD_PULL_ANCHOR: handler}
+        :type anchor_2_handlers: dict
+
+        :return: Returns True if there are any anchors left after filtering, indicating a need to 
+                execute comment SQL, otherwise False.
+        :rtype: bool
+        """
         filter_anchor_2_handlers = self._remove_outer_fetch_anchor(
             extract_anchor_handlers(anchor_2_handlers, is_fetch_anchor=True))
         return len(filter_anchor_2_handlers) > 0
 
-    # def _roll_back_db(self):
-    #     handlers = extract_handlers(self.anchor_to_handlers.values(), is_fetch_anchor=False)
-    #     [handler.roll_back(self.db_controller) for handler in handlers]
-
     def reset(self):
-        # self._roll_back_db()
+        """
+        Resets the internal state of the object.
+        This method clears the anchor_to_handlers dictionary to remove all handler 
+        associations and then resets the connection by calling the `_reset_connection` method.
+        """
         self.anchor_to_handlers.clear()
         self._reset_connection()
 
@@ -262,25 +283,65 @@ class PilotDataInteractor:
         return anchor_params
 
     def add_anchors(self, handlers):
+        """
+        Adds multiple anchor-handler associations.
+        Iterates over a list of handler objects and registers each of them to 
+        its corresponding anchor name within the anchor_to_handlers dictionary.
+
+        :param handlers: A list of handler objects, each with an `anchor_name` attribute.
+        :type handlers: list
+        """
         for handler in handlers:
             self.add_anchor(handler.anchor_name, handler)
 
     def add_anchor(self, anchor, handler):
+        """
+        Registers a handler to a specific anchor.
+        If the provided anchor is a string, it converts the string to the corresponding
+        `AnchorEnum` member before registering. The method then associates the handler
+        with the anchor in the anchor_to_handlers dictionary.
+
+        :param anchor: The anchor identifier, which can be a string or an AnchorEnum member.
+        :type anchor: str or AnchorEnum
+        :param handler: The handler object to be associated with the anchor.
+        :type handler: RecordPullHandler
+        """
         if isinstance(anchor, str):
             anchor = AnchorEnum.to_anchor_enum(anchor)
         self.anchor_to_handlers[anchor] = handler
 
     def push_hint(self, key_2_value_for_hint: dict):
+        """
+        Sets the hint information and registers the hint push handler in the handlers dictionary.
+
+        :param key_2_value_for_hint: A dictionary containing key-value pairs representing hint information, e.g.
+            {"hint_key": "hint_value"}
+        :type key_2_value_for_hint: dict
+        """
         anchor: HintPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.HINT_PUSH_ANCHOR)
         anchor.key_2_value_for_hint = key_2_value_for_hint
         self.anchor_to_handlers[AnchorEnum.HINT_PUSH_ANCHOR] = anchor
 
     def push_card(self, subquery_2_value: dict):
+        """
+        Assigns card information and registers the card push handler to the handlers dictionary.
+
+        :param subquery_2_value: A dictionary containing subquery to card value mappings, e.g.  
+            {"subquery_1": "card_1", "subquery_2": "card_2"}
+        :type subquery_2_value: dict
+        """
         anchor: CardPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.CARD_PUSH_ANCHOR)
         anchor.subquery_2_card = subquery_2_value
         self.anchor_to_handlers[AnchorEnum.CARD_PUSH_ANCHOR] = anchor
 
     def push_knob(self, key_2_value_for_knob: dict):
+        """
+        Assigns knob information and registers the knob push handler to the handlers dictionary.
+
+        :param key_2_value_for_knob: A dictionary containing key-value pairs for knob settings, e.g.
+            {"knob_key": "knob_value"}
+        :type key_2_value_for_knob: dict
+        """
         anchor: KnobPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.KNOB_PUSH_ANCHOR)
         anchor.key_2_value_for_knob = key_2_value_for_knob
         self.anchor_to_handlers[AnchorEnum.KNOB_PUSH_ANCHOR] = anchor
@@ -291,15 +352,35 @@ class PilotDataInteractor:
         self.anchor_to_handlers[AnchorEnum.COMMENT_PUSH_ANCHOR] = anchor
 
     def push_cost(self, subplan_2_cost: dict):
+        """
+        Assigns cost information to subplans and registers the cost push handler.
+
+        :param subplan_2_cost: A dictionary mapping subplans to their associated costs, e.g.
+            {"subplan_1": 100, "subplan_2": 200}
+        :type subplan_2_cost: dict
+
+        :raises NotImplementedError: Indicates that the method has not been implemented yet.
+        """
         raise NotImplementedError
         anchor: CostPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.COST_PUSH_ANCHOR)
         anchor.subplan_2_cost = subplan_2_cost
         self.anchor_to_handlers[AnchorEnum.COST_PUSH_ANCHOR] = anchor
 
     def push_rule(self):
+        """
+        Placeholder method for pushing rule information.
+        """
         pass
 
     def push_index(self, indexes: List[Index], drop_other=True):
+        """
+        Assigns index information and registers the index push handler to the handlers dictionary.
+
+        :param indexes: A list of `Index` instances to be handled.
+        :type indexes: List[Index]
+        :param drop_other: A flag indicating whether to drop other indexes not in the `indexes` list.
+        :type drop_other: bool
+        """
         anchor: IndexPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
                                                                            AnchorEnum.INDEX_PUSH_ANCHOR)
         anchor.indexes = indexes
@@ -308,9 +389,15 @@ class PilotDataInteractor:
         pass
 
     def pull_hint(self):
+        """
+        Placeholder method for pulling hint information.
+        """
         pass
 
     def pull_subquery_card(self):
+        """
+        Retrieves the subquery card pull handler and registers it in the handlers dictionary.
+        """
         anchor: SubQueryCardPullHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
                                                                                   AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR] = anchor
@@ -319,36 +406,63 @@ class PilotDataInteractor:
             self.analyzed = True
 
     def pull_rewrite_sql(self):
+        """
+        Placeholder method for pulling SQL rewrite information.
+        """
         pass
 
     def pull_logical_plan(self):
+        """
+        Retrieves the logical plan pull handler and registers it in the handlers dictionary.
+        """
         anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.LOGICAL_PLAN_PULL_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.LOGICAL_PLAN_PULL_ANCHOR] = anchor
 
     def pull_physical_plan(self):
+        """
+        Retrieves the physical plan pull handler and registers it in the handlers dictionary.
+        """
         anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.PHYSICAL_PLAN_PULL_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.PHYSICAL_PLAN_PULL_ANCHOR] = anchor
 
     def pull_execution_time(self):
+        """
+        Retrieves the execution time pull handler and registers it in the handlers dictionary.
+        """
         anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.EXECUTION_TIME_PULL_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.EXECUTION_TIME_PULL_ANCHOR] = anchor
 
     def pull_record(self):
+        """
+        Retrieves the record pull handler and registers it in the handlers dictionary.
+        """
         anchor: RecordPullHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
                                                                             AnchorEnum.RECORD_PULL_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.RECORD_PULL_ANCHOR] = anchor
 
     def pull_buffercache(self):
+        """
+        Retrieves the buffer cache pull handler and registers it in the handlers dictionary.
+        """
         anchor: BuffercachePullHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
                                                                                  AnchorEnum.BUFFERCACHE_PULL_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.BUFFERCACHE_PULL_ANCHOR] = anchor
 
     def pull_real_node_cost(self):
+        """
+        Placeholder method for pulling real node cost information.
+        """
         pass
 
     def pull_real_node_card(self):
+        """
+        Placeholder method for pulling real node cardinality information.
+        """
         pass
 
     def pull_estimated_cost(self):
+        """
+        Retrieves the estimated cost pull handler and registers it in the handlers dictionary.
+        """
         anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.ESTIMATED_COST_PULL_ANCHOR)
         self.anchor_to_handlers[AnchorEnum.ESTIMATED_COST_PULL_ANCHOR] = anchor
