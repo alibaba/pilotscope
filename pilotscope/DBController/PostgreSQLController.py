@@ -63,25 +63,10 @@ class PostgreSQLController(BaseDBController):
                                          self.config.db)
 
     def execute(self, sql, fetch=False, fetch_column_name=False):
-        """Execute a sql statement
-
-        :param sql: sql or extended sql
-        :type sql: str
-        :param fetch: fetch result or not. If True, the function will return a list of tuple representing the result of the sql.
-        :type fetch: bool, optional
-        :param fetch_column_name: fetch the column names of the sql or not. If True, the first item of the result will be a tuple of column names. The parameter only makes sense when parameter ``fetch`` is True.
-        :type fetch_column_name: bool, optional
-        :raises DBStatementTimeoutException: the time of execution exceeded ``self.config.sql_execution_timeout``
-        :return: If ``fetch`` is True, the function will return a list of tuple representing the result of the sql. Otherwise, it will return None
-        :rtype: list or None
-        """
         row = None
         try:
             self.connect_if_loss()
             conn = self.get_connection()
-            # res = conn.execute(text("select pg_backend_pid();")).all()[0][0]
-            # with open(str(res)+".txt", "a") as f:
-            #     f.write(str(sql))
             result = conn.execute(text(sql) if isinstance(sql, str) else sql)
             if fetch:
                 row = result.all()
@@ -98,21 +83,10 @@ class PostgreSQLController(BaseDBController):
         return row
 
     def set_hint(self, key, value):
-        """Set hint in the connection the controller has
-
-        :param key: the name of the hint
-        :type key: str
-        :param value: the value set to
-        :type value: str
-        """
         sql = "SET {} TO {}".format(key, value)
         self.execute(sql)
 
     def create_index(self, index: Index):
-        """
-        :param index: a index object
-        :type index: pilotscope.common.Index
-        """
         if self.enable_simulate_index:
             self.simulate_index_visitor.create_index(index)
         else:
@@ -121,10 +95,6 @@ class PostgreSQLController(BaseDBController):
             self.execute(sql, fetch=False)
 
     def drop_index(self, index: Index):
-        """
-        :param index: an index object
-        :type index: pilotscope.common.Index
-        """
         if self.enable_simulate_index:
             self.simulate_index_visitor.drop_index(index)
         else:
@@ -145,12 +115,6 @@ class PostgreSQLController(BaseDBController):
                 self.drop_index(index)
 
     def get_all_indexes_byte(self):
-        """If using hypothesis index, i.e., self.enable_simulate_index is True, return the expected size in bytes of all hypothesis indexes; otherwise, return the actual size of the indexes in bytes.
-
-        :return: size of indexes in bytes
-        :rtype: float
-        """
-        # Returns size in bytes
         if self.enable_simulate_index:
             result = self.simulate_index_visitor.get_all_indexes_byte()
         else:
@@ -161,12 +125,6 @@ class PostgreSQLController(BaseDBController):
         return result
 
     def get_table_indexes_byte(self, table):
-        """If using hypothesis index, i.e., self.enable_simulate_index is True, return the expected size in bytes of all hypothesis indexes of the table; otherwise, return the actual size of the indexes of the table in bytes.
-        :param str table: the name of the table
-        :return: size of indexes in bytes
-        :rtype: float
-        """
-        # Returns size in bytes
         if self.enable_simulate_index:
             result = self.simulate_index_visitor.get_table_indexes_byte(table)
         else:
@@ -175,13 +133,6 @@ class PostgreSQLController(BaseDBController):
         return result
 
     def get_index_byte(self, index: Index):
-        """If using hypothesis index, i.e., self.enable_simulate_index is True, return the expected size in bytes of the index otherwise, return the actual size of the index in bytes.
-
-        :param index: an index object
-        :type index: pilotscope.common.Index
-        :return: size of the index in bytes
-        :rtype: float
-        """
         if self.enable_simulate_index:
             return self.simulate_index_visitor.get_index_byte(index)
         sql = f"select pg_table_size('{index.get_index_name()}');"
@@ -189,18 +140,46 @@ class PostgreSQLController(BaseDBController):
         return result
 
     def get_existed_index(self, table):
+        """
+        Retrieves the existing index on the specified table.
+
+        :param table: The name of the table to retrieve index information for.
+        :type table: str
+
+        :return: The index information of the specified table. The format of the returned
+                data will depend on the implementation of get_existed_index in the subclass
+                or the simulate_index_visitor.
+        :rtype: list
+        """
         if self.enable_simulate_index:
             return self.simulate_index_visitor.get_existed_index(table)
         else:
             return super().get_existed_index(table)
 
     def get_all_indexes(self):
+        """
+        Retrieves all indexes across all tables in the database.
+
+        :return: A collection containing the details of all indexes. The format of this
+                collection can vary depending on the implementation in the simulate_index_visitor
+                or the parent class's method.
+        :rtype: list
+        """
         if self.enable_simulate_index:
             return self.simulate_index_visitor.get_all_indexes()
         else:
             return super().get_all_indexes()
 
     def get_index_number(self, table):
+        """
+        Retrieves the number of indexes defined on the specified table.
+
+        :param table: The name of the table for which to count indexes.
+        :type table: str
+
+        :return: The number of indexes on the specified table.
+        :rtype: int
+        """
         if self.enable_simulate_index:
             return self.simulate_index_visitor.get_index_number(table)
         else:
@@ -219,20 +198,48 @@ class PostgreSQLController(BaseDBController):
         return self._explain(sql, comment, True)
 
     def get_estimated_cost(self, sql, comment=""):
+        """
+        Estimates the cost of a SQL query.
+
+        :param sql: The SQL query for which to estimate the cost.
+        :type sql: str
+
+        :param comment: An optional comment to include with the query plan. Useful for debugging.
+        :type comment: str
+
+        :return: The estimated total cost of executing the SQL query.
+        :rtype: float
+        """
         plan = self.explain_physical_plan(sql, comment=comment)
         return plan["Plan"]["Total Cost"]
 
     def get_explain_sql(self, sql, execute: bool, comment=""):
-        # the simulate index will be disabled if there are ANALYZE even though it is false
+        """
+        Constructs an EXPLAIN SQL statement for a given SQL query.
+
+        :param sql: The SQL query to explain.
+        :type sql: str
+
+        :param execute: A boolean flag indicating whether to include the ANALYZE option.
+                        If True, the ANALYZE option is included, and the query will be executed.
+        :type execute: bool
+
+        :param comment: An optional comment to add context to the EXPLAIN statement.
+        :type comment: str
+
+        :return: The constructed EXPLAIN SQL statement.
+        :rtype: str
+        """
         return "{} explain ({} VERBOSE, SETTINGS, SUMMARY, FORMAT JSON) {}".format(comment,
                                                                                    "ANALYZE," if execute else "",
                                                                                    sql)
 
     def get_buffercache(self):
-        """Get the numbers of buffer per table in the shared buffer cache in real time.
+        """
+        Get the numbers of buffer per table in the shared buffer cache in real time.
 
         :return: a dict, of which keys are the names of table and values are the numbers of buffer per table
-        :rtype: dict (str: int)
+        :rtype: dict
         """
         sql = """
             SELECT c.relname, count(*) AS buffers
@@ -264,10 +271,11 @@ class PostgreSQLController(BaseDBController):
         self._surun("{} stop -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.pgdata))
 
     def start(self):
-        """Try to start DBMS. If fails the first time, recover config to ``self.config.backup_db_config_path`` and raise ``DatabaseStartException``. If fails again after recovering config, raise DatabaseCrashException.
+        """
+        Try to start DBMS. If fails the first time, recover config to self.config.backup_db_config_path and raise DatabaseStartException. If fails again after recovering config, raise DatabaseCrashException.
 
-        :raises DatabaseStartException:
-        :raises DatabaseCrashException:
+        :raises DatabaseStartException
+        :raises DatabaseCrashException
         """
         res = self._surun("{} start -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.pgdata))
         if res != 0:
@@ -281,11 +289,19 @@ class PostgreSQLController(BaseDBController):
             instance.connect_if_loss()
 
     def status(self):
+        """
+        Retrieves the status of the PostgreSQL service.
+
+        :return: The output from the pg_ctl status command, which contains information
+                about the PostgreSQL server's status.
+        :rtype: str
+        """
         res = os.popen("su {} -c '{} status -D {}'".format(self.config.user, self.config.pg_ctl, self.config.pgdata))
         return res.read()
 
     def write_knob_to_file(self, knobs: dict):
-        """Write knobs to config file
+        """
+        Write knobs to config file
 
         :param knobs: a dict with keys as the names of the knobs and values as the values to be set.
         :type knobs: dict
@@ -296,7 +312,7 @@ class PostgreSQLController(BaseDBController):
                 f.write("{} = {}\n".format(k, v))
 
     def recover_config(self):
-        """Recover config file to the file at ``self.config.backup_db_config_path``
+        """Recover config file to the file at self.config.backup_db_config_path
         """
         with open(self.config.backup_db_config_path, "r") as f:
             db_config_file = f.read()
@@ -304,16 +320,29 @@ class PostgreSQLController(BaseDBController):
             f.write(db_config_file)
 
     def backup_config(self):
+        """
+        Creates a backup of the database configuration file.
+        """
         with open(self.config.db_config_path, "r") as f:
             with open(self.config.backup_db_config_path, "w") as w:
                 w.write(f.read())
 
     def get_table_column_name_all_schema(self, table_name):
+        """
+        Retrieves all column names for a given table across all schemas in the database.
+
+        :param table_name: The name of the table for which to retrieve column names.
+        :type table_name: str
+
+        :return: A list of column names for the specified table.
+        :rtype: list
+        """
         sql = "SELECT column_name FROM information_schema.columns WHERE table_name = '{}';".format(table_name)
         return [x[0] for x in self.execute(sql, fetch=True)]
 
     def get_relation_content(self, relation_names, fetch_column_name=False):
-        """Get the whole content of a relation or table
+        """
+        Get the whole content of a relation or table
         
         :param relation_names: the name of the relation or table
         :type relation_names: str
@@ -325,7 +354,8 @@ class PostgreSQLController(BaseDBController):
         return self.execute(sql, fetch=True, fetch_column_name=fetch_column_name)
 
     def get_column_number_of_distinct_value(self, table_name, column_name):
-        """Get the number of distinct value of a column
+        """
+        Get the number of distinct value of a column
 
         :param table_name: the name of the table that the column belongs to
         :type table_name: str
