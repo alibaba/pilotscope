@@ -3,6 +3,7 @@
 **/__pycache__/**
 .idea/
 test_example_algorithms/results/**
+test_example_algorithms/Results/**
 algorithm_examples/results/**
 dev_data/
 

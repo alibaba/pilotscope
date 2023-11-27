@@ -273,7 +273,6 @@ class SysmlExecutor(ExecutorInterface):
                 'index': {}
             }
         }
-        self.db_controller.connect_if_loss()
         for view in self.PG_STAT_VIEWS:
             columns, *results = self.db_controller.get_relation_content(view, fetch_column_name=True)
             results = [dict(zip(columns, row)) for row in results]

@@ -40,9 +40,6 @@ class AnchorHandlerFactory:
         elif anchor == AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR:
             from pilotscope.Anchor.Spark.PullAnchor import SparkSubQueryCardPullHandler
             return SparkSubQueryCardPullHandler(config)
-        elif anchor == AnchorEnum.LOGICAL_PLAN_PULL_ANCHOR:
-            from pilotscope.Anchor.Spark.PullAnchor import SparkLogicalPlanPullHandler
-            return SparkLogicalPlanPullHandler(config)
         elif anchor == AnchorEnum.ESTIMATED_COST_PULL_ANCHOR:
             from pilotscope.Anchor.Spark.PullAnchor import SparkEstimatedCostPullHandler
             return SparkEstimatedCostPullHandler(config)
@@ -78,9 +75,6 @@ class AnchorHandlerFactory:
         elif anchor == AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR:
             from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLSubQueryCardPullHandler
             return PostgreSQLSubQueryCardPullHandler(config)
-        elif anchor == AnchorEnum.LOGICAL_PLAN_PULL_ANCHOR:
-            from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLLogicalPlanPullHandler
-            return PostgreSQLLogicalPlanPullHandler(config)
         elif anchor == AnchorEnum.ESTIMATED_COST_PULL_ANCHOR:
             from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLEstimatedCostPullHandler
             return PostgreSQLEstimatedCostPullHandler(config)

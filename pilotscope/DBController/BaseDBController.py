@@ -44,7 +44,7 @@ class BaseDBController(ABC):
         return create_engine(conn_str, echo=self.echo, pool_size=10, pool_recycle=3600,
                              client_encoding='utf8', isolation_level="AUTOCOMMIT")
 
-    def get_connection(self):
+    def _get_connection(self):
         """
         
         Get the connection of DBController
@@ -56,20 +56,24 @@ class BaseDBController(ABC):
         return self.connection_thread.conn
 
     def connect_if_loss(self):
-        if not self.is_connect():
+        if not self._is_connect():
             self.connection_thread.conn = self.engine.connect()
 
     def reset(self):
+        """
+        reset the connection of DBController
+        :return:
+        """
         self.connection_thread.conn.close()
         self.engine.pool = self.engine.pool.recreate()
         self.connection_thread.conn = self.engine.connect()
 
-    def disconnect(self):
-        if self.is_connect():
+    def _disconnect(self):
+        if self._is_connect():
             self.connection_thread.conn.close()
             self.connection_thread.conn = None
 
-    def is_connect(self):
+    def _is_connect(self):
         """
         
         If self have connected, return True. Otherwise, return False. Note that if the DBMS is stopped from outside, the return value of this function will not change.
@@ -81,15 +85,7 @@ class BaseDBController(ABC):
         return hasattr(self.connection_thread, "conn") and self.connection_thread.conn is not None
 
     @abstractmethod
-    def modify_sql_for_ignore_records(self, sql, is_execute):
-        pass
-
-    @abstractmethod
     def explain_physical_plan(self, sql):
-        pass
-
-    @abstractmethod
-    def explain_logical_plan(self, sql):
         pass
 
     @abstractmethod
@@ -162,7 +158,7 @@ class BaseDBController(ABC):
         :type enable_autoincrement_id_key: bool, optional
 
         """
-
+        self.connect_if_loss()
         if primary_key_column is not None and primary_key_column not in column_2_value:
             raise RuntimeError("the primary key column {} is not in column_2_value".format(primary_key_column))
 
@@ -199,7 +195,7 @@ class BaseDBController(ABC):
         :rtype: bool
 
         """
-        return self.engine.dialect.has_table(self.get_connection(), table_name)
+        return self.engine.dialect.has_table(self._get_connection(), table_name)
 
     def get_all_sqla_tables(self):
         self.metadata.reflect(self.engine)
@@ -219,6 +215,7 @@ class BaseDBController(ABC):
         :type column_2_value: dict
 
         """
+        self.connect_if_loss()
         table = Table(table_name, self.metadata, autoload_with=self.engine)
         self.execute(table.insert().values(column_2_value))
 

@@ -8,7 +8,7 @@ from urllib3 import disable_warnings
 class MyTestCase(unittest.TestCase):
     def test_send(self):
         url = " http://localhost:54523"  # 指定 API 地址
-        data = {"physical_plan": "value1", "logical_plan": "value2"}  # 指定要发送的 JSON 数据
+        data = {"physical_plan": "value1"}  # 指定要发送的 JSON 数据
 
         # 将 Python 对象转换为 JSON 字符串
         json_data = json.dumps(data)

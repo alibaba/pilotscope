@@ -58,15 +58,13 @@ class PilotScheduler:
             handlers = [handlers]
         self.user_tasks += handlers
 
-    def register_required_data(self, table_name_for_store_data, pull_execution_time=False, pull_logical_plan=False,
+    def register_required_data(self, table_name_for_store_data, pull_execution_time=False,
                                pull_physical_plan=False, pull_real_node_card=False, pull_real_node_cost=False,
                                pull_subquery_2_cards=False, pull_buffer_cache=False, pull_estimated_cost=False,
                                pull_records=False):
 
         if pull_execution_time:
             self.data_interactor.pull_execution_time()
-        if pull_logical_plan:
-            self.data_interactor.pull_logical_plan()
         if pull_physical_plan:
             self.data_interactor.pull_physical_plan()
         if pull_real_node_card:

@@ -10,7 +10,6 @@ class PilotTransData:
         self.records = None
         self.anchor_name = None
         self.physical_plan = None
-        self.logical_plan = None
         self.execution_time = None
         self.estimated_cost = None
         self.buffercache = None
@@ -35,17 +34,7 @@ class PilotTransData:
             if key in data.__dict__:
                 if is_number(value):
                     value = float(value)
-                # elif isinstance(value, dict):
-                #     value = json.dumps(value)
-                # elif isinstance(value, str):
-                #     pass
-                # else:
-                #     raise RuntimeError(
-                #         "the data from database should be number, dict and str, the {} is not allowed".format(
-                #             type(value)))
-
                 setattr(data, key, value)
-
         cls._fill_subquery_2_card(data, target_json)
         return data
 

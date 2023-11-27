@@ -93,12 +93,12 @@ class MyTestCase(unittest.TestCase):
 
         self.db_controller.write_knob_to_file(
             {"spark.sql.ansi.enabled": "true", "spark.sql.autoBroadcastJoinThreshold": "1234"})
-        assert (self.db_controller.get_connection().conf.get("spark.sql.ansi.enabled") == 'true')
-        assert (self.db_controller.get_connection().conf.get("spark.sql.autoBroadcastJoinThreshold") == '1234')
+        assert (self.db_controller._get_connection().conf.get("spark.sql.ansi.enabled") == 'true')
+        assert (self.db_controller._get_connection().conf.get("spark.sql.autoBroadcastJoinThreshold") == '1234')
 
         self.db_controller.recover_config()
-        assert (self.db_controller.get_connection().conf.get("spark.sql.ansi.enabled") == 'false')
-        assert (self.db_controller.get_connection().conf.get("spark.sql.autoBroadcastJoinThreshold") == '10485760b')
+        assert (self.db_controller._get_connection().conf.get("spark.sql.ansi.enabled") == 'false')
+        assert (self.db_controller._get_connection().conf.get("spark.sql.autoBroadcastJoinThreshold") == '10485760b')
         self.db_controller.clear_all_tables()
 
     def test_plan_and_get_cost(self):
@@ -118,7 +118,6 @@ class MyTestCase(unittest.TestCase):
         self.db_controller.analyze_table_stats("test_create_table")
 
         sql = "SELECT * FROM test_create_table"
-        print(json.dumps(self.db_controller.explain_logical_plan(sql), indent=2))
 
         print(self.db_controller.get_estimated_cost(sql))
 

@@ -19,7 +19,7 @@ class PostgreSQLController(BaseDBController):
         return instance
 
     def __del__(self):
-        self.disconnect()
+        self._disconnect()
         type(self).instances.remove(self)
 
     def __init__(self, config: PostgreSQLConfig, echo=True, enable_simulate_index=False):
@@ -58,7 +58,7 @@ class PostgreSQLController(BaseDBController):
         return extensions
 
     def _create_conn_str(self):
-        return "{}://{}:{}@{}:{}/{}?{}".format("postgresql", self.config.user, self.config.pwd, self.config.host,
+        return "{}://{}:{}@{}:{}/{}?{}".format("postgresql", self.config.user, self.config.pwd, self.config.db_host,
                                                self.config.port, self.config.db, "connect_timeout=2")
 
     def execute(self, sql, fetch=False, fetch_column_name=False):
@@ -77,7 +77,7 @@ class PostgreSQLController(BaseDBController):
         row = None
         try:
             self.connect_if_loss()
-            conn = self.get_connection()
+            conn = self._get_connection()
             # res = conn.execute(text("select pg_backend_pid();")).all()[0][0]
             # with open(str(res)+".txt", "a") as f:
             #     f.write(str(sql))
@@ -205,14 +205,8 @@ class PostgreSQLController(BaseDBController):
         else:
             return super().get_index_number(table)
 
-    def modify_sql_for_ignore_records(self, sql, is_execute):
-        return self.get_explain_sql(sql, is_execute)
-
     def explain_physical_plan(self, sql, comment=""):
         return self._explain(sql, comment, False)
-
-    def explain_logical_plan(self, sql, comment=""):
-        return self.explain_physical_plan(sql, comment)
 
     def explain_execution_plan(self, sql, comment=""):
         return self._explain(sql, comment, True)
@@ -257,7 +251,7 @@ class PostgreSQLController(BaseDBController):
         """
         for instance in type(self).instances:
             # if hasattr(instance, "engine"):
-            instance.disconnect()  # to set DBController's self.connection_thread.conn is None
+            instance._disconnect()  # to set DBController's self.connection_thread.conn is None
             instance.engine.dispose(close=True)
             # del instance.engine
         self._surun("{} stop -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.pgdata))

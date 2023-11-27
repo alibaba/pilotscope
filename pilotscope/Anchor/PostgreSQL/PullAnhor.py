@@ -12,19 +12,6 @@ class PostgreSQLRecordPullHandler(RecordPullHandler, PostgreSQLAnchorMixin):
     pass
 
 
-class PostgreSQLLogicalPlanPullHandler(LogicalPlanPullHandler, PostgreSQLAnchorMixin):
-
-    def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
-                         fill_data: PilotTransData):
-        if fill_data.logical_plan is not None:
-            return
-
-        if anchor_data.physical_plan is None:
-            anchor_data.physical_plan = self.get_physical_plan(db_controller, sql, pilot_comment)
-
-        fill_data.logical_plan = anchor_data.physical_plan
-
-
 class PostgreSQLPhysicalPlanPullHandler(PhysicalPlanPullHandler, PostgreSQLAnchorMixin):
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,

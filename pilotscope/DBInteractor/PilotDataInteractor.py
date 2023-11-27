@@ -91,11 +91,6 @@ class PilotDataInteractor:
         :rtype: Optional[PilotTransData]
         """
         try:
-            TimeStatistic.start("connect_if_loss")
-            if not self.db_controller.is_connect():
-                self.db_controller.connect_if_loss()
-            TimeStatistic.end("connect_if_loss")
-
             origin_sql = sql
             enable_receive_pilot_data = self.is_need_to_receive_data(self.anchor_to_handlers)
 
@@ -315,10 +310,6 @@ class PilotDataInteractor:
 
     def pull_rewrite_sql(self):
         pass
-
-    def pull_logical_plan(self):
-        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.LOGICAL_PLAN_PULL_ANCHOR)
-        self.anchor_to_handlers[AnchorEnum.LOGICAL_PLAN_PULL_ANCHOR] = anchor
 
     def pull_physical_plan(self):
         anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.PHYSICAL_PLAN_PULL_ANCHOR)

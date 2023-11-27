@@ -37,9 +37,11 @@ class PilotConfig:
 
 
 class PostgreSQLConfig(PilotConfig):
-    def __init__(self, host="localhost", port="5432", user="postgres", pwd="postgres") -> None:
-        super().__init__(db_type=DatabaseEnum.POSTGRESQL)
-        self.host = host
+    # def __init__(self, pilotscope_core_host="localhost", host="localhost", port="5432", user="postgres", pwd="postgres") -> None:
+    def __init__(self, pilotscope_core_host="11.158.195.246", db_host="11.158.195.246", port="54323", user="postgres",
+                 pwd="postgres") -> None:
+        super().__init__(db_type=DatabaseEnum.POSTGRESQL, pilotscope_core_host=pilotscope_core_host)
+        self.db_host = db_host
         self.port = port
         self.user = user
         self.pwd = pwd

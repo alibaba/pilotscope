@@ -51,17 +51,6 @@ class RecordPullHandler(BasePullHandler):
         self.anchor_name = AnchorEnum.RECORD_PULL_ANCHOR.name
 
 
-class LogicalPlanPullHandler(BasePullHandler):
-
-    def __init__(self, config) -> None:
-        super().__init__(config)
-        self.fetch_method = FetchMethod.OUTER
-        self.anchor_name = AnchorEnum.LOGICAL_PLAN_PULL_ANCHOR.name
-
-    def prepare_data_for_writing(self, column_2_value, data: PilotTransData):
-        if data.logical_plan is not None:
-            column_2_value["logical_plan"] = json.dumps(data.logical_plan)
-
 
 class PhysicalPlanPullHandler(BasePullHandler):
 

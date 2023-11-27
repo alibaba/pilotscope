@@ -37,7 +37,6 @@ class DataFetchMethodEnum(PilotEnum):
 
 class AllowedPullDataEnum(PilotEnum):
     PHYSICAL_PLAN = "physical_plan",
-    LOGICAL_PLAN = "logical_plan",
     EXECUTION_TIME = "execution_time",
     REAL_COST_SUBPLAN = "real_cost_subplan",
     REAL_CARD_SUBQUERY = "real_card_subquery",

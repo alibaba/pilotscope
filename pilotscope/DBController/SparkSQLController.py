@@ -304,7 +304,7 @@ class SparkSQLController(BaseDBController):
             self.load_table_if_exists_in_datasource(table_name)
 
     def connect_if_loss(self):
-        if not self.is_connect():
+        if not self._is_connect():
             self.connection_thread.conn = self.engine.connect()
             all_user_created_table_names = self.engine.get_all_table_names_in_datasource()
             for table_name in all_user_created_table_names:
@@ -312,8 +312,8 @@ class SparkSQLController(BaseDBController):
                 logger.debug("[connect_if_loss] Loaded table '{}'".format(table_name))
         pass
 
-    def disconnect(self):
-        if self.get_connection() is not None:
+    def _disconnect(self):
+        if self._get_connection() is not None:
             # try:
             self.persist_tables()
             self.engine.clearCachedTables()
@@ -330,7 +330,7 @@ class SparkSQLController(BaseDBController):
             table.persist(self.engine)
 
     def exist_table(self, table_name, where="session") -> bool:
-        has_table = self.engine.has_table(self.get_connection(), table_name, where)
+        has_table = self.engine.has_table(self._get_connection(), table_name, where)
         if has_table:
             return True
         return False
@@ -360,7 +360,7 @@ class SparkSQLController(BaseDBController):
 
     # clear all SparkTable instances in cache 
     def clear_all_tables(self):
-        conn = self.get_connection()
+        conn = self._get_connection()
         conn.catalog.clearCache()
         for table_name in self.name_2_table:
             conn.catalog.dropTempView(table_name)
@@ -369,7 +369,7 @@ class SparkSQLController(BaseDBController):
     # check whether the input key (config name) is modifiable in runtime
     # and set its value to the given value if it is modifiable
     def set_hint(self, key, value):
-        if self.get_connection().conf.isModifiable(key):
+        if self._get_connection().conf.isModifiable(key):
             # self.connection.conf.set(key, value)
             sql = "SET {} = {}".format(key, value)
             self.execute(sql)
@@ -421,7 +421,7 @@ class SparkSQLController(BaseDBController):
         row = None
         try:
             self.connect_if_loss()
-            df = self.get_connection().sql(sql)
+            df = self._get_connection().sql(sql)
             row = df.toPandas()
             if not fetch:
                 row = df
@@ -445,11 +445,6 @@ class SparkSQLController(BaseDBController):
     def _physicalPlan(self, query_execution):
         return query_execution.executedPlan()
 
-    def explain_logical_plan(self, sql, comment="") -> Dict:
-        sql = "{} {}".format(comment, sql)
-        plan = self._logicalPlan(self.execute(sql)._jdf.queryExecution())
-        return json.loads(plan.toJSON())
-
     def explain_physical_plan(self, sql, comment="") -> Dict:
         sql = "{} {}".format(comment, sql)
         plan = self._physicalPlan(self.execute(sql)._jdf.queryExecution())
@@ -472,7 +467,7 @@ class SparkSQLController(BaseDBController):
     # done
     def recover_config(self):
         # reset all modifiable runtime configurations
-        self.get_connection().sql("RESET")
+        self._get_connection().sql("RESET")
 
     # switch user and run
     def _surun(self, cmd):
@@ -497,10 +492,6 @@ class SparkSQLController(BaseDBController):
         # return "{} explain (ANALYZE {}, VERBOSE, SETTINGS, SUMMARY, FORMAT JSON) {}".format(comment,
         #                                                                                    "" if execute else "False",
         #                                                                                    sql)
-        pass
-
-    def modify_sql_for_ignore_records(self, sql, is_execute):
-        # return self.get_explain_sql(sql, is_execute)
         pass
 
     def status(self):
