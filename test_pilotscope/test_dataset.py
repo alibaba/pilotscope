@@ -1,19 +1,18 @@
 import unittest
+
+from algorithm_examples.ExampleConfig import example_pg_bin, example_pgdata
+from pilotscope.Dataset.BaseDataset import BaseDataset
 from pilotscope.Dataset.ImdbDataset import ImdbDataset
+from pilotscope.Dataset.ImdbTinyDataset import ImdbTinyDataset
 from pilotscope.Dataset.StatsDataset import StatsDataset
 from pilotscope.Dataset.StatsTinyDataset import StatsTinyDataset
-from pilotscope.Dataset.ImdbTinyDataset import ImdbTinyDataset
 from pilotscope.Dataset.TpcdsDataset import TpcdsDataset
-from pilotscope.Dataset.BaseDataset import BaseDataset
+from pilotscope.Factory.DBControllerFectory import DBControllerFactory
+from pilotscope.PilotConfig import PostgreSQLConfig
 from pilotscope.PilotEnum import DatabaseEnum
 
-from pilotscope.DBController.PostgreSQLController import PostgreSQLController
-from pilotscope.Factory.DBControllerFectory import DBControllerFactory
-from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
-from algorithm_examples.ExampleConfig import example_pg_bin, example_pgdata
 
-
-def test_dataset(ds:BaseDataset):
+def test_dataset(ds: BaseDataset):
     train_set = ds.read_train_sql()
     print("train:\n", len(train_set), train_set[0])
     test_set = ds.read_test_sql()
@@ -24,27 +23,30 @@ def test_dataset(ds:BaseDataset):
     except FileNotFoundError:
         pass
 
+
 class MyTestCase(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.config = PostgreSQLConfig()
-        cls.config.enable_deep_control_local(example_pg_bin, example_pgdata)
-        cls.config.db = "stats_loadtest"
-        cls.db_controller: PostgreSQLController = DBControllerFactory.get_db_controller(cls.config)
 
-    def test_load_to_db(self):
-        ds = StatsDataset(DatabaseEnum.POSTGRESQL)
-        ds.load_to_db(self.db_controller)
-        for table in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:
-            self.assertTrue(self.db_controller.exist_table(table))
-            self.db_controller.drop_table_if_exist(table)
+    def __init__(self, methodName="runTest"):
+        super().__init__(methodName)
+        self.config = PostgreSQLConfig()
+        self.config.enable_deep_control_local(example_pg_bin, example_pgdata)
 
-    def test_load_to_db_from_local(self):
-        ds =StatsTinyDataset(DatabaseEnum.POSTGRESQL)
-        ds.load_to_db(self.db_controller)
+    def test_load_to_stats(self):
+        ds = StatsDataset(DatabaseEnum.POSTGRESQL, created_db_name="stats")
+        ds.load_to_db(self.config)
+        # the config will be modified in load_to_db, so we need to get controller again
+        db_controller = DBControllerFactory.get_db_controller(self.config)
         for table in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:
-            self.assertTrue(self.db_controller.exist_table(table))
-            self.db_controller.drop_table_if_exist(table)
+            self.assertTrue(db_controller.exist_table(table))
+            db_controller.drop_table_if_exist(table)
+
+    def test_load_to_db_stats_tiny_from_local(self):
+        ds = StatsTinyDataset(DatabaseEnum.POSTGRESQL, created_db_name="stats_tiny")
+        ds.load_to_db(self.config)
+        db_controller = DBControllerFactory.get_db_controller(self.config)
+        for table in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:
+            self.assertTrue(db_controller.exist_table(table))
+            db_controller.drop_table_if_exist(table)
 
     def test_get_sql(self):
         ds = ImdbDataset(DatabaseEnum.POSTGRESQL)
@@ -63,6 +65,7 @@ class MyTestCase(unittest.TestCase):
         test_dataset(ds)
         ds = TpcdsDataset(DatabaseEnum.SPARK)
         test_dataset(ds)
+        print("test_get_sql done")
 
 
 if __name__ == '__main__':

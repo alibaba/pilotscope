@@ -12,8 +12,9 @@ class StatsDataset(BaseDataset):
     The original STATS dataset can be found in https://relational.fit.cvut.cz/dataset/Stats.
     The data, indexes and quiries used for AI for DB are from https://github.com/Nathaniel-Han/End-to-End-CardEst-Benchmark/
     """
-    data_location_dict = {DatabaseEnum.POSTGRESQL : ["https://github.com/weiwch/ai4db_datasets/releases/download/stats/postgres_stats.tar.gz"],
-                          DatabaseEnum.SPARK : None}
+    data_location_dict = {DatabaseEnum.POSTGRESQL: [
+        "https://github.com/weiwch/ai4db_datasets/releases/download/stats/postgres_stats.tar.gz"],
+                          DatabaseEnum.SPARK: None}
     data_sha256 = "f557545c3fcf449eab02f2f3b91b13dffd814254c32536e3f96bc20e0b6991bb"
     sub_dir = "Stats"
     train_sql_file = "stats_train.txt"
@@ -21,10 +22,9 @@ class StatsDataset(BaseDataset):
     now_path = os.path.join(os.path.dirname(__file__), sub_dir)
     file_db_type = DatabaseEnum.POSTGRESQL
 
-    def __init__(self, use_db_type: DatabaseEnum, data_dir="data") -> None:
-        super().__init__(use_db_type, data_dir)
+    def __init__(self, use_db_type: DatabaseEnum, created_db_name="stats", data_dir="data") -> None:
+        super().__init__(use_db_type, created_db_name, data_dir)
         self.download_urls = self.data_location_dict[use_db_type]
 
     def test_sql_fast(self):
         return self._get_sql(os.path.join(self.now_path, "stats_less_than_2_sec.txt"))
-

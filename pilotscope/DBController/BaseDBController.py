@@ -38,7 +38,7 @@ class BaseDBController(ABC):
         conn_str = self._create_conn_str()
 
         if not database_exists(conn_str):
-            create_database(conn_str, encoding="utf8")
+            create_database(conn_str, encoding="utf8", template="template0")
 
         # return create_engine(conn_str, echo=self.echo, pool_size=10, pool_recycle=3600,
         #                      connect_args={
@@ -78,7 +78,7 @@ class BaseDBController(ABC):
         self.engine.pool = self.engine.pool.recreate()
         self.connection_thread.conn = self.engine.connect()
 
-    def disconnect(self):
+    def _disconnect(self):
         """
         Disconnect from the database.
         This function closes the connection if it is already established.

@@ -13,8 +13,9 @@ class ImdbDataset(BaseDataset):
     The license and links to the current version IMDB data set can be found at http://www.imdb.com/interfaces
     Query and index are from https://github.com/gregrahn/join-order-benchmark
     """
-    data_location_dict = {DatabaseEnum.POSTGRESQL : ["https://github.com/weiwch/ai4db_datasets/releases/download/imdb/postgres_imdb.tar.gz"],
-                          DatabaseEnum.SPARK : None}
+    data_location_dict = {DatabaseEnum.POSTGRESQL: [
+        "https://github.com/weiwch/ai4db_datasets/releases/download/imdb/postgres_imdb.tar.gz"],
+        DatabaseEnum.SPARK: None}
     data_sha256 = "0dd9c5d77d9bfddec010d4a3ed3e38c1ccccc6d7c7beae29404e3fbad2736f88"
     sub_dir = "Imdb"
     train_sql_file = "job_train_ascii.txt"
@@ -22,10 +23,9 @@ class ImdbDataset(BaseDataset):
     now_path = os.path.join(os.path.dirname(__file__), sub_dir)
     file_db_type = DatabaseEnum.POSTGRESQL
 
-    def __init__(self, use_db_type: DatabaseEnum, data_dir="./data") -> None:
-        super().__init__(use_db_type, data_dir)
+    def __init__(self, use_db_type: DatabaseEnum, created_db_name="imdb", data_dir="./data") -> None:
+        super().__init__(use_db_type, created_db_name, data_dir)
         self.download_urls = self.data_location_dict[use_db_type]
 
     def test_sql_fast(self):
         return self._get_sql(os.path.join(self.now_path, "imdb_less_than_2_sec.txt"))
-
