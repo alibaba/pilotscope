@@ -98,7 +98,9 @@ class PilotDataInteractor:
             enable_receive_pilot_data = self.is_need_to_receive_data(self.anchor_to_handlers)
 
             # create pilot comment
-            comment_creator = PilotCommentCreator(enable_receive_pilot_data=enable_receive_pilot_data, extra_comment = self.anchor_to_handlers[AnchorEnum.COMMENT_PUSH_ANCHOR].comment_str if AnchorEnum.COMMENT_PUSH_ANCHOR in self.anchor_to_handlers else None)
+            comment_creator = PilotCommentCreator(enable_receive_pilot_data=enable_receive_pilot_data,
+                                                  extra_comment=self.anchor_to_handlers[
+                                                      AnchorEnum.COMMENT_PUSH_ANCHOR].comment_str if AnchorEnum.COMMENT_PUSH_ANCHOR in self.anchor_to_handlers else None)
             comment_creator.add_params(self.data_fetcher.get_extra_infos_for_trans())
             comment_creator.enable_terminate(
                 False if AnchorEnum.RECORD_PULL_ANCHOR in self.anchor_to_handlers else True)
@@ -263,7 +265,9 @@ class PilotDataInteractor:
         handles = sorted(handles, key=lambda x: cast(BaseAnchorHandler, x).get_call_priority())
         for handle in handles:
             if isinstance(handle, BasePullHandler) and handle.fetch_method == FetchMethod.OUTER:
-                comment_creator = PilotCommentCreator(anchor_params=replace_anchor_params, enable_terminate_flag=False, extra_comment = self.anchor_to_handlers[AnchorEnum.COMMENT_PUSH_ANCHOR].comment_str if AnchorEnum.COMMENT_PUSH_ANCHOR in self.anchor_to_handlers else None)
+                comment_creator = PilotCommentCreator(anchor_params=replace_anchor_params, enable_terminate_flag=False,
+                                                      extra_comment=self.anchor_to_handlers[
+                                                          AnchorEnum.COMMENT_PUSH_ANCHOR].comment_str if AnchorEnum.COMMENT_PUSH_ANCHOR in self.anchor_to_handlers else None)
                 comment = comment_creator.create_comment()
                 handle.fetch_from_outer(self.db_controller, sql, comment, anchor_data, data)
 
@@ -342,7 +346,8 @@ class PilotDataInteractor:
         self.anchor_to_handlers[AnchorEnum.KNOB_PUSH_ANCHOR] = anchor
 
     def push_comment(self, comment_str):
-        anchor: CommentPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.COMMENT_PUSH_ANCHOR)
+        anchor: CommentPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
+                                                                             AnchorEnum.COMMENT_PUSH_ANCHOR)
         anchor.comment_str = comment_str
         self.anchor_to_handlers[AnchorEnum.COMMENT_PUSH_ANCHOR] = anchor
 
@@ -406,16 +411,6 @@ class PilotDataInteractor:
         """
         pass
 
-<<<<<<< HEAD
-=======
-    def pull_logical_plan(self):
-        """
-        Retrieves the logical plan pull handler and registers it in the handlers dictionary.
-        """
-        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.LOGICAL_PLAN_PULL_ANCHOR)
-        self.anchor_to_handlers[AnchorEnum.LOGICAL_PLAN_PULL_ANCHOR] = anchor
-
->>>>>>> 6d40249a2ae78c877a9fec88f8922dfd2a14ac80
     def pull_physical_plan(self):
         """
         Retrieves the physical plan pull handler and registers it in the handlers dictionary.

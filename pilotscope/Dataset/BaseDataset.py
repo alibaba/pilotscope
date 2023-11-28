@@ -85,7 +85,7 @@ class BaseDataset(ABC):
     def _load_dump(self, dump_file_dir, db_controller: BaseDBController):
         if self.use_db_type == DatabaseEnum.POSTGRESQL:
             psql = os.path.join(db_controller.config.pg_bin_path,"psql")
-            os.system(f"{psql} {db_controller.config.db} -U {db_controller.config.user} < {dump_file_dir}")
+            os.system(f"{psql} {db_controller.config.db} -U {db_controller.config.db_user} < {dump_file_dir}")
         else:
             raise NotImplementedError    
     

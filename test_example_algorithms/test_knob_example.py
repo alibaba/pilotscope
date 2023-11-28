@@ -16,7 +16,7 @@ from algorithm_examples.KnobTuning.KnobPresetScheduler import get_knob_preset_sc
 class KnobTest(unittest.TestCase):
     def setUp(self):
         self.config: PostgreSQLConfig = PostgreSQLConfig()
-        self.config.enable_deep_control(example_pg_bin, example_pgdata)
+        self.config.enable_deep_control_local(example_pg_bin, example_pgdata)
         self.config.db = "stats_tiny"
         self.config.sql_execution_timeout = 300000
         self.config.once_request_timeout = 300000

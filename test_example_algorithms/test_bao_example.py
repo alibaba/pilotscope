@@ -25,7 +25,7 @@ from algorithm_examples.utils import load_test_sql
 
 class BaoTest(unittest.TestCase):
     def setUp(self):
-        self.config: PostgreSQLConfig = PostgreSQLConfig(db_host="localhost", port="5432", user="postgres", pwd="postgres")
+        self.config: PostgreSQLConfig = PostgreSQLConfig(db_host="localhost", db_port="5432", db_user="postgres", db_user_pwd="postgres")
         self.config.db = "stats_tiny"
 
         self.used_cache = False

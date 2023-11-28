@@ -78,7 +78,6 @@ class BaseDBController(ABC):
         self.engine.pool = self.engine.pool.recreate()
         self.connection_thread.conn = self.engine.connect()
 
-
     def disconnect(self):
         """
         Disconnect from the database.
@@ -100,18 +99,6 @@ class BaseDBController(ABC):
         return hasattr(self.connection_thread, "conn") and self.connection_thread.conn is not None
 
     @abstractmethod
-    def modify_sql_for_ignore_records(self, sql, is_execute):
-        """
-        Modify the SQL statement and ignore records.
-
-        :param sql: The SQL statement to be modified.
-        :type sql: str
-        :param is_execute: Whether to execute the modified SQL statement.
-        :type is_execute: bool
-        """
-        pass
-
-    @abstractmethod
     def explain_physical_plan(self, sql):
         """
         Generates an explanation of the physical plan for a given SQL query.
@@ -122,19 +109,6 @@ class BaseDBController(ABC):
         pass
 
     @abstractmethod
-<<<<<<< HEAD
-=======
-    def explain_logical_plan(self, sql):
-        """
-        Generates an explanation of the logical plan for a given SQL query.
-
-        :param sql: The SQL query string for which the logical plan should be explained.
-        :type sql: str
-        """
-        pass
-
-    @abstractmethod
->>>>>>> 6d40249a2ae78c877a9fec88f8922dfd2a14ac80
     def explain_execution_plan(self, sql):
         """
         Generates an explanation of the execution plan for a given SQL query.
@@ -450,13 +424,13 @@ class BaseDBController(ABC):
     def start(self):
         """
         start local database
-        """ 
+        """
         pass
 
     def restart(self):
         """
         restart local database
-        """ 
+        """
         self.shutdown()
         self.start()
 

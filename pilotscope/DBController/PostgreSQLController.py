@@ -58,21 +58,14 @@ class PostgreSQLController(BaseDBController):
         return extensions
 
     def _create_conn_str(self):
-        return "{}://{}:{}@{}:{}/{}?{}".format("postgresql", self.config.user, self.config.pwd, self.config.db_host,
-                                               self.config.port, self.config.db, "connect_timeout=2")
+        return "{}://{}:{}@{}:{}/{}?{}".format("postgresql", self.config.db_user, self.config.db_user_pwd, self.config.db_host,
+                                               self.config.db_port, self.config.db, "connect_timeout=2")
 
     def execute(self, sql, fetch=False, fetch_column_name=False):
         row = None
         try:
             self.connect_if_loss()
-<<<<<<< HEAD
             conn = self._get_connection()
-            # res = conn.execute(text("select pg_backend_pid();")).all()[0][0]
-            # with open(str(res)+".txt", "a") as f:
-            #     f.write(str(sql))
-=======
-            conn = self.get_connection()
->>>>>>> 6d40249a2ae78c877a9fec88f8922dfd2a14ac80
             result = conn.execute(text(sql) if isinstance(sql, str) else sql)
             if fetch:
                 row = result.all()
@@ -258,7 +251,7 @@ class PostgreSQLController(BaseDBController):
 
     # switch user and run
     def _surun(self, cmd):
-        return os.system("su {} -c '{}'".format(self.config.user, cmd))
+        return os.system("su {} -c '{}'".format(self.config.db_user, cmd))
 
     def shutdown(self):
         """Shutdown the local DBMS
@@ -296,7 +289,7 @@ class PostgreSQLController(BaseDBController):
                 about the PostgreSQL server's status.
         :rtype: str
         """
-        res = os.popen("su {} -c '{} status -D {}'".format(self.config.user, self.config.pg_ctl, self.config.pgdata))
+        res = os.popen("su {} -c '{} status -D {}'".format(self.config.db_user, self.config.pg_ctl, self.config.pgdata))
         return res.read()
 
     def write_knob_to_file(self, knobs: dict):

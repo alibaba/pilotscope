@@ -1,5 +1,6 @@
 import os
 
+from pilotscope.Common.SSHConnector import SSHConnector
 from pilotscope.PilotEnum import DataFetchMethodEnum, DatabaseEnum, TrainSwitchMode, SparkSQLDataSourceEnum
 import logging
 
@@ -14,12 +15,14 @@ class PilotConfig:
     the user name and password to log into the database, etc.
     """
 
-    def __init__(self, db_type: DatabaseEnum, db="stats_tiny", pilotscope_core_host="localhost") -> None:
+    def __init__(self, db_type: DatabaseEnum, db="stats_tiny", pilotscope_core_host="localhost", is_local=True) -> None:
         self.db_type: DatabaseEnum = db_type
 
         self.pilotscope_core_host = pilotscope_core_host
         self.data_fetch_method = DataFetchMethodEnum.HTTP
         self.db = db
+
+        self.is_local = is_local
 
         # second
         self.sql_execution_timeout = 300
@@ -37,14 +40,13 @@ class PilotConfig:
 
 
 class PostgreSQLConfig(PilotConfig):
-    # def __init__(self, pilotscope_core_host="localhost", host="localhost", port="5432", user="postgres", pwd="postgres") -> None:
-    def __init__(self, pilotscope_core_host="11.158.195.246", db_host="11.158.195.246", port="54323", user="postgres",
-                 pwd="postgres") -> None:
+    def __init__(self, pilotscope_core_host="localhost", db_host="localhost", db_port="5432", db_user="postgres",
+                 db_user_pwd="postgres") -> None:
         super().__init__(db_type=DatabaseEnum.POSTGRESQL, pilotscope_core_host=pilotscope_core_host)
         self.db_host = db_host
-        self.port = port
-        self.user = user
-        self.pwd = pwd
+        self.db_port = db_port
+        self.db_user = db_user
+        self.db_user_pwd = db_user_pwd
 
         # for deep control
         self.pg_bin_path = None
@@ -52,22 +54,59 @@ class PostgreSQLConfig(PilotConfig):
         self.pg_ctl = None
         self.db_config_path = None
         self.backup_db_config_path = None
+        self.db_host_user = None
+        self.db_host_pwd = None
+        self.db_host_port = None
 
-    def enable_deep_control(self, pg_bin_path, pgdata):
-        """Set value for local PostgreSQL. They influence the start, stop, changing config file, etc. If you do not need these functions, it is not necessary to set these values.
-
+    # def enable_deep_control(self, pg_bin_path, pgdata, db_host_user=None, db_host_pwd=None, db_host_ssh_port=54023):
+    def enable_deep_control_local(self, pg_bin_path, pgdata):
+        """Set value for local PostgreSQL. They influence the start, stop, changing config file, etc.
+            If you do not need these functions, it is not necessary to set these values.
         :param pg_bin_path: the directory of binary file of postgresql, i.e. the path of 'postgres', 'pg_ctl' etc.
         :type pg_bin_path: str
         :param pgdata: location of the database storage area
         :type pgdata: str
         """
+
         self.pg_bin_path = pg_bin_path
         self.pgdata = pgdata
         self.backup_db_config_path = os.path.join(pgdata, "pilotscope_postgresql_backup.conf")
         self.db_config_path = os.path.join(pgdata, "postgresql.conf")
+        self.pg_ctl = os.path.join(pg_bin_path, "pg_ctl")
         with open(self.db_config_path, "r") as f:
             with open(self.backup_db_config_path, "w") as w:
                 w.write(f.read())
+        self.pg_ctl = os.path.join(pg_bin_path, "pg_ctl")
+
+    def enable_deep_control_remote(self, pg_bin_path, pgdata, db_host_user, db_host_pwd, db_host_ssh_port=22):
+        """Set value for local PostgreSQL. They influence the start, stop, changing config file, etc.
+            If you do not need these functions, it is not necessary to set these values.
+        :param db_host_ssh_port:
+        :param db_host_user:
+        :param db_host_pwd:
+        :param pg_bin_path: the directory of binary file of postgresql, i.e. the path of 'postgres', 'pg_ctl' etc.
+        :type pg_bin_path: str
+        :param pgdata: location of the database storage area
+        :type pgdata: str
+        """
+
+        self.is_local = False
+        self.db_host_user = db_host_user
+        self.db_host_pwd = db_host_pwd
+        self.db_host_port = db_host_ssh_port
+
+        self.pg_bin_path = pg_bin_path
+        self.pgdata = pgdata
+        self.backup_db_config_path = os.path.join(pgdata, "pilotscope_postgresql_backup.conf")
+        self.db_config_path = os.path.join(pgdata, "postgresql.conf")
+        self.pg_ctl = os.path.join(pg_bin_path, "pg_ctl")
+
+        ssh_conn = SSHConnector(self.db_host, self.db_host_user, self.db_host_pwd, self.db_host_port)
+        ssh_conn.connect()
+        with ssh_conn.open_file(self.db_config_path, "r") as f:
+            with ssh_conn.open_file(self.backup_db_config_path, "w") as w:
+                w.write(f.read())
+        ssh_conn.close()
         self.pg_ctl = os.path.join(pg_bin_path, "pg_ctl")
 
 

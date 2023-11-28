@@ -16,7 +16,7 @@ class MyTestCase(unittest.TestCase):
         super().__init__(methodName)
         self.config = PostgreSQLConfig()
         self.config.db = "stats_tiny"
-        self.config.enable_deep_control(example_pg_bin, example_pgdata)
+        self.config.enable_deep_control_local(example_pg_bin, example_pgdata)
         self.data_interactor = PilotDataInteractor(self.config)
         self.sql = "select count(*) from posts as p, postlinks as pl, posthistory as ph where p.id = pl.postid and pl.postid = ph.postid and p.creationdate>=1279570117 and ph.creationdate>=1279585800 and p.score < 50;"
 

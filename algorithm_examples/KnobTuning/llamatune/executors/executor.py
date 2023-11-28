@@ -247,7 +247,7 @@ class SysmlExecutor(ExecutorInterface):
         self.sqls_file_path = kwargs["sqls_file_path"]
         # self.timeout_per_sql=int(kwargs["timeout_per_sql"]) # ms
         config = PostgreSQLConfig()
-        config.enable_deep_control(example_pg_bin, example_pgdata)
+        config.enable_deep_control_local(example_pg_bin, example_pgdata)
         config.db = kwargs["db_name"]
         config.once_request_timeout = 120
         config.sql_execution_timeout = 120
