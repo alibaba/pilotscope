@@ -20,7 +20,7 @@ class StatsTinyDataset(BaseDataset):
     now_path = os.path.join(os.path.dirname(__file__), sub_dir)
     file_db_type = DatabaseEnum.POSTGRESQL
 
-    def __init__(self, use_db_type: DatabaseEnum, created_db_name="stats_tiny", data_dir="data") -> None:
+    def __init__(self, use_db_type: DatabaseEnum, created_db_name="stats_tiny", data_dir = None) -> None:
         super().__init__(use_db_type, created_db_name, data_dir)
         self.data_file = self.data_location_dict[use_db_type]
 

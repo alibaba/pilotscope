@@ -10,7 +10,7 @@ from pilotscope.Dataset.TpcdsDataset import TpcdsDataset
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PostgreSQLConfig
 from pilotscope.PilotEnum import DatabaseEnum
-
+import appdirs
 
 def test_dataset(ds: BaseDataset):
     train_set = ds.read_train_sql()
@@ -28,13 +28,13 @@ class MyTestCase(unittest.TestCase):
 
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
-        self.config = PostgreSQLConfig()
+        self.config : PostgreSQLConfig = PostgreSQLConfig()
         self.config.enable_deep_control_local(example_pg_bin, example_pgdata)
 
     def test_load_to_stats(self):
-        ds = StatsDataset(DatabaseEnum.POSTGRESQL, created_db_name="stats")
+        ds = StatsDataset(DatabaseEnum.POSTGRESQL, created_db_name="stats", data_dir= None)
         ds.load_to_db(self.config)
-        # the config will be modified in load_to_db, so we need to get controller again
+        # the config will be modified in load_to_db, so we need to get controller after that
         db_controller = DBControllerFactory.get_db_controller(self.config)
         for table in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:
             self.assertTrue(db_controller.exist_table(table))
@@ -44,6 +44,24 @@ class MyTestCase(unittest.TestCase):
         ds = StatsTinyDataset(DatabaseEnum.POSTGRESQL, created_db_name="stats_tiny")
         ds.load_to_db(self.config)
         db_controller = DBControllerFactory.get_db_controller(self.config)
+        for table in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:
+            self.assertTrue(db_controller.exist_table(table))
+            db_controller.drop_table_if_exist(table)
+
+    def test_load_to_stats_remote(self):
+        self.config = PostgreSQLConfig(pilotscope_core_host="127.0.0.1", db_host="127.0.0.1", db_port="5432",
+                                       db_user="postgres", db_user_pwd="postgres")
+        self.config.enable_deep_control_remote(example_pg_bin, example_pgdata, "root", "root")
+        ds = StatsTinyDataset(DatabaseEnum.POSTGRESQL, created_db_name="stats_tiny_remote")
+        ds.load_to_db(self.config)
+        db_controller = DBControllerFactory.get_db_controller(self.config)
+        for table in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:
+            self.assertTrue(db_controller.exist_table(table))
+            db_controller.drop_table_if_exist(table)
+        ds = StatsDataset(DatabaseEnum.POSTGRESQL, created_db_name="stats_remote")
+        ds.load_to_db(self.config)
+        db_controller = DBControllerFactory.get_db_controller(self.config)
+        # the config will be modified in load_to_db, so we need to get controller again
         for table in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:
             self.assertTrue(db_controller.exist_table(table))
             db_controller.drop_table_if_exist(table)

@@ -5,8 +5,10 @@ from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotEnum import DatabaseEnum
 from pilotscope.Dataset.Utils import database_enum_to_sqlglot_str
 from pilotscope.DBController import BaseDBController
+from pilotscope.Common.SSHConnector import SSHConnector
 import sqlglot
-from requests import get
+import wget
+import appdirs
 import os
 import hashlib
 import tarfile
@@ -22,9 +24,13 @@ class BaseDataset(ABC):
     test_sql_file = None
     file_db_type = None
 
-    def __init__(self, use_db_type: DatabaseEnum, created_db_name, data_dir="data") -> None:
+    def __init__(self, use_db_type: DatabaseEnum, created_db_name, data_dir = None) -> None:
         self.use_db_type = use_db_type
-        self.data_dir = data_dir  # could modify to __file__ or other dir
+        if data_dir is None:
+           self.data_dir = os.path.join(appdirs.user_data_dir(),"pilotscope_data/")
+        else:
+            self.data_dir = data_dir
+        os.makedirs(self.data_dir, exist_ok=True)
         self.now_path = os.path.join(os.path.dirname(__file__), self.sub_dir)
         self.created_db_name = created_db_name
 
@@ -47,25 +53,24 @@ class BaseDataset(ABC):
 
     def _download_dataset(self, urls):
         merged_fname = urls[0].split("/")[-1].split(".")[0] + ".tar.gz"
-        merged_file_dir = os.path.join(self.data_dir, merged_fname)
-        if os.path.isfile(merged_file_dir) and self._hash_data(merged_file_dir) == self.data_sha256:
+        merged_dir_and_fname = os.path.join(self.data_dir, merged_fname)
+        if os.path.isfile(merged_dir_and_fname) and self._hash_data(merged_dir_and_fname) == self.data_sha256:
             return merged_fname
         fnames = []
         for url in urls:
             fnames.append(self._download_save(url))
-        self._merge_files(fnames, merged_fname)
-        if os.path.isfile(merged_fname):
-            if self._hash_data(merged_fname) == self.data_sha256:
-                return merged_fname
-            else:
-                print("Hash of existed file is not same, redownload!")
-                return self._download_dataset(self.download_urls)
+        self._merge_files(fnames, merged_dir_and_fname)
+        assert(os.path.isfile(merged_dir_and_fname))
+        if self._hash_data(merged_fname) == self.data_sha256:
+            return merged_fname
+        else:
+            print("Hash of existed file is not same, redownload!")
+            return self._download_dataset(self.download_urls)
 
     def _download_save(self, url):
         dir_and_filename = os.path.join(self.data_dir, url.split("/")[-1])
-        response = get(url)
-        with open(dir_and_filename, "wb") as file:
-            file.write(response.content)
+        print("Downloading: ", end="")
+        wget.download(url, self.data_dir)
         return dir_and_filename
 
     def _hash_data(self, file_dir):
@@ -89,7 +94,16 @@ class BaseDataset(ABC):
     def _load_dump(self, dump_file_dir, db_controller: BaseDBController):
         if self.use_db_type == DatabaseEnum.POSTGRESQL:
             psql = os.path.join(db_controller.config.pg_bin_path, "psql")
-            os.system(f"{psql} {self.created_db_name} -U {db_controller.config.db_user} < {dump_file_dir}")
+            if db_controller.config.is_local:
+                os.system(f"{psql} {self.created_db_name} -U {db_controller.config.db_user} < {dump_file_dir}")
+            else:
+                ssh_conn = SSHConnector(db_controller.config.db_host, db_controller.config.db_host_user, db_controller.config.db_host_pwd, db_controller.config.db_host_port)
+                ssh_conn.connect()
+                with open(dump_file_dir, "r") as f:
+                    remote_file_dir = os.path.join(db_controller.config.pgdata,os.path.split(dump_file_dir)[1])
+                    ssh_conn.write_file(remote_file_dir, f.read())
+                    ssh_conn.remote_exec_cmd(f"{psql} {self.created_db_name} -U {db_controller.config.db_user} < {remote_file_dir}")
+                ssh_conn.close()
         else:
             raise NotImplementedError
 

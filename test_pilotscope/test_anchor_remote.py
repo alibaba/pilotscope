@@ -9,10 +9,10 @@ class TestAnchorRemote(TestAnchorLocal):
 
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
-        self.config = PostgreSQLConfig(pilotscope_core_host="11.158.195.246", db_host="11.158.195.246", db_port="54323",
+        self.config = PostgreSQLConfig(pilotscope_core_host="127.0.0.1", db_host="127.0.0.1", db_port="5432",
                                        db_user="postgres", db_user_pwd="postgres")
         self.config.db = "stats_tiny"
-        self.config.enable_deep_control_remote(example_pg_bin, example_pgdata)
+        self.config.enable_deep_control_remote(example_pg_bin, example_pgdata,"root","root")
         self.data_interactor = PilotDataInteractor(self.config)
 
     def test_fetch_card(self):
