@@ -8,7 +8,7 @@ URL = 'https://github.com/duoyw/PilotScope'
 
 minimal_requires = [
     "APScheduler>=3.10.1", "pandas>=2.0.1", "numpy>=1.24.3", "SQLAlchemy>=2.0.2", "SQLAlchemy-Utils>=0.41.1",
-    "joblib>=1.2.0", "openpyxl>=3.1.2", "sqlglot>=12.4.0", "psycopg2-binary", "paramiko", "wget"
+    "joblib>=1.2.0", "openpyxl>=3.1.2", "sqlglot>=12.4.0", "psycopg2-binary", "paramiko", "wget", "appdirs"
 ]
 
 requires = minimal_requires + ["torch==2.0.1", "scikit-learn==1.2.2", "matplotlib==3.7.2", "ConfigSpace==0.4.20",

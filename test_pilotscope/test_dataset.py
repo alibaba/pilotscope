@@ -10,7 +10,7 @@ from pilotscope.Dataset.TpcdsDataset import TpcdsDataset
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PostgreSQLConfig
 from pilotscope.PilotEnum import DatabaseEnum
-import appdirs
+
 
 def test_dataset(ds: BaseDataset):
     train_set = ds.read_train_sql()
@@ -28,11 +28,11 @@ class MyTestCase(unittest.TestCase):
 
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
-        self.config : PostgreSQLConfig = PostgreSQLConfig()
+        self.config: PostgreSQLConfig = PostgreSQLConfig()
         self.config.enable_deep_control_local(example_pg_bin, example_pgdata)
 
     def test_load_to_stats(self):
-        ds = StatsDataset(DatabaseEnum.POSTGRESQL, created_db_name="stats", data_dir= None)
+        ds = StatsDataset(DatabaseEnum.POSTGRESQL, created_db_name="stats", data_dir=None)
         ds.load_to_db(self.config)
         # the config will be modified in load_to_db, so we need to get controller after that
         db_controller = DBControllerFactory.get_db_controller(self.config)
