@@ -3,8 +3,8 @@ from copy import deepcopy
 
 from pandas import DataFrame
 
-from DataManager.TableVisitedTracker import TableVisitedTracker
 from pilotscope.DBController.BaseDBController import BaseDBController
+from pilotscope.DataManager.TableVisitedTracker import TableVisitedTracker
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotEnum import DatabaseEnum

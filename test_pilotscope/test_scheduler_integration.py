@@ -21,10 +21,10 @@ class ExamplePilotModel(PilotModel):
         self.model_save_dir = "../algorithm_examples/ExampleData/Example/Model"
         self.model_path = os.path.join(self.model_save_dir, self.model_name)
 
-    def _save_model(self, user_model):
+    def save_model(self):
         self.test_flag = "test_flag"
 
-    def _load_model(self):
+    def load_model(self):
         pass
 
     def predict(self, subquery_2_card):
@@ -65,9 +65,9 @@ class MyTestCase(unittest.TestCase):
         config = self.config
         scheduler: PilotScheduler = SchedulerFactory.create_scheduler(config)
         model = ExamplePilotModel("test_model")
-        model.save()
+        model.save_model()
         model = ExamplePilotModel("test_model")
-        model.load()
+        model.load_model()
 
         handler = ExampleCardPushHandler(model, config)
         scheduler.register_custom_handlers([handler])

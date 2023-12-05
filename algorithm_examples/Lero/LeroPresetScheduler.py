@@ -24,7 +24,7 @@ def get_lero_preset_scheduler(config, enable_collection, enable_training) -> Pil
     pretraining_data_table = "lero_pretraining_collect_data"
 
     lero_pilot_model: PilotModel = LeroPilotModel(model_name)
-    lero_pilot_model.load()
+    lero_pilot_model.load_model()
     lero_handler = LeroCardPushHandler(lero_pilot_model, config)
 
     # core
@@ -54,7 +54,7 @@ def get_lero_dynamic_preset_scheduler(config) -> PilotScheduler:
 
     model_name = "lero_pair"  # This test can only work when existing a model
     lero_pilot_model: PilotModel = LeroPilotModel(model_name)
-    lero_pilot_model.load()
+    lero_pilot_model.load_model()
     lero_handler = LeroCardPushHandler(lero_pilot_model, config)
 
     # core

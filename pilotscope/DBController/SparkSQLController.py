@@ -186,7 +186,7 @@ class SparkIO:
             self.reader = self.reader.option("dbtable", table_name)
         elif query is not None:
             self.reader = self.reader.option("query", query)
-        return self.reader.load()
+        return self.reader.load_model()
 
     def write(self, table_or_rows: Union[SparkTable, DataFrame], mode: SparkIOWriteModeEnum, target_table_name=None):
         if isinstance(table_or_rows, SparkTable):
@@ -209,7 +209,7 @@ class SparkIO:
                 .option("user", self.conn_info['user']) \
                 .option("password", self.conn_info['pwd']) \
                 .option("dbtable", table_name)
-        write.save()
+        write.save_model()
 
     def has_table(self, table_name):
         return self.read(table_name="information_schema.tables") \
@@ -434,7 +434,7 @@ class SparkSQLController(BaseDBController):
         return query_execution.logical()
 
     def _resolvedLogicalPlan(self, query_execution):
-        return query_execution.analyzed()
+        return query_execution.spark_analyzed()
 
     def _optimizedLogicalPlan(self, query_execution):
         return query_execution.optimizedPlan()

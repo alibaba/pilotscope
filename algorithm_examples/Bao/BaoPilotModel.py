@@ -20,13 +20,13 @@ class BaoPilotModel(PilotModel):
     def update(self, data_manager: DataManager):
         print("enter LeroPilotModel.update")
 
-    def _save_model(self, user_model):
-        user_model.save(self.model_path)
+    def save_model(self):
+        self.model.save_model(self.model_path)
 
-    def _load_model(self):
+    def load_model(self):
         try:
             bao_model = BaoRegression(have_cache_data=self.have_cache_data, is_spark=self.is_spark)
             bao_model.load(self.model_path)
         except FileNotFoundError:
             bao_model = BaoRegression(have_cache_data=self.have_cache_data, is_spark=self.is_spark)
-        return bao_model
+        self.model = bao_model

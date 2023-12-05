@@ -109,7 +109,7 @@ class PeriodicModelUpdateEvent(QueryFinishEvent, ABC):
         model = self.custom_model_update(self.pilot_model, db_controller, data_manager)
         if self.pilot_model is not None:
             self.pilot_model.model = model
-            self.pilot_model.save()
+            self.pilot_model.save_model()
 
     @abstractmethod
     def custom_model_update(self, pilot_model: PilotModel, db_controller: BaseDBController,
@@ -194,7 +194,7 @@ class PretrainingModelEvent(Event, ABC):
         """
         if self.enable_training:
             self._model.model = self.custom_model_training(self._model.model, db_controller, train_data_manager)
-            self._model.save()
+            self._model.save_model()
 
     @abstractmethod
     def iterative_data_collection(self, db_controller: BaseDBController, train_data_manager: DataManager):

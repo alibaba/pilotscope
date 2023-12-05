@@ -56,7 +56,7 @@ class SparkBaoTest(unittest.TestCase):
 
             bao_pilot_model: BaoPilotModel = BaoPilotModel(self.model_name, have_cache_data=self.used_cache,
                                                            is_spark=True)
-            bao_pilot_model.load()
+            bao_pilot_model.load_model()
             bao_handler = BaoHintPushHandler(bao_pilot_model, config)
 
             # core

@@ -30,10 +30,10 @@ class PilotScheduler:
 
         # add recordPullAnchor
         record_handler = RecordPullHandler(self.config)
-        data_interactor.add_anchor(record_handler.anchor_name, record_handler)
+        data_interactor._add_anchor(record_handler.anchor_name, record_handler)
 
         # add all replace anchors from user
-        data_interactor.add_anchors(self.user_tasks)
+        data_interactor._add_anchors(self.user_tasks)
 
         # replace value based on user's method
 
@@ -93,7 +93,7 @@ class PilotScheduler:
         self._deal_execution_end_events()
 
     def _store_collected_data_into_table(self, data: PilotTransData):
-        pull_anchors = extract_handlers(self.data_interactor.get_all_handlers(), True)
+        pull_anchors = extract_handlers(self.data_interactor._get_all_handlers(), True)
         column_2_value = {}
         for anchor in pull_anchors:
             if isinstance(anchor, BasePullHandler):

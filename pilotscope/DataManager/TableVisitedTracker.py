@@ -1,7 +1,7 @@
 from pandas import DataFrame
 
-from DBController.BaseDBController import BaseDBController
-from PilotSysConfig import PilotSysConfig
+from pilotscope.DBController.BaseDBController import BaseDBController
+from pilotscope.PilotSysConfig import PilotSysConfig
 
 
 class TableVisitedTracker:

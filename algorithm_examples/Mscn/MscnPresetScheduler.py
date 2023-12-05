@@ -19,7 +19,7 @@ def get_mscn_preset_scheduler(config, enable_collection, enable_training) -> Pil
         enable_training = eval(enable_training)
     model_name = "mscn"
     mscn_pilot_model: PilotModel = MscnPilotModel(model_name)
-    mscn_pilot_model.load()
+    mscn_pilot_model.load_model()
     mscn_handler = MscnCardPushHandler(mscn_pilot_model, config)
 
     # core

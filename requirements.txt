@@ -48,7 +48,6 @@ Pillow==10.0.0
 prettytable==3.6.0
 prompt-toolkit==3.0.37
 psutil==5.9.5
-psycopg2==2.9.6
 ptyprocess==0.7.0
 pure-eval==0.2.2
 Pygments==2.14.0
@@ -95,3 +94,4 @@ nvidia-cusolver-cu11==11.4.0.1
 nvidia-cusparse-cu11==11.7.4.91
 nvidia-nccl-cu11==2.14.3
 nvidia-nvtx-cu11==11.7.91
+psycopg2-binary

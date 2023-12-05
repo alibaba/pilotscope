@@ -18,13 +18,13 @@ class LeroPilotModel(PilotModel):
     def update(self, data_manager: DataManager):
         print("enter LeroPilotModel.update")
 
-    def _save_model(self, user_model):
-        user_model.save(self.model_path)
+    def save_model(self):
+        self.model.save_model(self.model_path)
 
-    def _load_model(self):
+    def load_model(self):
         try:
             lero_model = LeroModelPairWise(None)
-            lero_model.load(self.model_path)
+            lero_model.load_model(self.model_path)
         except FileNotFoundError:
             lero_model = LeroModelPairWise(None)
-        return lero_model
+        self.model = lero_model
