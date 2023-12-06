@@ -25,7 +25,8 @@ from algorithm_examples.utils import load_test_sql
 
 class BaoTest(unittest.TestCase):
     def setUp(self):
-        self.config: PostgreSQLConfig = PostgreSQLConfig(db_host="localhost", db_port="5432", db_user="postgres", db_user_pwd="postgres")
+        self.config: PostgreSQLConfig = PostgreSQLConfig(db_host="localhost", db_port="5432", db_user="postgres",
+                                                         db_user_pwd="postgres")
         self.config.db = "stats_tiny"
 
         self.used_cache = False
@@ -58,8 +59,8 @@ class BaoTest(unittest.TestCase):
                                              pull_buffer_cache=self.used_cache)
 
             pretraining_event = BaoPretrainingModelEvent(config, bao_pilot_model, self.pretraining_data_table,
-                                                         enable_collection=True,
-                                                         enable_training=True)
+                                                         enable_collection=False,
+                                                         enable_training=False)
             scheduler.register_events([pretraining_event])
 
             # start
@@ -71,7 +72,6 @@ class BaoTest(unittest.TestCase):
                 TimeStatistic.start(ExperimentTimeEnum.SQL_END_TO_END)
                 scheduler.execute(sql)
                 TimeStatistic.end(ExperimentTimeEnum.SQL_END_TO_END)
-            TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo, config.db))
             name_2_value = TimeStatistic.get_average_data()
             Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db), is_rotation=True)
             print("run ok")
@@ -94,7 +94,7 @@ class BaoTest(unittest.TestCase):
         })
 
         df.to_excel("./Experiment/Data/{}_plan_compare.xlsx".format(self.config.db))
-        print()
+
 
 
 if __name__ == '__main__':

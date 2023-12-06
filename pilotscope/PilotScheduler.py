@@ -11,6 +11,7 @@ from pilotscope.Common.TimeStatistic import TimeStatistic
 from pilotscope.Common.Util import extract_handlers
 
 
+# noinspection PyProtectedMember
 class PilotScheduler:
 
     def __init__(self, config: PilotConfig) -> None:
@@ -107,14 +108,14 @@ class PilotScheduler:
         for event in self.events:
             if isinstance(event, PretrainingModelEvent):
                 event: PretrainingModelEvent = event
-                pretraining_thread = event.async_start()
+                pretraining_thread = event._async_start()
             elif isinstance(event, PeriodicModelUpdateEvent):
                 event: PeriodicModelUpdateEvent = event
                 if event.execute_before_first_query:
                     event.process(self.db_controller, self.data_manager)
             elif isinstance(event, WorkloadBeforeEvent):
                 event: WorkloadBeforeEvent = event
-                event.update(self.db_controller, self.data_manager)
+                event._update(self.db_controller, self.data_manager)
 
         # wait until finishing pretraining
         if pretraining_thread is not None and self.config.pretraining_model == TrainSwitchMode.WAIT:
@@ -125,7 +126,7 @@ class PilotScheduler:
         for event in self.events:
             if isinstance(event, QueryFinishEvent):
                 event: QueryFinishEvent = event
-                event.update(self.db_controller, self.data_manager)
+                event._update(self.db_controller, self.data_manager)
 
     def _is_valid_custom_handlers(self, handlers):
         # return false, if there is identical class typy for the elements in handlers

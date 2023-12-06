@@ -13,7 +13,7 @@ class MscnPilotModel(PilotModel):
         self.model_path = os.path.join(self.lero_model_save_dir, self.model_name)
 
     def save_model(self):
-        self.model.save_model(self.model_path)
+        self.model.save(self.model_path)
 
     def load_model(self):
         try:

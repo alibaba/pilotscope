@@ -1,8 +1,8 @@
 import os
 
+from algorithm_examples.Lero.source.model import LeroModelPairWise
 from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.PilotModel import PilotModel
-from model import LeroModelPairWise
 
 
 class LeroPilotModel(PilotModel):
@@ -19,12 +19,12 @@ class LeroPilotModel(PilotModel):
         print("enter LeroPilotModel.update")
 
     def save_model(self):
-        self.model.save_model(self.model_path)
+        self.model.save(self.model_path)
 
     def load_model(self):
         try:
             lero_model = LeroModelPairWise(None)
-            lero_model.load_model(self.model_path)
+            lero_model.load(self.model_path)
         except FileNotFoundError:
             lero_model = LeroModelPairWise(None)
         self.model = lero_model

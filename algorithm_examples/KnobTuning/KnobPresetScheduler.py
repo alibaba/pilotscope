@@ -22,9 +22,9 @@ def get_knob_preset_scheduler(config: PilotConfig) -> PilotScheduler:
 
     # allow to pretrain model
     periodic_model_update_event = KnobPeriodicModelUpdateEvent(config, 200,
-                                                                execute_on_init=True,
-                                                                llamatune_config_file="../algorithm_examples/KnobTuning/llamatune/configs/llama_config.ini",
-                                                                optimizer_type="smac")
+                                                               execute_on_init=True,
+                                                               llamatune_config_file="../algorithm_examples/KnobTuning/llamatune/configs/llama_config.ini",
+                                                               optimizer_type="smac")
     scheduler.register_events([periodic_model_update_event])
     scheduler.register_required_data("llamatune_data", pull_execution_time=True)
     # TimeStatistic.print()

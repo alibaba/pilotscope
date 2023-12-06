@@ -32,7 +32,7 @@ class MyTestCase(unittest.TestCase):
         self.config.enable_deep_control_local(example_pg_bin, example_pgdata)
 
     def test_load_to_stats(self):
-        ds = StatsDataset(DatabaseEnum.POSTGRESQL, created_db_name="stats", data_dir=None)
+        ds = StatsDataset(DatabaseEnum.POSTGRESQL, created_db_name="test_stats", data_dir=None)
         ds.load_to_db(self.config)
         # the config will be modified in load_to_db, so we need to get controller after that
         db_controller = DBControllerFactory.get_db_controller(self.config)
@@ -41,7 +41,7 @@ class MyTestCase(unittest.TestCase):
             db_controller.drop_table_if_exist(table)
 
     def test_load_to_db_stats_tiny_from_local(self):
-        ds = StatsTinyDataset(DatabaseEnum.POSTGRESQL, created_db_name="stats_tiny")
+        ds = StatsTinyDataset(DatabaseEnum.POSTGRESQL, created_db_name="test_stats_tiny")
         ds.load_to_db(self.config)
         db_controller = DBControllerFactory.get_db_controller(self.config)
         for table in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:

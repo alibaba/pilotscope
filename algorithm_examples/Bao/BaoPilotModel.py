@@ -21,7 +21,7 @@ class BaoPilotModel(PilotModel):
         print("enter LeroPilotModel.update")
 
     def save_model(self):
-        self.model.save_model(self.model_path)
+        self.model.save(self.model_path)
 
     def load_model(self):
         try:

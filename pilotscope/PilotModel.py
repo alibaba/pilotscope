@@ -6,8 +6,10 @@ class PilotModel(ABC):
         self.model_name = model_name
         self.model = None
 
+    @abstractmethod
     def save_model(self):
         raise NotImplementedError
 
+    @abstractmethod
     def load_model(self):
         raise NotImplementedError

@@ -17,6 +17,7 @@ class Event(ABC):
     This class provides the base structure for different event types in an application,
     and is meant to be subclassed to create concrete event implementations.
     """
+
     def __init__(self, config):
         self.config = config
 
@@ -31,7 +32,7 @@ class QueryFinishEvent(Event, ABC):
         self.interval_count = interval_count
         self.query_execution_count = 0
 
-    def update(self, db_controller: BaseDBController, data_manager: DataManager):
+    def _update(self, db_controller: BaseDBController, data_manager: DataManager):
         """
         This function will be called when a query is finished.
         It will call process function when `interval_count` query is finished.
@@ -66,7 +67,7 @@ class WorkloadBeforeEvent(Event, ABC):
         super().__init__(config)
         self.already_been_called = not enable
 
-    def update(self, db_controller: BaseDBController, data_manager: DataManager):
+    def _update(self, db_controller: BaseDBController, data_manager: DataManager):
         """
         Updates the event state and triggers the processing of the event.
         This method sets the `already_been_called` flag to True to indicate the event has been
@@ -100,6 +101,7 @@ class PeriodicModelUpdateEvent(QueryFinishEvent, ABC):
     """
     The user can inherit this class to implement a periodic model update event.
     """
+
     def __init__(self, config, interval_count, pilot_model: PilotModel = None, execute_on_init=True):
         super().__init__(config, interval_count)
         self.pilot_model = pilot_model
@@ -137,6 +139,7 @@ class PretrainingModelEvent(Event, ABC):
     routines prior to the model being deployed in a production environment. It utilizes
     mechanisms for asynchronous data collection and model training.
     """
+
     def __init__(self, config: PilotConfig, bind_model: PilotModel, data_saving_table, enable_collection=True,
                  enable_training=True):
         super().__init__(config)
@@ -146,7 +149,7 @@ class PretrainingModelEvent(Event, ABC):
         self.enable_training = enable_training
         self.data_saving_table = data_saving_table
 
-    def async_start(self):
+    def _async_start(self):
         """
         Starts the pretraining process asynchronously by launching a separate thread.
         This method creates a new ValueThread, sets it as a daemon thread, and starts it.
@@ -164,10 +167,10 @@ class PretrainingModelEvent(Event, ABC):
     def _run(self):
         db_controller = DBControllerFactory.get_db_controller(self.config)
         data_manager = DataManager(self.config)
-        self.collect_and_store_data(db_controller, data_manager)
-        self.model_training(db_controller, data_manager)
+        self._collect_and_store_data(db_controller, data_manager)
+        self._model_training(db_controller, data_manager)
 
-    def collect_and_store_data(self, db_controller: BaseDBController, data_manager: DataManager):
+    def _collect_and_store_data(self, db_controller: BaseDBController, data_manager: DataManager):
         """
         This function iteratively collects data from the database and stores it in the specified table.
 
@@ -183,7 +186,7 @@ class PretrainingModelEvent(Event, ABC):
                 table = self.data_saving_table
                 data_manager.save_data_batch(table, column_2_value_list)
 
-    def model_training(self, db_controller: BaseDBController, train_data_manager: DataManager):
+    def _model_training(self, db_controller: BaseDBController, train_data_manager: DataManager):
         """
         If training is enabled, this function trains the model with custom training logic and saves it.
 

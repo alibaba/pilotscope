@@ -18,10 +18,7 @@ class LeroTest(unittest.TestCase):
     def test_lero(self):
         try:
             config = self.config
-            # model_name = "leroDynamic"
-
-            scheduler = get_lero_preset_scheduler(config, True, True)
-
+            scheduler = get_lero_preset_scheduler(config, enable_collection=True, enable_training=True)
             print("start to test sql")
             sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):

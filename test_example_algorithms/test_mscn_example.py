@@ -18,7 +18,7 @@ class MscnTest(unittest.TestCase):
 
     def test_mscn(self):
         try:
-            scheduler = get_mscn_preset_scheduler(self.config, True, True)
+            scheduler = get_mscn_preset_scheduler(self.config, enable_collection=True, enable_training=True)
             print("start to test sql")
             sqls = load_test_sql(self.config.db)
             for i, sql in enumerate(sqls):
