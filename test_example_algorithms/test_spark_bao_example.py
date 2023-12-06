@@ -2,25 +2,20 @@ import sys
 
 sys.path.append("../algorithm_examples/Bao/source")
 sys.path.append("../")
-from pilotscope.DataManager.DataManager import DataManager
-from SparkPlanCompress import SparkPlanCompress
 from pilotscope.Common.Drawer import Drawer
 from pilotscope.Common.TimeStatistic import TimeStatistic
-from pilotscope.Common.dotDrawer import PlanDotDrawer
-from algorithm_examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
-from algorithm_examples.Bao.source.model import BaoRegression
+from algorithm_examples.ExampleConfig import get_time_statistic_img_path
 
 import unittest
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.Common.Util import pilotscope_exit
-from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
-from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig, SparkConfig
+from pilotscope.PilotConfig import SparkConfig
 from pilotscope.PilotEnum import *
 from pilotscope.PilotScheduler import PilotScheduler
 from algorithm_examples.Bao.BaoParadigmHintAnchorHandler import BaoHintPushHandler, modify_sql_for_spark
 from algorithm_examples.Bao.BaoPilotModel import BaoPilotModel
 from algorithm_examples.Bao.EventImplement import BaoPretrainingModelEvent
-from algorithm_examples.utils import load_test_sql, to_tree_json
+from algorithm_examples.utils import load_test_sql
 
 
 class SparkBaoTest(unittest.TestCase):
@@ -81,7 +76,6 @@ class SparkBaoTest(unittest.TestCase):
                 TimeStatistic.start(ExperimentTimeEnum.SQL_END_TO_END)
                 scheduler.execute(sql)
                 TimeStatistic.end(ExperimentTimeEnum.SQL_END_TO_END)
-                TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path(self.algo, config.db))
             name_2_value = TimeStatistic.get_average_data()
             Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db), is_rotation=True)
             print("run ok")

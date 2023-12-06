@@ -1,21 +1,19 @@
-import json
-from copy import copy
-
-from pilotscope.DBController.BaseDBController import BaseDBController
-from pilotscope.Common.Index import Index
-from pilotscope.Common.TimeStatistic import TimeStatistic
-from pilotscope.Common.Util import json_str_to_json_obj
-import sys
 import os
-from pilotscope.PilotEnum import DatabaseEnum
+
+from pilotscope.Common.Index import Index
+from pilotscope.Common.Util import json_str_to_json_obj
+from pilotscope.DBController.BaseDBController import BaseDBController
 from pilotscope.Dataset.ImdbDataset import ImdbDataset
 from pilotscope.Dataset.StatsDataset import StatsDataset
 from pilotscope.Dataset.StatsTinyDataset import StatsTinyDataset
 from pilotscope.Dataset.TpcdsDataset import TpcdsDataset
+from pilotscope.PilotEnum import DatabaseEnum
+
 
 def get_path(sql_file):
     my_path = os.path.abspath(__file__)
     return os.path.join(os.path.dirname(my_path), sql_file)
+
 
 def load_training_sql(db):
     if "stats_tiny" == db.lower():
@@ -68,10 +66,6 @@ def compress_anchor_name(name_2_values):
     for name, value in name_2_values.items():
         res[name.split("_")[0]] = value
     return res
-
-
-def add_remain_time_statistic():
-    TimeStatistic.get_sum_data()
 
 
 def recover_stats_index(db_controller: BaseDBController):
@@ -167,10 +161,10 @@ def get_spark_table_name_for_scan_node(node: dict):
     node_type = node["class"]
     if "org.apache.spark.sql.execution.columnar.InMemoryTableScanExec" == node_type:
         table = node["relation"][0]["cacheBuilder"]["tableName"]
-        assert len(node["relation"])==1
+        assert len(node["relation"]) == 1
     elif "org.apache.spark.sql.execution.RowDataSourceScanExec" == node_type:
         table = node["output"][0][0]["name"]
-        assert len(node["output"][0])==1
+        assert len(node["output"][0]) == 1
     else:
         raise NotImplementedError
     return table

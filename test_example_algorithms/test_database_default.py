@@ -1,10 +1,11 @@
 import sys
 
+from pilotscope.Common.TimeStatistic import TimeStatistic
+
 sys.path.append("../")
 
 from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.Common.Drawer import Drawer
-from pilotscope.Common.TimeStatistic import TimeStatistic
 from algorithm_examples.ExampleConfig import get_time_statistic_img_path
 
 import unittest
@@ -44,10 +45,6 @@ class MyTestCase(unittest.TestCase):
         for i, sql in enumerate(sqls):
             print("current is the {}-th sql, and it is {}".format(i, sql))
             scheduler.execute(sql)
-        TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path("pg", config.db))
-        name_2_value = TimeStatistic.get_average_data()
-        Drawer.draw_bar(name_2_value, get_time_statistic_img_path("pg", self.db), is_rotation=True)
-        TimeStatistic.clear()
 
     def test_1_spark_plan(self):
         config: PilotConfig = SparkConfig(app_name="testApp", master_url="local[*]")
@@ -87,12 +84,9 @@ class MyTestCase(unittest.TestCase):
         sqls = load_test_sql(config.db)
         for i, sql in enumerate(sqls):
             print("current is the {}-th sql, and it is {}".format(i, sql))
-            TimeStatistic.start(ExperimentTimeEnum.PIPE_END_TO_END)
+            TimeStatistic.start(ExperimentTimeEnum.SQL_END_TO_END)
             scheduler.execute(sql)
-            TimeStatistic.end(ExperimentTimeEnum.PIPE_END_TO_END)
-            # TimeStatistic.print()
-            print("{}-th sql OK".format(i), flush=True)
-        TimeStatistic.save_xlsx(get_time_statistic_xlsx_file_path("spark", config.db))
+            TimeStatistic.end(ExperimentTimeEnum.SQL_END_TO_END)
         name_2_value = TimeStatistic.get_sum_data()
         Drawer.draw_bar(name_2_value, get_time_statistic_img_path("spark", self.db), is_rotation=True)
 

@@ -4,11 +4,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from algorithm_examples.utils import load_training_sql
-from pilotscope.Common.TimeStatistic import TimeStatistic
 from pilotscope.DBController.BaseDBController import BaseDBController
 from pilotscope.DataManager.DataManager import DataManager
-from pilotscope.PilotEnum import ExperimentTimeEnum
 from pilotscope.PilotEvent import PeriodicModelUpdateEvent
 from pilotscope.PilotModel import PilotModel
 
@@ -104,7 +101,6 @@ class KnobPeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
 
     def custom_model_update(self, pilot_model: PilotModel, db_controller: BaseDBController,
                             data_manager: DataManager):
-        TimeStatistic.start(ExperimentTimeEnum.FIND_KNOB)
         db_controller.recover_config()
         db_controller.restart()
 
@@ -117,4 +113,3 @@ class KnobPeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
         exp_state = llamatune(conf)
         db_controller.write_knob_to_file(dict(exp_state.best_conf))
         db_controller.restart()
-        TimeStatistic.end(ExperimentTimeEnum.FIND_KNOB)

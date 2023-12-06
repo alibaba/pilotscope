@@ -1,5 +1,4 @@
 import time
-import time
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from typing import Optional, List, cast
@@ -8,7 +7,6 @@ import pandas
 
 from pilotscope.Anchor.BaseAnchor.BasePullHandler import *
 from pilotscope.Anchor.BaseAnchor.BasePushHandler import *
-from pilotscope.Common.TimeStatistic import TimeStatistic
 from pilotscope.Common.Util import extract_anchor_handlers, extract_handlers, wait_futures_results
 from pilotscope.DBInteractor.InteractorReceiver import InteractorReceiver
 from pilotscope.DBInteractor.PilotCommentCreator import PilotCommentCreator
@@ -17,7 +15,7 @@ from pilotscope.Factory.AnchorHandlerFactory import AnchorHandlerFactory
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.Factory.InteractorReceiverFactory import InteractorReceiverFactory
 from pilotscope.PilotConfig import PilotConfig
-from pilotscope.PilotEnum import FetchMethod, ExperimentTimeEnum, DatabaseEnum
+from pilotscope.PilotEnum import FetchMethod, DatabaseEnum
 from pilotscope.PilotTransData import PilotTransData
 
 
@@ -257,29 +255,22 @@ class PilotDataInteractor:
             # execution sqls. Sometimes, data do not need to be got from inner
             is_execute_comment_sql = self._is_execute_comment_sql(self._anchor_to_handlers)
 
-            TimeStatistic.start("_execute_sqls")
             records, python_sql_execution_time = self._execute_sqls(comment_sql, is_execute_comment_sql)
-            TimeStatistic.end("_execute_sqls")
 
             # wait to fetch data
-            TimeStatistic.start("is_need_to_receive_data")
             if self._is_need_to_receive_data(self._anchor_to_handlers):
                 receive_data = self._data_fetcher.block_for_data_from_db()
                 data: PilotTransData = PilotTransData.parse_2_instance(receive_data, origin_sql)
-                self._add_detailed_time_for_experiment(data)
                 # fetch data from outer
             else:
                 data = PilotTransData()
-            TimeStatistic.end("is_need_to_receive_data")
             if records is not None:
                 if self.config.db_type == DatabaseEnum.POSTGRESQL:
                     data.records = pandas.DataFrame.from_records(records[1:], columns=records[0])
                 else:
                     data.records = records
             data.sql = origin_sql
-            TimeStatistic.start("_fetch_data_from_outer")
             self._fetch_data_from_outer(origin_sql, data)
-            TimeStatistic.end("_fetch_data_from_outer")
 
             if self.config.db_type == DatabaseEnum.SPARK:
                 self._add_execution_time_from_python(data, python_sql_execution_time)
@@ -290,7 +281,6 @@ class PilotDataInteractor:
             return data
 
         except (DBStatementTimeoutException, InteractorReceiveTimeoutException) as e:
-            self._add_detailed_time_for_experiment(None)
             print(e)
             return None
         except Exception as e:
@@ -317,20 +307,6 @@ class PilotDataInteractor:
     def _add_execution_time_from_python(self, data: PilotTransData, python_sql_execution_time):
         if AnchorEnum.EXECUTION_TIME_PULL_ANCHOR in self._anchor_to_handlers:
             data.execution_time = python_sql_execution_time
-
-    def _add_detailed_time_for_experiment(self, data: PilotTransData):
-        if data is not None:
-            TimeStatistic.add_time(ExperimentTimeEnum.DB_PARSER, data.parser_time)
-
-            for i in range(len(data.anchor_names)):
-                anchor_name = data.anchor_names[i]
-                anchor_time = data.anchor_times[i]
-                TimeStatistic.add_time(ExperimentTimeEnum.get_anchor_key(anchor_name), float(anchor_time))
-
-            if data.execution_time is not None:
-                TimeStatistic.add_time(ExperimentTimeEnum.SQL_TOTAL_TIME, data.execution_time)
-        else:
-            TimeStatistic.add_time(ExperimentTimeEnum.SQL_TOTAL_TIME, self.config.sql_execution_timeout)
 
     def _is_need_to_receive_data(self, anchor_2_handlers):
         """
@@ -371,18 +347,14 @@ class PilotDataInteractor:
     def _execute_sqls(self, comment_sql, is_execute_comment_sql):
         handlers = extract_handlers(self._anchor_to_handlers.values(), extract_pull_anchor=False)
         handlers = sorted(handlers, key=lambda x: cast(BaseAnchorHandler, x).get_call_priority())
-        TimeStatistic.start("execute_before_comment_sql")
         for handler in handlers:
             handler.exec_commands_before_sql(self.db_controller)
-        TimeStatistic.end("execute_before_comment_sql")
 
-        TimeStatistic.start("self.db_controller.execute")
         records = python_sql_execution_time = None
         if is_execute_comment_sql:
             start_time = time.time()
             records = self.db_controller.execute(comment_sql, fetch=True, fetch_column_name=True)
             python_sql_execution_time = time.time() - start_time
-        TimeStatistic.end("self.db_controller.execute")
         return records, python_sql_execution_time
 
     def _get_anchor_params_as_comment(self):

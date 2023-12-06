@@ -4,7 +4,6 @@ sys.path.append("../")
 sys.path.append("../algorithm_examples/Lero/source")
 
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
-from pilotscope.PilotEnum import EventEnum, AllowedPullDataEnum
 from pilotscope.PilotModel import PilotModel
 from pilotscope.PilotScheduler import PilotScheduler
 from algorithm_examples.Lero.EventImplement import LeroPretrainingModelEvent, LeroPeriodicCollectEvent, \

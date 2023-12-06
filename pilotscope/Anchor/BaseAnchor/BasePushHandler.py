@@ -2,10 +2,9 @@ from typing import List
 
 from pilotscope.Anchor.AnchorEnum import AnchorEnum
 from pilotscope.Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
-from pilotscope.DBController.BaseDBController import BaseDBController
-from pilotscope.PilotEnum import PushHandlerTriggerLevelEnum, ExperimentTimeEnum
 from pilotscope.Common.Index import Index
-from pilotscope.Common.TimeStatistic import TimeStatistic
+from pilotscope.DBController.BaseDBController import BaseDBController
+from pilotscope.PilotEnum import PushHandlerTriggerLevelEnum
 
 
 class BasePushHandler(BaseAnchorHandler):
@@ -109,10 +108,8 @@ class HintPushHandler(BasePushHandler):
         self.key_2_value_for_hint = self.acquire_injected_data(sql)
 
     def exec_commands_before_sql(self, db_controller: BaseDBController):
-        TimeStatistic.start(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
         for hint, value in self.key_2_value_for_hint.items():
             db_controller.set_hint(hint, value)
-        TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
     def add_trans_params(self, params: dict):
         # the empty function is meaningful for removing all params from superclass.
@@ -141,12 +138,10 @@ class KnobPushHandler(BasePushHandler):
         self.key_2_value_for_knob = self.acquire_injected_data(sql)
 
     def exec_commands_before_sql(self, db_controller: BaseDBController):
-        TimeStatistic.start(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
         if self.can_trigger():
             db_controller.write_knob_to_file(self.key_2_value_for_knob)
             db_controller.restart()
             self.have_been_triggered = True
-        TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
     def add_trans_params(self, params: dict):
         # the empty function is meaningful for removing all params from superclass.
@@ -167,23 +162,19 @@ class IndexPushHandler(BasePushHandler):
                            "The modification of workload level should be dealt with event mechanism")
 
     def exec_commands_before_sql(self, db_controller: BaseDBController):
-        TimeStatistic.start(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
         if self.can_trigger():
             if self.drop_other:
                 db_controller.drop_all_indexes()
             for index in self.indexes:
                 db_controller.create_index(index)
             self.have_been_triggered = True
-        TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
 
     def add_trans_params(self, params: dict):
         # the empty function is meaningful for removing all params from superclass.
         pass
 
     def roll_back(self, db_controller):
-        TimeStatistic.start(ExperimentTimeEnum.get_anchor_key(self.anchor_name))
         # self.is_can_trigger() is False if indexes has been built
         if not self.can_trigger():
             for index in self.indexes:
                 db_controller.drop_index(index)
-        TimeStatistic.end(ExperimentTimeEnum.get_anchor_key(self.anchor_name))

@@ -3,12 +3,11 @@ from typing import List
 from pilotscope.Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
 from pilotscope.Anchor.BaseAnchor.BasePullHandler import RecordPullHandler, BasePullHandler
 from pilotscope.Anchor.BaseAnchor.BasePushHandler import BasePushHandler
+from pilotscope.Common.Util import extract_handlers
 from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotEnum import *
 from pilotscope.PilotEvent import *
 from pilotscope.PilotTransData import PilotTransData
-from pilotscope.Common.TimeStatistic import TimeStatistic
-from pilotscope.Common.Util import extract_handlers
 
 
 # noinspection PyProtectedMember
@@ -41,9 +40,7 @@ class PilotScheduler:
         for replace_handle in self.user_tasks:
             replace_handle.update_injected_data(sql)
 
-        TimeStatistic.start("data_interactor.execute")
         result = data_interactor.execute(sql, is_reset=False)
-        TimeStatistic.end("data_interactor.execute")
 
         if result is not None:
             self._post_process(result)
@@ -88,9 +85,7 @@ class PilotScheduler:
         self.events += events
 
     def _post_process(self, data: PilotTransData):
-        TimeStatistic.start(ExperimentTimeEnum.WRITE_TABLE)
         self._store_collected_data_into_table(data)
-        TimeStatistic.end(ExperimentTimeEnum.WRITE_TABLE)
         self._deal_execution_end_events()
 
     def _store_collected_data_into_table(self, data: PilotTransData):

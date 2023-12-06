@@ -5,11 +5,9 @@ from algorithm_examples.Index.index_selection_evaluation.selection.index_selecti
 from algorithm_examples.Index.index_selection_evaluation.selection.workload import Query
 from algorithm_examples.utils import to_pilot_index, load_test_sql
 from pilotscope.Common.Index import Index as PilotIndex
-from pilotscope.Common.TimeStatistic import TimeStatistic
 from pilotscope.DBController.BaseDBController import BaseDBController
 from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.DataManager.DataManager import DataManager
-from pilotscope.PilotEnum import ExperimentTimeEnum
 from pilotscope.PilotEvent import PeriodicModelUpdateEvent
 from pilotscope.PilotModel import PilotModel
 
@@ -48,7 +46,6 @@ class IndexPeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
 
     def custom_model_update(self, pilot_model: PilotModel, db_controller: BaseDBController,
                             data_manager: DataManager):
-        TimeStatistic.start(ExperimentTimeEnum.FIND_INDEX)
         db_controller.drop_all_indexes()
         sqls = self._load_sql()
         workload = to_workload(sqls)
@@ -63,4 +60,3 @@ class IndexPeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
             columns = [c.name for c in index.columns]
             db_controller.create_index(PilotIndex(columns, index.table().name, index.index_idx()))
             print("create index {}".format(index))
-        TimeStatistic.end(ExperimentTimeEnum.FIND_INDEX)

@@ -35,15 +35,6 @@ class DataFetchMethodEnum(PilotEnum):
     HTTP = 0
 
 
-class AllowedPullDataEnum(PilotEnum):
-    PHYSICAL_PLAN = "physical_plan",
-    EXECUTION_TIME = "execution_time",
-    REAL_COST_SUBPLAN = "real_cost_subplan",
-    REAL_CARD_SUBQUERY = "real_card_subquery",
-    SUBQUERY_2_CARDS = "subquery_2_cards",
-    BUFFER_CACHE = "buffer_cache",
-
-
 class FetchMethod(PilotEnum):
     INNER = 0,
     OUTER = 1,
@@ -57,21 +48,6 @@ class TrainSwitchMode(PilotEnum):
 class ExperimentTimeEnum:
     PIPE_END_TO_END = "PIPEEndToEnd"
     SQL_END_TO_END = "SQLEndToEnd"
-    AI_TASK = "AiTask"
-    WRITE_TABLE = "Write"
-    SQL_TOTAL_TIME = "Sql"
-    Db_SQL_TIME = "DbSql"
-    DB_PARSER = "Parser"
-    DB_HTTP = "Http"
-    ANCHOR = "{}"
-    REMAIN = "Remain"
-    PREDICT = "Predict"
-    FIND_INDEX = "FindIndex"
-    FIND_KNOB = "FindKnob"
-
-    @classmethod
-    def get_anchor_key(cls, anchor_name):
-        return ExperimentTimeEnum.ANCHOR.format(anchor_name.split("_")[0])
 
 
 class SparkSQLDataSourceEnum(PilotEnum):

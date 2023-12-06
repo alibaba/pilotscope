@@ -1,16 +1,14 @@
-import socket
-from pilotscope.DBInteractor.InteractorReceiver import InteractorReceiver
-from pilotscope.PilotConfig import PilotConfig
-
 import json
+import socket
 import threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
 import time
-from pilotscope.Exception.Exception import InteractorReceiveTimeoutException
-from pilotscope.PilotEnum import ExperimentTimeEnum
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
 from pilotscope.Common.Thread import ValueThread
-from pilotscope.Common.TimeStatistic import TimeStatistic
 from pilotscope.Common.Util import all_https, singleton
+from pilotscope.DBInteractor.InteractorReceiver import InteractorReceiver
+from pilotscope.Exception.Exception import InteractorReceiveTimeoutException
+from pilotscope.PilotConfig import PilotConfig
 
 data_lock = threading.Condition()
 tid_2_lock = {}
@@ -84,7 +82,6 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         data = json.loads(data)
         cur_time = time.time_ns() / 1000000000.0
-        TimeStatistic.add_time(ExperimentTimeEnum.DB_HTTP, float(cur_time - float(data["http_time"])))
         with data_lock:
             # receive data
             tid = data["tid"]

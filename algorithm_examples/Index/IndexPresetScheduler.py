@@ -3,9 +3,7 @@ import sys
 sys.path.append("../")
 sys.path.append("../algorithm_examples/Index/index_selection_evaluation")
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
-from pilotscope.Common.TimeStatistic import TimeStatistic
 from pilotscope.PilotConfig import PilotConfig
-from pilotscope.PilotEnum import ExperimentTimeEnum, EventEnum
 from pilotscope.PilotScheduler import PilotScheduler
 from algorithm_examples.Index.EventImplement import IndexPeriodicModelUpdateEvent
 
@@ -24,6 +22,5 @@ def get_index_preset_scheduler(config: PilotConfig) -> PilotScheduler:
     scheduler.register_required_data(test_data_table, pull_execution_time=True)
 
     # start
-    TimeStatistic.start(ExperimentTimeEnum.PIPE_END_TO_END)
     scheduler.init()
     return scheduler

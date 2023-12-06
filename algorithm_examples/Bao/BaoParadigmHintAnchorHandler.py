@@ -1,14 +1,15 @@
 from concurrent.futures.thread import ThreadPoolExecutor
 
+from algorithm_examples.Bao.source.SparkPlanCompress import SparkPlanCompress
+from algorithm_examples.utils import to_tree_json
 from pilotscope.Anchor.BaseAnchor.BasePushHandler import HintPushHandler
+from pilotscope.Common.Util import wait_futures_results
 from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PilotConfig
-from pilotscope.PilotEnum import DatabaseEnum, ExperimentTimeEnum
+from pilotscope.PilotEnum import DatabaseEnum
 from pilotscope.PilotModel import PilotModel
 from pilotscope.PilotTransData import PilotTransData
-from pilotscope.Common.TimeStatistic import TimeStatistic
-from pilotscope.Common.Util import wait_futures_results
 
 
 def modify_sql_for_spark(config, sql: str):
@@ -63,7 +64,6 @@ class BaoHintPushHandler(HintPushHandler):
     def acquire_injected_data(self, sql):
         sql = modify_sql_for_spark(self.config, sql)
         try:
-            TimeStatistic.start(ExperimentTimeEnum.AI_TASK)
             # with ThreadPoolExecutor(max_workers=len(self.bao_hint.arms_hint2val)) as pool:
             with ThreadPoolExecutor(max_workers=1) as pool:
                 futures = []
@@ -82,11 +82,8 @@ class BaoHintPushHandler(HintPushHandler):
                     plan["Plan"] = compress.compress(plan["Plan"])
                     plans.append(plan)
 
-            TimeStatistic.start(ExperimentTimeEnum.PREDICT)
             est_exe_time = self.model.model.predict(plans)
-            TimeStatistic.end(ExperimentTimeEnum.PREDICT)
-            print("BAO: ", est_exe_time, flush = True)
-            TimeStatistic.end(ExperimentTimeEnum.AI_TASK)
+            print("BAO: ", est_exe_time, flush=True)
             idx = est_exe_time.argmin()
             pass
         except Exception as e:

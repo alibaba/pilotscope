@@ -6,16 +6,12 @@ sys.path.append("../algorithm_examples/Bao/source")
 sys.path.append("../")
 
 from pilotscope.DataManager.DataManager import DataManager
-from pilotscope.Common.Drawer import Drawer
-from pilotscope.Common.TimeStatistic import TimeStatistic
 from pilotscope.Common.dotDrawer import PlanDotDrawer
-from algorithm_examples.ExampleConfig import get_time_statistic_img_path, get_time_statistic_xlsx_file_path
 
 import unittest
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.Common.Util import pilotscope_exit
 from pilotscope.PilotConfig import PostgreSQLConfig
-from pilotscope.PilotEnum import *
 from pilotscope.PilotScheduler import PilotScheduler
 from algorithm_examples.Bao.BaoParadigmHintAnchorHandler import BaoHintPushHandler
 from algorithm_examples.Bao.BaoPilotModel import BaoPilotModel
@@ -69,11 +65,7 @@ class BaoTest(unittest.TestCase):
             sqls = load_test_sql(config.db)
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, total is {}".format(i, len(sqls)))
-                TimeStatistic.start(ExperimentTimeEnum.SQL_END_TO_END)
                 scheduler.execute(sql)
-                TimeStatistic.end(ExperimentTimeEnum.SQL_END_TO_END)
-            name_2_value = TimeStatistic.get_average_data()
-            Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db), is_rotation=True)
             print("run ok")
         finally:
             pilotscope_exit()

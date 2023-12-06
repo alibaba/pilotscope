@@ -4,7 +4,6 @@ sys.path.append("../")
 from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
-from pilotscope.PilotEnum import EventEnum, AllowedPullDataEnum
 from pilotscope.PilotScheduler import PilotScheduler
 from algorithm_examples.KnobTuning.EventImplement import KnobPeriodicModelUpdateEvent
 
