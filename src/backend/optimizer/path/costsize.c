@@ -4643,11 +4643,17 @@ void save_subquery_and_card(double nrows)
 		realloc_string_array_object(pilot_trans_data->subquery,subquery_count+1);
 		realloc_string_array_object(pilot_trans_data->card,subquery_count+1);
 		
-		//store  subquery 
-		store_string(sub_query->data,pilot_trans_data->subquery[subquery_count]);
+		//store  subquery and card
+		MemoryContext QueryContext = AllocSetContextCreate(CurrentMemoryContext->parent,
+                                          "QueryContext",
+                                          ALLOCSET_DEFAULT_SIZES);
+		MemoryContext oldcontext = CurrentMemoryContext;
+		MemoryContextSwitchTo(QueryContext);
 
-		// store card
+		store_string(sub_query->data,pilot_trans_data->subquery[subquery_count]);
 		store_string_for_num(nrows,pilot_trans_data->card[subquery_count]);
+
+		MemoryContextSwitchTo(oldcontext);
 
 		// update subquery num
 		++subquery_count;
