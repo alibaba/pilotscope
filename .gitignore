@@ -12,3 +12,9 @@
 config.log
 config.status
 GNUmakefile
+bin/
+data/
+include/
+lib/
+plugins/
+share/
