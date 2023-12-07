@@ -41,7 +41,7 @@ class MyTestCase(unittest.TestCase):
     def test_stats_ceb(self):
         self.config.db = "stats_tiny"
         self.data_interactor = PilotDataInteractor(self.config)    
-        sqls = load_test_sql("stats")
+        sqls = load_test_sql("stats_tiny")
         self._check_wrokload(sqls)
         
 
