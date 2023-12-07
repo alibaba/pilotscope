@@ -37,14 +37,6 @@ typedef struct
     char** card;
     size_t subquery_num;
     size_t card_num;
-
-    char* parser_time;
-    char* http_time;
-    char** anchor_names;
-    char** anchor_times;
-    size_t anchor_names_num;
-    size_t anchor_times_num;
-    
 }PilotTransData;
 
 typedef struct 
@@ -103,12 +95,7 @@ extern reflect_item_t Record_Fetch_Anchor_ref_tbl[];
 // vars
 extern int anchor_num;
 extern int enableTerminate;
-extern double subquerycardfetcher_time;
-extern double cardreplace_time;
-extern double executiontimefetch_time;
-extern double parser_time_;
 extern int enablePilotscope;
-extern int anchor_time_num;
 extern int subquery_count;
 extern int port;
 extern char* host;

@@ -288,19 +288,11 @@ planner(Query *parse, const char *query_string, int cursorOptions,
 			* After the above anchors are processed, it will arrive at the post-processing stage,
 			* where we will make set 'enable' to 0 、reduce anchor_num by 1 and store the time of processing
 			* each anchor.
-			* 
-			* The anchor_time_num is the num of anchors needing to record time, it is a little different from
-			* anchor_num, since the RecordPullAnchor is hard to get anchor time(the time is sended back and the 
-			* program will go on to get record.) In addition, the anchor_time_num acts as the serial number
-			*  of 'pilot_trans_data->anchor_times'.
 			*/
 		if(card_push_anchor != NULL && card_push_anchor->enable == 1)
 		{ 
 			elog(INFO,"card_push_anchor done!");
 			change_flag_for_anchor(card_push_anchor->enable);
-
-			// add anchor time
-			add_anchor_time(card_push_anchor->name,cardreplace_time);
 		}
 
 		if(subquery_card_pull_anchor != NULL && subquery_card_pull_anchor->enable == 1)
@@ -309,9 +301,6 @@ planner(Query *parse, const char *query_string, int cursorOptions,
 			elog(INFO,"The number of subqueries is %d",pilot_trans_data->subquery_num);
 			elog(INFO,"subquery_card_pull_anchor done!");
 			change_flag_for_anchor(subquery_card_pull_anchor->enable);
-			
-			// add anchor time
-			add_anchor_time(subquery_card_pull_anchor->name,subquerycardfetcher_time);
 		}
 
 		/*

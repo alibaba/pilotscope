@@ -17,10 +17,6 @@
  *      enableTerminate
  *      enableSend
  *      enablePilotscope
- *      subquerycardfetcher_time
- *      cardreplace_time
- *      executiontimefetch_time
- *      anchor_time_num
  *      port
  *      host
  * 
@@ -97,11 +93,6 @@ int subquery_count;
 int enableTerminate;
 int enableSend;
 int enablePilotscope;
-double subquerycardfetcher_time;
-double cardreplace_time;
-double executiontimefetch_time;
-double parser_time_;
-int anchor_time_num;
 int port;
 char* host;
 
@@ -156,11 +147,6 @@ reflect_item_t Record_Fetch_Anchor_ref_tbl[] = {
     enableSend                      = 1;
     enableTerminate                 = false;
     enablePilotscope                = 1;
-    subquerycardfetcher_time        = 0.0;
-    cardreplace_time                = 0.0;
-    executiontimefetch_time         = 0.0;
-    parser_time_                    = 0.0;
-    anchor_time_num                 = 0;
     subquery_count                  = 0;
     host                            = NULL;
     port                            = 8888;
@@ -203,14 +189,10 @@ static char* pilottransdata_to_json()
     cJSON_AddStringToObject(root, "logical_plan", pilot_trans_data->logical_plan);
     cJSON_AddStringToObject(root, "execution_time", pilot_trans_data->execution_time);
     cJSON_AddStringToObject(root, "tid", pilot_trans_data->tid);
-    cJSON_AddStringToObject(root, "parser_time", pilot_trans_data->parser_time);
-    cJSON_AddStringToObject(root, "http_time", pilot_trans_data->http_time);
 
     //  add array element to json from struct
     cJSON_AddStringArrayToObject(root,"subquery",pilot_trans_data->subquery,pilot_trans_data->subquery_num);
     cJSON_AddStringArrayToObject(root,"card",pilot_trans_data->card,pilot_trans_data->card_num);
-    cJSON_AddStringArrayToObject(root,"anchor_names",pilot_trans_data->anchor_names,pilot_trans_data->anchor_names_num);
-    cJSON_AddStringArrayToObject(root,"anchor_times",pilot_trans_data->anchor_times,pilot_trans_data->anchor_times_num);
 
     // get json
     char* json = get_json_from_cjson(root);    
@@ -237,10 +219,6 @@ void end_anchor()
      */
     if(enableSend == 1)
     {
-        // http start time
-        double http_time = get_curr_timestamp();
-        store_string_for_num(http_time,pilot_trans_data->http_time);
-
         // send
         char* string_of_pilottransdata = pilottransdata_to_json();
         send_and_receive(string_of_pilottransdata);
@@ -332,21 +310,9 @@ static void cJSON_AddStringArrayToObject(cJSON*root,char* array_name,char** arra
 // store array num for pilottransdata
 static void store_array_num_for_pilottransdata()
 {
-    pilot_trans_data->anchor_names_num = anchor_time_num;
-    pilot_trans_data->anchor_times_num = anchor_time_num;
     pilot_trans_data->card_num = subquery_count;
     pilot_trans_data->subquery_num = subquery_count;
     return ;
-}
-
-// get timestamp such as 1617588512.123456
-static double get_curr_timestamp()
-{
-    double http_time;
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    http_time = tv.tv_sec + tv.tv_usec/1000000.0; 
-    return http_time;
 }
 
 // free all struct

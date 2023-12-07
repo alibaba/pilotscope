@@ -4691,24 +4691,14 @@ set_baserel_size_estimates(PlannerInfo *root, RelOptInfo *rel)
 	// get single-table subquery
 	if(subquery_card_pull_anchor!= NULL && subquery_card_pull_anchor->enable==1)
 	{
-		// start time
-		clock_t starttime = start_to_record_time();
-
 		// get subquery
 		get_single_rel(root, rel);
 		save_subquery_and_card(nrows);
-
-		// end time
-		subquerycardfetcher_time += end_time(starttime);
-
 	}
 
 	// set single-table subquery card
 	if(card_push_anchor != NULL && card_push_anchor->enable == 1)
 	{
-		// start time
-		clock_t starttime = start_to_record_time();
-
 		// get subquery
 		get_single_rel(root, rel);
 
@@ -4718,9 +4708,6 @@ set_baserel_size_estimates(PlannerInfo *root, RelOptInfo *rel)
 		{
 			nrows = atof(row_from_push_anchor);
 		}
-
-		// end time
-		cardreplace_time += end_time(starttime);
 	}
 	/** modification end **/
 
@@ -4999,23 +4986,14 @@ calc_joinrel_size_estimate(PlannerInfo *root,
 	// get multi-table subquery
 	if(subquery_card_pull_anchor != NULL && subquery_card_pull_anchor->enable==1)
 	{	
-		// start time
-		clock_t starttime = start_to_record_time();
-
 		// get subquery
 		get_join_rel(root, joinrel, outer_rel, inner_rel, sjinfo, restrictlist);
 		save_subquery_and_card(nrows);
-
-		// end time
-		subquerycardfetcher_time += end_time(starttime);
 	}
 
 	// set multi-table subquery card
 	if(card_push_anchor != NULL && card_push_anchor->enable == 1)
 	{
-		// start time
-		clock_t starttime = start_to_record_time();
-	
 		// get subquery
 		get_join_rel(root, joinrel, outer_rel, inner_rel, sjinfo, restrictlist);
 
@@ -5025,13 +5003,8 @@ calc_joinrel_size_estimate(PlannerInfo *root,
 		{
 			nrows = atof(row_from_push_anchor);
 		}
-
-		// end time
-		cardreplace_time += end_time(starttime);
 	}
 	/** modification end **/
-
-
 	return clamp_row_est(nrows);
 }
 

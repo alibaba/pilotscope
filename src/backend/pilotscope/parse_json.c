@@ -90,9 +90,6 @@ void parse_json(char* queryString)
         return;
     }
 
-    // start time
-    clock_t starttime = start_to_record_time();
-
     // init
     init_some_vars();
 
@@ -112,12 +109,6 @@ void parse_json(char* queryString)
         end_anchor();
         return;
     }
-
-    // end time
-    parser_time_ += end_time(starttime);
-
-    // store parsing time
-    store_string_for_num(parser_time_,pilot_trans_data->parser_time);
 }
 
 // enumerate each anchor

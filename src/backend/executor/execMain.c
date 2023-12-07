@@ -164,9 +164,6 @@ ExecutorStart(QueryDesc *queryDesc, int eflags)
      */
 	if (execution_time_pull_anchor != NULL && execution_time_pull_anchor->enable == 1)
 	{
-        // start time
-        clock_t starttime = start_to_record_time();
-
         // set timer
 		if (queryDesc->totaltime == NULL)
 		{
@@ -176,9 +173,6 @@ ExecutorStart(QueryDesc *queryDesc, int eflags)
 			queryDesc->totaltime = InstrAlloc(1, INSTRUMENT_ALL);
 			MemoryContextSwitchTo(oldcxt);
 		}
-
-        // end time
-        executiontimefetch_time += end_time(starttime);
 	}
 	/** modification end **/
 }
@@ -503,9 +497,6 @@ ExecutorEnd(QueryDesc *queryDesc)
      */
     if(execution_time_pull_anchor != NULL && execution_time_pull_anchor->enable == 1)
     {
-        // start time
-        clock_t starttime = start_to_record_time();
-
         // get execution time
 		InstrEndLoop(queryDesc->totaltime);
         double	totaltime = queryDesc->totaltime->total;
@@ -518,14 +509,6 @@ ExecutorEnd(QueryDesc *queryDesc)
         elog(INFO,"execution_time_pull_anchor done!");
     
         change_flag_for_anchor(execution_time_pull_anchor->enable);
-
-        // end time
-        executiontimefetch_time += end_time(starttime);
-
-        // add anchor time
-        // avoid redefinition cause by "#define"
-
-        add_anchor_time(execution_time_pull_anchor->name,executiontimefetch_time);
         
        /*
         * This is the second time we try to end anchors. Because just execution_time_pull_anchor and record_pull_anchor 

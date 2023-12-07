@@ -48,9 +48,4 @@
 // change flag for anchor
 #define change_flag_for_anchor(anchor_flag) anchor_flag = 0;\
          anchor_num--; 
-
-extern void add_anchor_time(char* anchor_name,double anchor_time);
-extern clock_t start_to_record_time();
-extern double end_time(clock_t starttime);
-
 #endif
