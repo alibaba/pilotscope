@@ -1,6 +1,7 @@
 import unittest
 
 from algorithm_examples.ExampleConfig import example_pg_bin, example_pgdata
+from pilotscope.DBController.BaseDBController import BaseDBController
 from pilotscope.Dataset.BaseDataset import BaseDataset
 from pilotscope.Dataset.ImdbDataset import ImdbDataset
 from pilotscope.Dataset.ImdbTinyDataset import ImdbTinyDataset
@@ -35,7 +36,7 @@ class MyTestCase(unittest.TestCase):
         ds = StatsDataset(DatabaseEnum.POSTGRESQL, created_db_name="test_stats", data_dir=None)
         ds.load_to_db(self.config)
         # the config will be modified in load_to_db, so we need to get controller after that
-        db_controller = DBControllerFactory.get_db_controller(self.config)
+        db_controller: BaseDBController = DBControllerFactory.get_db_controller(self.config)
         for table in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:
             self.assertTrue(db_controller.exist_table(table))
             db_controller.drop_table_if_exist(table)
@@ -43,7 +44,7 @@ class MyTestCase(unittest.TestCase):
     def test_load_to_db_stats_tiny_from_local(self):
         ds = StatsTinyDataset(DatabaseEnum.POSTGRESQL, created_db_name="test_stats_tiny")
         ds.load_to_db(self.config)
-        db_controller = DBControllerFactory.get_db_controller(self.config)
+        db_controller: BaseDBController = DBControllerFactory.get_db_controller(self.config)
         for table in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:
             self.assertTrue(db_controller.exist_table(table))
             db_controller.drop_table_if_exist(table)
@@ -54,7 +55,7 @@ class MyTestCase(unittest.TestCase):
         self.config.enable_deep_control_remote(example_pg_bin, example_pgdata, "root", "root")
         ds = StatsTinyDataset(DatabaseEnum.POSTGRESQL, created_db_name="stats_tiny_remote")
         ds.load_to_db(self.config)
-        db_controller = DBControllerFactory.get_db_controller(self.config)
+        db_controller: BaseDBController = DBControllerFactory.get_db_controller(self.config)
         for table in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:
             self.assertTrue(db_controller.exist_table(table))
             db_controller.drop_table_if_exist(table)

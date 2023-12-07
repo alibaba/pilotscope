@@ -64,7 +64,7 @@ class PostgreSQLController(BaseDBController):
     def execute(self, sql, fetch=False, fetch_column_name=False):
         row = None
         try:
-            self.connect_if_loss()
+            self._connect_if_loss()
             conn = self._get_connection()
             result = conn.execute(text(sql) if isinstance(sql, str) else sql)
             if fetch:
@@ -279,7 +279,7 @@ class PostgreSQLController(BaseDBController):
             else:
                 raise DatabaseCrashException
         for instance in type(self).instances:
-            instance.connect_if_loss()
+            instance._connect_if_loss()
 
     def status(self):
         """

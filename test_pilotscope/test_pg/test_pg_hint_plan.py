@@ -31,7 +31,7 @@ class MyTestCase(unittest.TestCase):
         print(result.physical_plan)
         
         self.data_interactor.push_card(larger_card)
-        self.data_interactor.push_comment("/*+SeqScan(b) SeqScan(u) SeqScan(c) SeqScan(v)*/")
+        self.data_interactor.push_pg_hint_comment("/*+SeqScan(b) SeqScan(u) SeqScan(c) SeqScan(v)*/")
         self.data_interactor.pull_physical_plan()
         self.data_interactor.pull_estimated_cost()
         result = self.data_interactor.execute(self.sql)

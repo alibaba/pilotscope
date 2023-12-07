@@ -27,7 +27,7 @@ class BaseDBController(ABC):
         """
         self.engine = self._create_engine()
         self.metadata = MetaData()
-        self.connect_if_loss()
+        self._connect_if_loss()
 
     def _create_engine(self):
         """
@@ -60,7 +60,7 @@ class BaseDBController(ABC):
         """
         return self.connection_thread.conn
 
-    def connect_if_loss(self):
+    def _connect_if_loss(self):
         """
         If the connection is lost, establish a new connection to the database.
 
@@ -68,7 +68,7 @@ class BaseDBController(ABC):
         if not self._is_connect():
             self.connection_thread.conn = self.engine.connect()
 
-    def reset(self):
+    def _reset(self):
         """
         Reset the database connection.
         This function closes the current connection, recreates the pool, and establishes a new connection
@@ -230,7 +230,7 @@ class BaseDBController(ABC):
         :param enable_autoincrement_id_key: If it is True, the primary key will be autoincrement. It is only meaningful when primary_key_column is a string.
         :type enable_autoincrement_id_key: bool, optional
         """
-        self.connect_if_loss()
+        self._connect_if_loss()
         if primary_key_column is not None and primary_key_column not in column_2_value:
             raise RuntimeError("the primary key column {} is not in column_2_value".format(primary_key_column))
 
@@ -294,7 +294,7 @@ class BaseDBController(ABC):
         :param column_2_value: a dict where the keys are column names and the values are the values to be inserted
         :type column_2_value: dict
         """
-        self.connect_if_loss()
+        self._connect_if_loss()
         table = Table(table_name, self.metadata, autoload_with=self.engine)
         self.execute(table.insert().values(column_2_value))
 

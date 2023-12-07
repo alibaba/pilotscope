@@ -25,7 +25,7 @@ class MyTestCase(unittest.TestCase):
         cls.db_controller.insert(cls.test_table, {"col_1": 1, "col_2": 1})
 
     def test_connection(self):
-        self.db_controller.connect_if_loss()
+        self.db_controller._connect_if_loss()
         print("connection ok")
 
     def test_create_table(self):

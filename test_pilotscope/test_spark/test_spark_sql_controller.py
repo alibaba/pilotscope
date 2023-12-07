@@ -42,7 +42,7 @@ class MyTestCase(unittest.TestCase):
         self.sql = "select * from badges limit 10;"
         self.table = "badges"
         self.column = "date"
-        self.db_controller.connect_if_loss()
+        self.db_controller._connect_if_loss()
         print("1" + str(self.db_controller.name_2_table))
 
     def test_get_hint_sql(self):

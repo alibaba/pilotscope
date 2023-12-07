@@ -24,7 +24,7 @@ def p_error_calc(config:PilotConfig, sql, estimated_cards:dict, true_cards = Non
         res = data_interactor.execute(sql)
         true_card_plan_hint = get_pg_hints(res.physical_plan)
         
-        data_interactor.push_comment(true_card_plan_hint)
+        data_interactor.push_pg_hint_comment(true_card_plan_hint)
         data_interactor.push_card(true_cards)
         data_interactor.pull_estimated_cost()
         data_interactor.pull_physical_plan() # 
@@ -41,7 +41,7 @@ def p_error_calc(config:PilotConfig, sql, estimated_cards:dict, true_cards = Non
         # print(json.dumps(res.physical_plan),res.estimated_cost,"\n"+"-"*100) #
         # print(res.subquery_2_card)
         
-        data_interactor.push_comment(est_card_plan_hints)
+        data_interactor.push_pg_hint_comment(est_card_plan_hints)
         data_interactor.push_card(true_cards)
         data_interactor.pull_estimated_cost()
         data_interactor.pull_physical_plan() # 

@@ -66,13 +66,15 @@ class PilotDataInteractor:
         anchor.key_2_value_for_knob = key_2_value_for_knob
         self._anchor_to_handlers[AnchorEnum.KNOB_PUSH_ANCHOR] = anchor
 
-    def push_comment(self, comment_str):
+    def push_pg_hint_comment(self, comment_str):
+        if self.config.db_type != DatabaseEnum.POSTGRESQL:
+            raise NotImplementedError("PG Hint only is implemented for PostgresSQL database")
         anchor: CommentPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
                                                                              AnchorEnum.COMMENT_PUSH_ANCHOR)
         anchor.comment_str = comment_str
         self._anchor_to_handlers[AnchorEnum.COMMENT_PUSH_ANCHOR] = anchor
 
-    def push_cost(self, subplan_2_cost: dict):
+    def push_subplan_cost(self, subplan_2_cost: dict):
         """
         Assigns cost information to subplans and registers the cost push handler.
 
@@ -84,11 +86,11 @@ class PilotDataInteractor:
         """
         raise NotImplementedError
 
-    def push_rule(self):
+    def _push_rule(self):
         """
         Placeholder method for pushing rule information.
         """
-        pass
+        raise NotImplementedError
 
     def push_index(self, indexes: List[Index], drop_other=True):
         """
@@ -106,12 +108,6 @@ class PilotDataInteractor:
         self._anchor_to_handlers[AnchorEnum.INDEX_PUSH_ANCHOR] = anchor
         pass
 
-    def pull_hint(self):
-        """
-        Placeholder method for pulling hint information.
-        """
-        pass
-
     def pull_subquery_card(self):
         """
         Retrieves the subquery card pull handler and registers it in the handlers dictionary.
@@ -123,11 +119,11 @@ class PilotDataInteractor:
             self.db_controller.analyze_all_table_stats()
             self.spark_analyzed = True
 
-    def pull_rewrite_sql(self):
+    def _pull_rewrite_sql(self):
         """
         Placeholder method for pulling SQL rewrite information.
         """
-        pass
+        raise NotImplementedError
 
     def pull_physical_plan(self):
         """
@@ -159,13 +155,13 @@ class PilotDataInteractor:
                                                                                  AnchorEnum.BUFFERCACHE_PULL_ANCHOR)
         self._anchor_to_handlers[AnchorEnum.BUFFERCACHE_PULL_ANCHOR] = anchor
 
-    def pull_real_node_cost(self):
+    def _pull_real_node_cost(self):
         """
         Placeholder method for pulling real node cost information.
         """
         pass
 
-    def pull_real_node_card(self):
+    def _pull_real_node_card(self):
         """
         Placeholder method for pulling real node cardinality information.
         """
@@ -223,7 +219,7 @@ class PilotDataInteractor:
                 futures.append(future)
             results = wait_futures_results(futures)
         if is_reset:
-            self.reset()
+            self._reset()
 
         return results
 
@@ -260,7 +256,7 @@ class PilotDataInteractor:
             # wait to fetch data
             if self._is_need_to_receive_data(self._anchor_to_handlers):
                 receive_data = self._data_fetcher.block_for_data_from_db()
-                data: PilotTransData = PilotTransData.parse_2_instance(receive_data, origin_sql)
+                data: PilotTransData = PilotTransData._parse_2_instance(receive_data, origin_sql)
                 # fetch data from outer
             else:
                 data = PilotTransData()
@@ -277,7 +273,7 @@ class PilotDataInteractor:
 
             # clear state
             if is_reset:
-                self.reset()
+                self._reset()
             return data
 
         except (DBStatementTimeoutException, InteractorReceiveTimeoutException) as e:
@@ -286,7 +282,7 @@ class PilotDataInteractor:
         except Exception as e:
             raise e
 
-    def reset(self):
+    def _reset(self):
         """
         Resets the internal state of the object.
         This method clears the anchor_to_handlers dictionary to remove all handler
@@ -342,7 +338,7 @@ class PilotDataInteractor:
     def _reset_connection(self, *args, **kwargs):
         # todo
         if self.config.db_type != DatabaseEnum.SPARK:
-            self.db_controller.reset()
+            self.db_controller._reset()
 
     def _execute_sqls(self, comment_sql, is_execute_comment_sql):
         handlers = extract_handlers(self._anchor_to_handlers.values(), extract_pull_anchor=False)

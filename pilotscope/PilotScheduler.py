@@ -66,9 +66,9 @@ class PilotScheduler:
         if pull_physical_plan:
             self.data_interactor.pull_physical_plan()
         if pull_real_node_card:
-            self.data_interactor.pull_real_node_card()
+            self.data_interactor._pull_real_node_card()
         if pull_real_node_cost:
-            self.data_interactor.pull_real_node_cost()
+            self.data_interactor._pull_real_node_cost()
         if pull_subquery_2_cards:
             self.data_interactor.pull_subquery_card()
         if pull_buffer_cache:

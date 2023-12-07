@@ -16,6 +16,7 @@ class DataManager:
     """
     This class provides methods to interact with a database to store and retrieve data.
     """
+
     def __init__(self, config: PilotConfig) -> None:
         self.config = deepcopy(config)
 
@@ -28,17 +29,43 @@ class DataManager:
 
         self.table_visited_tracker = TableVisitedTracker(self.db_controller)
 
-    def exist_table(self, table_name) -> bool:
+    def read_all(self, table_name):
         """
-        Check if a table exists in the database.
+        Read all rows from a given table.
 
-        :param table_name: The name of the table to check.
+        :param table_name: The name of the table to read from.
         :type table_name: str
 
-        :return: True if the table exists, False otherwise.
-        :rtype: bool
+        :return: All rows in the specified table as a pandas DataFrame.
+        :rtype: pandas.DataFrame
         """
-        return self.db_controller.exist_table(table_name)
+        query = "select * from {}".format(table_name)
+        data = DataFrame(self.db_controller.execute(query, fetch=True))
+
+        self._update_visited_record(table_name, data)
+        return data
+
+    def read_update(self, table_name):
+        """
+        Read and update the visited record of a given table.
+
+        :param table_name: The name of the table to read and update.
+        :type table_name: str
+
+        :return: The new rows in the specified table since the last visit as a pandas DataFrame.
+        :rtype: pandas.DataFrame
+        """
+        if self.config.db_type == DatabaseEnum.SPARK:
+            raise RuntimeError("spark not support read_update")
+
+        last_id = self.table_visited_tracker.read_data_visit_id(table_name)
+        last_id = -1 if last_id is None else last_id
+
+        query = "select * from {} where {} > {}".format(table_name, self.table_primary_key, last_id)
+        data = DataFrame(self.db_controller.execute(query, fetch=True))
+
+        self._update_visited_record(table_name, data)
+        return data
 
     def save_data(self, table_name, column_2_value):
         """
@@ -51,19 +78,8 @@ class DataManager:
         """
         if len(column_2_value) > 0:
             column_2_value = self._convert_data_type(column_2_value)
-            self.create_table_if_absence(table_name, column_2_value)
+            self._create_table_if_absence(table_name, column_2_value)
             self.db_controller.insert(table_name, column_2_value)
-
-    def drop_table_if_exist(self, table_name):
-        """
-        Drop the table if it exists.
-
-        :param table_name: The name of the table to be dropped.
-        :type table_name: str
-        """  
-        if self.exist_table(table_name):
-            self.db_controller.drop_table_if_exist(table_name)
-            self.table_visited_tracker.delete_visited_record(table_name)
 
     def save_data_batch(self, table_name, column_2_value_list):
         """
@@ -77,61 +93,22 @@ class DataManager:
 
         :return: None
         :rtype: NoneType
-        """ 
+        """
         for i, column_2_value in enumerate(column_2_value_list):
             self.save_data(table_name, column_2_value)
 
-    def get_table_row_count(self, table_name):
+    def remove_table_and_tracker(self, table_name):
         """
-        Get the number of rows in a given table.
+        Drop the table if it exists.
 
-        :param table_name: The name of the table whose row count is needed.
+        :param table_name: The name of the table to be dropped.
         :type table_name: str
-
-        :return: The number of rows in the given table.
-        :rtype: int
-        """  
-        return self.db_controller.get_table_row_count(table_name)
-
-    def read_all(self, table_name):
         """
-        Read all rows from a given table.
+        if self.db_controller.exist_table(table_name):
+            self.db_controller.drop_table_if_exist(table_name)
+            self.table_visited_tracker.delete_visited_record(table_name)
 
-        :param table_name: The name of the table to read from.
-        :type table_name: str
-        
-        :return: All rows in the specified table as a pandas DataFrame.
-        :rtype: pandas.DataFrame
-        """  
-        query = "select * from {}".format(table_name)
-        data = DataFrame(self.db_controller.execute(query, fetch=True))
-
-        self._update_visited_record(table_name, data)
-        return data
-
-    def read_update(self, table_name):
-        """
-        Read and update the visited record of a given table.
-
-        :param table_name: The name of the table to read and update.
-        :type table_name: str
-        
-        :return: The new rows in the specified table since the last visit as a pandas DataFrame.
-        :rtype: pandas.DataFrame
-        """  
-        if self.config.db_type == DatabaseEnum.SPARK:
-            raise RuntimeError("spark not support read_update")
-
-        last_id = self.table_visited_tracker.read_data_visit_id(table_name)
-        last_id = -1 if last_id is None else last_id
-
-        query = "select * from {} where {} > {}".format(table_name, self.table_primary_key, last_id)
-        data = DataFrame(self.db_controller.execute(query, fetch=True))
-
-        self._update_visited_record(table_name, data)
-        return data
-
-    def create_table_if_absence(self, table_name, column_2_value):
+    def _create_table_if_absence(self, table_name, column_2_value):
         """
         Create a table if it does not exist.
 
@@ -140,7 +117,7 @@ class DataManager:
 
         :param column_2_value: A dictionary representing the columns and their default values for the new table, e.g. {'id': 0, 'name': '', 'email': ''}
         :type column_2_value: Dict[str, Any]
-        """   
+        """
         if self.config.db_type != DatabaseEnum.SPARK:
             new_column_2_value = dict(column_2_value)
             new_column_2_value[self.table_primary_key] = 0

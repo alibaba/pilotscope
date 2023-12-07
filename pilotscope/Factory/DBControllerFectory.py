@@ -18,7 +18,7 @@ class DBControllerFactory:
 
             if identifier in DBControllerFactory.identifier_2_db_controller:
                 db_controller: BaseDBController = cls.identifier_2_db_controller[identifier]
-                db_controller.connect_if_loss()
+                db_controller._connect_if_loss()
                 return db_controller
 
             if config.db_type == DatabaseEnum.POSTGRESQL:

@@ -273,7 +273,7 @@ class SparkSQLController(BaseDBController):
     def _db_init(self):
         self.name_2_table = {}
         self.engine: SparkEngine = self._create_engine()
-        self.connect_if_loss()
+        self._connect_if_loss()
 
     def _create_conn_str(self):
         return ""
@@ -303,7 +303,7 @@ class SparkSQLController(BaseDBController):
         for table_name in all_user_created_table_names:
             self.load_table_if_exists_in_datasource(table_name)
 
-    def connect_if_loss(self):
+    def _connect_if_loss(self):
         if not self._is_connect():
             self.connection_thread.conn = self.engine.connect()
             all_user_created_table_names = self.engine.get_all_table_names_in_datasource()
@@ -379,7 +379,7 @@ class SparkSQLController(BaseDBController):
 
     def create_table_if_absences(self, table_name, column_2_value, primary_key_column=None,
                                  enable_autoincrement_id_key=True):
-        self.connect_if_loss()
+        self._connect_if_loss()
         if primary_key_column is not None:
             logger.warning(
                 "[create_table_if_absences] Spark SQL does not support specifying primary key while creating table.")
@@ -420,7 +420,7 @@ class SparkSQLController(BaseDBController):
     def execute(self, sql, fetch=False, fetch_column_name=False) -> Union[pandas.DataFrame, DataFrame]:
         row = None
         try:
-            self.connect_if_loss()
+            self._connect_if_loss()
             df = self._get_connection().sql(sql)
             row = df.toPandas()
             if not fetch:
