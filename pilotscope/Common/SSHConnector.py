@@ -25,8 +25,7 @@ class SSHConnector:
             
     def remote_exec_cmd(self, cmd):
         _, std_out, std_err = self.client.exec_command(cmd)
-        print("remote stdout:", std_out.readlines())
-        print("remote stderr:", std_err.readlines())
+        return std_out.readlines(), std_err.readlines()
 
     def close(self):
         self.client.close()

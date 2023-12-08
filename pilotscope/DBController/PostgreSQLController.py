@@ -8,7 +8,7 @@ from pilotscope.Common.Index import Index
 from pilotscope.DBController.BaseDBController import BaseDBController
 from pilotscope.Exception.Exception import DBStatementTimeoutException, DatabaseCrashException, DatabaseStartException
 from pilotscope.PilotConfig import PostgreSQLConfig
-
+from pilotscope.Common.SSHConnector import SSHConnector
 
 class PostgreSQLController(BaseDBController):
     instances = set()
@@ -251,8 +251,15 @@ class PostgreSQLController(BaseDBController):
 
     # switch user and run
     def _surun(self, cmd):
-        return os.system("su {} -c '{}'".format(self.config.db_user, cmd))
-
+        su_and_cmd = "su {} -c '{}'".format(self.config.db_user, cmd)
+        if self.config.is_local:
+            return os.system(su_and_cmd)
+        else:
+            ssh_conn = SSHConnector(self.config.db_host, self.config.db_host_user, self.config.db_host_pwd, self.config.db_host_port)
+            ssh_conn.connect()
+            ssh_conn.remote_exec_cmd(su_and_cmd)
+            ssh_conn.close()
+        
     def shutdown(self):
         """Shutdown the local DBMS
         """
@@ -270,11 +277,11 @@ class PostgreSQLController(BaseDBController):
         :raises DatabaseStartException
         :raises DatabaseCrashException
         """
-        res = self._surun("{} start -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.pgdata))
-        if res != 0:
+        self._surun("{} start -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.pgdata))
+        if "server is running" not in self.status():
             self.recover_config()
-            res = self._surun("{} start -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.pgdata))
-            if res == 0:
+            self._surun("{} start -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.pgdata))
+            if "server is running" not in self.status():
                 raise DatabaseStartException
             else:
                 raise DatabaseCrashException
@@ -289,8 +296,17 @@ class PostgreSQLController(BaseDBController):
                 about the PostgreSQL server's status.
         :rtype: str
         """
-        res = os.popen("su {} -c '{} status -D {}'".format(self.config.db_user, self.config.pg_ctl, self.config.pgdata))
-        return res.read()
+        check_db_runing_cmd = "su {} -c '{} status -D {}'".format(self.config.db_user, self.config.pg_ctl, self.config.pgdata)
+        if self.config.is_local:
+            res = os.popen(check_db_runing_cmd)
+            return res.read()
+        else:
+            ssh_conn = SSHConnector(self.config.db_host, self.config.db_host_user, self.config.db_host_pwd, self.config.db_host_port)
+            ssh_conn.connect()
+            res_out, res_err = ssh_conn.remote_exec_cmd(check_db_runing_cmd)
+            ssh_conn.close()
+            return "{},{}".format(res_out, res_err)
+            
 
     def write_knob_to_file(self, knobs: dict):
         """
