@@ -101,7 +101,8 @@
 #include "pilotscope/subplanquery.h"
 #include "pilotscope/pilotscope_config.h"
 #include "pilotscope/anchor2struct.h"
-#include "pilotscope/hashtable.h"
+/** temporarily remove hashtable **/
+//#include "pilotscope/hashtable.h"
 #include "pilotscope/utils.h"
 #include "time.h"
 /** modification end **/
@@ -4699,6 +4700,10 @@ set_baserel_size_estimates(PlannerInfo *root, RelOptInfo *rel)
 	// set single-table subquery card
 	if(card_push_anchor != NULL && card_push_anchor->enable == 1)
 	{
+		
+		nrows = get_next_card_from_push_anchor();
+		/** temporarily remove hashtable **/
+		/*
 		// get subquery
 		get_single_rel(root, rel);
 
@@ -4708,6 +4713,7 @@ set_baserel_size_estimates(PlannerInfo *root, RelOptInfo *rel)
 		{
 			nrows = atof(row_from_push_anchor);
 		}
+		*/
 	}
 	/** modification end **/
 
@@ -4994,6 +5000,9 @@ calc_joinrel_size_estimate(PlannerInfo *root,
 	// set multi-table subquery card
 	if(card_push_anchor != NULL && card_push_anchor->enable == 1)
 	{
+		nrows = get_next_card_from_push_anchor();
+		/** temporarily remove hashtable **/
+		/*
 		// get subquery
 		get_join_rel(root, joinrel, outer_rel, inner_rel, sjinfo, restrictlist);
 
@@ -5003,6 +5012,7 @@ calc_joinrel_size_estimate(PlannerInfo *root,
 		{
 			nrows = atof(row_from_push_anchor);
 		}
+		*/
 	}
 	/** modification end **/
 	return clamp_row_est(nrows);

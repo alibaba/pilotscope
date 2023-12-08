@@ -145,7 +145,8 @@ static void parse_one_anchor(char* anchorname,char* anchor_json)
             break;
         case CARD_PUSH_ANCHOR:
             anchor_handler(anchor_json,card_push_anchor,CardPushAnchor,Card_Replace_Anchor_ref_tbl);
-            store_aimodel_subquery2card();
+            /** temporarily remove hashtable **/
+            // store_aimodel_subquery2card();
             break;
         case EXECUTION_TIME_PULL_ANCHOR:
             anchor_handler(anchor_json,execution_time_pull_anchor,ExecutionTimePullAnchor,Execution_Time_Fetch_Anchor_ref_tbl);

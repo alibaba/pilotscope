@@ -95,6 +95,7 @@ int enableSend;
 int enablePilotscope;
 int port;
 char* host;
+int push_card_cnt;
 
 /*
  * Define some reflection tables(refer to 'cson'). We need to state every varibles in the struct.
@@ -150,6 +151,7 @@ reflect_item_t Record_Fetch_Anchor_ref_tbl[] = {
     subquery_count                  = 0;
     host                            = NULL;
     port                            = 8888;
+    push_card_cnt                   = 0;
  }
 
 /*
@@ -253,7 +255,8 @@ void end_anchor()
  * Note that the size of table are advised to set as  the square of the card_num in order to
  * avoid the hash confict.
  */
-
+/** temporarily remove hashtable **/
+/*
 // store_aimodel_subquery2card
  void store_aimodel_subquery2card()
 {
@@ -282,14 +285,21 @@ char* get_card_from_push_anchor(Hashtable* table, const char* key)
         return card;
     }
 }
+*/
 
+double get_next_card_from_push_anchor() {
+    return card_push_anchor->card[push_card_cnt++];
+}
+
+/** temporarily remove hashtable **/
+/*
 // put_aimodel_subquery2card
 static void put_aimodel_subquery2card(Hashtable* table, const char* key, const char* value)
 {
     put(table, key, value);
     
 }
-
+*/
 // add string array to cjson object
 static void cJSON_AddStringArrayToObject(cJSON*root,char* array_name,char** array,int array_size)
 {
@@ -323,6 +333,7 @@ static void free_all_struct()
     free_palloc(card_push_anchor);
     free_palloc(execution_time_pull_anchor);
     free_palloc(record_pull_anchor);
-    free_palloc(table);
+    /** temporarily remove hashtable **/
+    //free_palloc(table);
     return;
 }

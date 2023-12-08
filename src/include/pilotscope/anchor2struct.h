@@ -15,8 +15,8 @@
 #include "stdlib.h"
 #include <stdbool.h>
 #include "time.h"
-
-#include "hashtable.h"
+/** temporarily remove hashtable **/
+//#include "hashtable.h"
 #include "cson.h"
 #include "cJSON.h"
 #include "cson.h"
@@ -100,11 +100,16 @@ extern int subquery_count;
 extern int port;
 extern char* host;
 extern int enableSend;
+extern int push_card_cnt;
 
 // function
 extern void init_some_vars();
 extern void end_anchor();
+/** temporarily remove hashtable **/
+/*
 extern char* get_card_from_push_anchor(Hashtable* table, const char* key);
+*/
+extern double get_next_card_from_push_anchor();
 extern void store_aimodel_subquery2card();
 
 #endif 

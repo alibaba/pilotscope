@@ -11,6 +11,9 @@
  * -------------------------------------------------------------------------
  */
 
+/** temporarily remove hashtable **/
+/* Temporarily don't use hash table. Getting cards by index instead by key.
+
 #include "pilotscope/hashtable.h"
 
 int table_size = 1;
@@ -86,3 +89,5 @@ char* get(Hashtable* table, const char* key)
     }
     return NULL;
 }
+
+*/
