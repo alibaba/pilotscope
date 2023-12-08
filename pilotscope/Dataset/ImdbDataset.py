@@ -28,4 +28,4 @@ class ImdbDataset(BaseDataset):
         self.download_urls = self.data_location_dict[use_db_type]
 
     def test_sql_fast(self):
-        return self._get_sql(os.path.join(self.now_path, "imdb_less_than_2_sec.txt"))
+        return self._get_sql(os.path.join(self.now_path, "imdb_fast_sql.txt"))

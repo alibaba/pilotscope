@@ -23,7 +23,7 @@ class TpcdsDataset(BaseDataset):
         self.download_urls = self.data_location_dict[use_db_type]
 
     def test_sql_fast(self):
-        return self._get_sql(os.path.join(self.now_path, "tpcds_less_than_0_point_2_sec.txt"))
+        return self._get_sql(os.path.join(self.now_path, "tpcds_fast_sql.txt"))
 
     def load_to_db(self, db_controller: BaseDBController):
         raise NotImplementedError
