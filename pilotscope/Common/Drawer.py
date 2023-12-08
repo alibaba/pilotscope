@@ -13,7 +13,9 @@ class Drawer:
         for vs in name_2_values.values():
             values.append(sum_list(vs) / len(vs) if hasattr(vs, '__iter__') else vs)
 
-        plt.bar(names, values)
+        plt.figure(figsize=(6, 4))
+        plt.bar(names, values, width=0.2)  # 调整条形的宽度
+        plt.xlim(-0.5, 0.5)
 
         # 设置x轴和y轴标签
         plt.xlabel(x_title)
@@ -22,6 +24,7 @@ class Drawer:
             plt.xticks(rotation=45)
         plt.subplots_adjust(bottom=0.2)
         # 保存图像
+        plt.savefig(file_name+'.png')
         plt.show()
 
     @classmethod

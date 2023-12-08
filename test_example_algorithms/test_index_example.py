@@ -27,11 +27,11 @@ class IndexTest(unittest.TestCase):
             # sqls = []
             for i, sql in enumerate(sqls):
                 print("current is the {}-th sql, and it is {}".format(i, sql))
-                TimeStatistic.start(ExperimentTimeEnum.SQL_END_TO_END)
+                TimeStatistic.start('Index')
                 scheduler.execute(sql)
-                TimeStatistic.end(ExperimentTimeEnum.SQL_END_TO_END)
+                TimeStatistic.end('Index')
             name_2_value = TimeStatistic.get_sum_data()
-            Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db), is_rotation=True)
+            Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db), is_rotation=False)
         finally:
             pilotscope_exit()
 
