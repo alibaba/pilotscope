@@ -1,5 +1,7 @@
 import sys
 
+from algorithm_examples.KnobTuning.SparkKnobPresetScheduler import get_knob_spark_preset_scheduler
+
 sys.path.append("../")
 from pilotscope.Common.TimeStatistic import TimeStatistic
 from algorithm_examples.ExampleConfig import get_time_statistic_img_path
@@ -11,7 +13,6 @@ import unittest
 from pilotscope.PilotConfig import PilotConfig, SparkConfig
 from algorithm_examples.utils import load_test_sql
 
-from algorithm_examples.KnobTuning.KnobPresetScheduler import get_knob_spark_preset_scheduler
 
 
 class KnobTest(unittest.TestCase):

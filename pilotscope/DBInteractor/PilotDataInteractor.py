@@ -19,6 +19,7 @@ from pilotscope.PilotEnum import FetchMethod, DatabaseEnum
 from pilotscope.PilotTransData import PilotTransData
 
 
+# noinspection PyProtectedMember
 class PilotDataInteractor:
     """The core module for interacting with DBMS and handling push-and-pull operators
     """

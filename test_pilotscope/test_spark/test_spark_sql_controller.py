@@ -1,14 +1,7 @@
-import sys
-import os
 import unittest
-import json
 
-from pilotscope.DBController.SparkSQLController import SparkSQLController, SparkConfig, SUCCESS, FAILURE, SparkSQLDataSourceEnum
+from pilotscope.DBController.SparkSQLController import SparkSQLController, SparkConfig, SparkSQLDataSourceEnum
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
-from pilotscope.PilotConfig import PilotConfig
-from pilotscope.PilotEnum import DatabaseEnum
-from pilotscope.Common.Index import Index
-from pyspark.sql import SparkSession
 
 
 class MyTestCase(unittest.TestCase):

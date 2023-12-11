@@ -2,6 +2,8 @@ import sys
 import logging
 import readline
 from functools import wraps
+
+from algorithm_examples.KnobTuning.SparkKnobPresetScheduler import get_knob_spark_preset_scheduler
 from pilotscope.DBController.SparkSQLController import SparkSQLDataSourceEnum
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig, SparkConfig
@@ -11,7 +13,7 @@ import traceback
 
 from algorithm_examples.Mscn.MscnPresetScheduler import get_mscn_preset_scheduler
 from algorithm_examples.Index.IndexPresetScheduler import get_index_preset_scheduler
-from algorithm_examples.KnobTuning.KnobPresetScheduler import get_knob_preset_scheduler, get_knob_spark_preset_scheduler
+from algorithm_examples.KnobTuning.KnobPresetScheduler import get_knob_preset_scheduler
 from algorithm_examples.Lero.LeroPresetScheduler import get_lero_preset_scheduler, get_lero_dynamic_preset_scheduler
 
 temp_log_file = None
