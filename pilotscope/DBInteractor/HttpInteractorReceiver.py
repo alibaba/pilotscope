@@ -96,3 +96,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b'OK')
+
+    # Overload log_message of BaseHTTPRequestHandler to mute log output
+    def log_message(self, format, *args):
+        pass
