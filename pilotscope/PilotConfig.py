@@ -62,6 +62,7 @@ class PostgreSQLConfig(PilotConfig):
     def enable_deep_control_local(self, pg_bin_path, pgdata):
         """Set value for local PostgreSQL. They influence the start, stop, changing config file, etc.
             If you do not need these functions, it is not necessary to set these values.
+        
         :param pg_bin_path: the directory of binary file of postgresql, i.e. the path of 'postgres', 'pg_ctl' etc.
         :type pg_bin_path: str
         :param pgdata: location of the database storage area
@@ -81,6 +82,7 @@ class PostgreSQLConfig(PilotConfig):
     def enable_deep_control_remote(self, pg_bin_path, pgdata, db_host_user, db_host_pwd, db_host_ssh_port=22):
         """Set value for local PostgreSQL. They influence the start, stop, changing config file, etc.
             If you do not need these functions, it is not necessary to set these values.
+        
         :param db_host_ssh_port:
         :param db_host_user:
         :param db_host_pwd:

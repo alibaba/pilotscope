@@ -25,7 +25,7 @@ class StatsTinyDataset(BaseDataset):
         self.data_file = self.data_location_dict[use_db_type]
 
     def test_sql_fast(self):
-        return self._get_sql(os.path.join(self.now_path, "stats_less_than_2_sec_time2int.txt"))
+        return self._get_sql(os.path.join(self.now_path, "stats_fast_sql_time2int.txt"))
 
     def load_to_db(self, config: PilotConfig):  # Overload
         config.db = self.created_db_name

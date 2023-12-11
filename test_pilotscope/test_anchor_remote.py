@@ -14,6 +14,7 @@ class TestAnchorRemote(TestAnchorLocal):
         self.config.db = "stats_tiny"
         self.config.enable_deep_control_remote(example_pg_bin, example_pgdata, "root", "root")
         self.data_interactor = PilotDataInteractor(self.config)
+        self.db_controller = self.data_interactor.db_controller
 
     def test_fetch_card(self):
         super().test_fetch_card()
@@ -21,6 +22,12 @@ class TestAnchorRemote(TestAnchorLocal):
     def test_anchor_order(self):
         super().test_anchor_order()
 
+    def test_shutdown(self):
+        self.db_controller.shutdown()
+        res = self.db_controller.status()
+        self.assertTrue("no server running" in res)
+        self.db_controller.start()
+        self.assertTrue("server is running" in self.db_controller.status())
 
 if __name__ == "__main__":
     unittest.main()

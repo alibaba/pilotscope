@@ -7,6 +7,7 @@ from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
 from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.PilotEnum import DatabaseEnum
+from pilotscope.PilotSysConfig import PilotSysConfig
 
 
 class MyTestCase(unittest.TestCase):
@@ -15,6 +16,8 @@ class MyTestCase(unittest.TestCase):
         super().__init__(methodName)
         self.config = PostgreSQLConfig()
         self.data_manager = DataManager(self.config)
+        self.config.db = PilotSysConfig.USER_DATA_DB_NAME
+        # DataManager always connects to PilotSysConfig.USER_DATA_DB_NAME
         self.test_table_name = "data_manager_test_table"
         self.db_controller: PostgreSQLController = DBControllerFactory.get_db_controller(self.config)
 

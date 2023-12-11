@@ -186,7 +186,7 @@ class SparkIO:
             self.reader = self.reader.option("dbtable", table_name)
         elif query is not None:
             self.reader = self.reader.option("query", query)
-        return self.reader.load_model()
+        return self.reader.load()
 
     def write(self, table_or_rows: Union[SparkTable, DataFrame], mode: SparkIOWriteModeEnum, target_table_name=None):
         if isinstance(table_or_rows, SparkTable):
@@ -218,8 +218,7 @@ class SparkIO:
 
     def get_all_table_names_in_datasource(self) -> np.ndarray:
         return self.read(table_name="information_schema.tables") \
-            .filter("table_schema != 'pg_catalog'") \
-            .filter("table_schema != 'information_schema'").toPandas()["table_name"].values
+            .filter("table_schema == 'public'").toPandas()["table_name"].values
 
 
 class SparkEngine:
