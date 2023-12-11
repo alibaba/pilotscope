@@ -4708,6 +4708,9 @@ set_baserel_size_estimates(PlannerInfo *root, RelOptInfo *rel)
 		{
 			nrows = atof(row_from_push_anchor);
 		}
+		else{
+			elog(ERROR, "Can not find the corresponding sub-plan query in push anchor");
+		}
 	}
 	/** modification end **/
 
@@ -5002,6 +5005,9 @@ calc_joinrel_size_estimate(PlannerInfo *root,
 		if(row_from_push_anchor != NULL)
 		{
 			nrows = atof(row_from_push_anchor);
+		}
+		else{
+			elog(ERROR, "Can not find the corresponding sub-plan query in push anchor");
 		}
 	}
 	/** modification end **/
