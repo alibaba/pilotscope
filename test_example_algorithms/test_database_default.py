@@ -11,12 +11,10 @@ from algorithm_examples.ExampleConfig import get_time_statistic_img_path
 import unittest
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.Common.Util import pilotscope_exit
-from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig, SparkConfig
 from pilotscope.PilotEnum import *
 from pilotscope.PilotScheduler import PilotScheduler
 from algorithm_examples.utils import load_test_sql
-from algorithm_examples.ExampleConfig import get_time_statistic_xlsx_file_path
 
 
 class MyTestCase(unittest.TestCase):
