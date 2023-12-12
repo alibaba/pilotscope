@@ -53,9 +53,12 @@ typedef struct DeparseCxt
 StringInfo sub_query;
 // if true, the prefix = " where ", else the prefix = " and "
 static bool isWhereOrAnd;
+static bool isSwap = false;  // for lexicographic order of join clause
 bool rel_first; 
 DeparseCxt* context;
 
+static int comp_string(const StringInfo str1, const StringInfo str2);
+static StringInfo get_var(const Var  *var, PlannerInfo *root);
 static void get_expr(const Node *expr, PlannerInfo *root);
 static void get_restrictclauses(PlannerInfo *root, List *clauses);
 static void get_rels_for_deparse (PlannerInfo *root, Relids relids, bool visit);
@@ -71,6 +74,31 @@ static void get_base_restrictclauses (PlannerInfo *root, Relids relids);
 static DeparseTblRef **makeDeparseTblRef(int num);
 static Relids get_relids_only_in_rangetbl(Node *jtnode);
 
+/* 
+ * Compare the lexicographic order of strings.
+ */
+static int 
+comp_string(const StringInfo str1, const StringInfo str2){
+	return strcmp(str1->data, str2->data);
+}
+
+
+/* 
+ * get the string value of Var
+ */
+static StringInfo 
+get_var(const Var  *var, PlannerInfo *root){
+	StringInfo name = makeStringInfo();
+	char	*relname, *attname;
+	const List *rtable = root->parse->rtable;
+    RangeTblEntry *rte;
+    Assert(var->varno > 0 && (int) var->varno <= list_length(rtable));
+	rte = rt_fetch(var->varno, rtable);
+    relname = rte->eref->aliasname;
+    attname = get_rte_attribute_name(rte, var->varattno);
+	appendStringInfo(name, "%s.%s", relname, attname);
+	return name;
+}
 
 /* 
  * transform expression into string and append them to the subquery string.
@@ -239,19 +267,55 @@ get_expr(const Node *expr, PlannerInfo *root)
 				   (oprkind == 'l' && list_length(e->args) == 1) ||
 				   (oprkind == 'b' && list_length(e->args) == 2));
 			
-			/* Deparse left operand. */
-			if (oprkind == 'r' || oprkind == 'b')
-			{
+			// B.k = A.k convert to A.k = B.k
+			isSwap = false;
+			if (strcmp(opname, "=") == 0){
+				StringInfo left_var, right_var;
 				lc = list_head(e->args);
-				get_expr(lfirst(lc), root);
+				Expr  *ex = (Expr *) lfirst(lc);
+				if (nodeTag(ex) == T_Var){
+					left_var = get_var((Var *) ex, root);
+					lc = list_tail(e->args);
+					ex = (Expr *) lfirst(lc);
+					if (nodeTag(ex) == T_Var){
+						right_var = get_var((Var *) ex, root);
+						if (comp_string(left_var, right_var) > 0)
+							isSwap = true;
+					}
+				}
+
 			}
-			appendStringInfo(sub_query, " %s ", opname);
-			/* Deparse right operand. */
-			if (oprkind == 'l' || oprkind == 'b')
-			{
-				lc = list_tail(e->args);
-				get_expr(lfirst(lc), root);
+
+			if (!isSwap){
+				/* Deparse left operand. */
+				if (oprkind == 'r' || oprkind == 'b')
+				{
+					lc = list_head(e->args);
+					get_expr(lfirst(lc), root);
+				}
+				appendStringInfo(sub_query, " %s ", opname);
+				/* Deparse right operand. */
+				if (oprkind == 'l' || oprkind == 'b')
+				{
+					lc = list_tail(e->args);
+					get_expr(lfirst(lc), root);
+				}
+			}else{
+				/* Deparse left operand. */
+				if (oprkind == 'r' || oprkind == 'b')
+				{
+					lc = list_tail(e->args);
+					get_expr(lfirst(lc), root);
+				}
+				appendStringInfo(sub_query, " %s ", opname);
+				/* Deparse right operand. */
+				if (oprkind == 'l' || oprkind == 'b')
+				{
+					lc = list_head(e->args);
+					get_expr(lfirst(lc), root);
+				}
 			}
+			
 			ReleaseSysCache(tuple);
 			break;
 		}
