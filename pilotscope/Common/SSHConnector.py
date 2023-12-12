@@ -1,5 +1,9 @@
 import paramiko
 
+import logging
+
+logging.getLogger("paramiko.transport").setLevel(logging.WARNING)
+
 
 class SSHConnector:
     def __init__(self, host, user, pwd, port=22):
@@ -22,7 +26,7 @@ class SSHConnector:
     def write_file(self, remote_path, content):
         with self.open_file(remote_path, "w") as f:
             f.write(content)
-            
+
     def remote_exec_cmd(self, cmd):
         _, std_out, std_err = self.client.exec_command(cmd)
         return std_out.readlines(), std_err.readlines()

@@ -5,7 +5,7 @@ from pilotscope.PilotConfig import PostgreSQLConfig
 from test_pilotscope.test_anchor_local import TestAnchorLocal
 
 
-class TestAnchorRemote(TestAnchorLocal):
+class TestAnchorAndControllerRemote(TestAnchorLocal):
 
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
@@ -24,10 +24,12 @@ class TestAnchorRemote(TestAnchorLocal):
 
     def test_shutdown(self):
         self.db_controller.shutdown()
-        res = self.db_controller.status()
-        self.assertTrue("no server running" in res)
+        is_running = self.db_controller.is_running()
+        self.assertFalse(is_running)
         self.db_controller.start()
-        self.assertTrue("server is running" in self.db_controller.status())
+        is_running = self.db_controller.is_running()
+        self.assertTrue(is_running)
+
 
 if __name__ == "__main__":
     unittest.main()

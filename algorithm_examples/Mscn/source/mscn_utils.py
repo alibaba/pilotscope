@@ -204,12 +204,12 @@ def load_schema(db_control: PostgreSQLController):
     def get_table_info(table_name):
         res = dict()
         res['rows'] = db_control.get_table_row_count(table_name)
-        cols = db_control.get_table_column_name_all_schema(table_name)
+        cols = db_control.get_table_columns(table_name)
         res['columns'] = dict()
         for col in cols:
             col_info = dict()
             col_info["dtype"] = str(db_control.get_sqla_table(table_name).c[col].type)
-            col_info["ndv"] = db_control.get_column_number_of_distinct_value(table_name, col)
+            col_info["ndv"] = db_control.get_number_of_distinct_value(table_name, col)
             if col_info["dtype"] in PG_NUMERIC_TYPES or col_info["dtype"] in PG_TIMESTEMP_TYPES:
                 col_info["max"] = db_control.get_column_max(table_name, col)
                 col_info["min"] = db_control.get_column_min(table_name, col)

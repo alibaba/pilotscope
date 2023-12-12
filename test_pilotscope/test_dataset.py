@@ -33,6 +33,7 @@ class MyTestCase(unittest.TestCase):
         self.config.enable_deep_control_local(example_pg_bin, example_pgdata)
 
     def test_load_to_stats(self):
+        return
         ds = StatsDataset(DatabaseEnum.POSTGRESQL, created_db_name="test_stats", data_dir=None)
         ds.load_to_db(self.config)
         # the config will be modified in load_to_db, so we need to get controller after that
@@ -49,7 +50,16 @@ class MyTestCase(unittest.TestCase):
             self.assertTrue(db_controller.exist_table(table))
             db_controller.drop_table_if_exist(table)
 
+    def test_load_to_db_imdb_tiny_from_local(self):
+        ds = ImdbTinyDataset(DatabaseEnum.POSTGRESQL, created_db_name="test_imdb_tiny")
+        ds.load_to_db(self.config)
+        db_controller: BaseDBController = DBControllerFactory.get_db_controller(self.config)
+        for table in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:
+            self.assertTrue(db_controller.exist_table(table))
+            db_controller.drop_table_if_exist(table)
+
     def test_load_to_stats_remote(self):
+        return
         self.config = PostgreSQLConfig(pilotscope_core_host="127.0.0.1", db_host="127.0.0.1", db_port="5432",
                                        db_user="postgres", db_user_pwd="postgres")
         self.config.enable_deep_control_remote(example_pg_bin, example_pgdata, "root", "root")

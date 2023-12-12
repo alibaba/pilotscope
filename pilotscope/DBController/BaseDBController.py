@@ -369,7 +369,7 @@ class BaseDBController(ABC):
         n = len(inspector.get_indexes(table))
         return n
 
-    def get_existed_index(self, table):
+    def get_existed_indexes(self, table):
         """ 
         Get all indexes of a table
 

@@ -43,7 +43,7 @@ class MyTestCase(unittest.TestCase):
         res = self.db_controller.get_table_column_name(self.table)
         print(res)
         self.assertTrue(res == ['id', 'userid', 'date'])
-        res = self.db_controller.get_table_column_name_all_schema(self.table)
+        res = self.db_controller.get_table_columns(self.table)
         self.assertTrue(res == ['id', 'userid', 'date'])
 
     def test_explain_physical_plan(self):
@@ -56,17 +56,10 @@ class MyTestCase(unittest.TestCase):
         print(res)
 
     def test_get_existed_index(self):
-        res = self.db_controller.get_existed_index("badges")
+        res = self.db_controller.get_existed_indexes("badges")
         print(res)
         self.assertTrue("badges: userid" in str(res))
         print(res)
-
-    def test_get_relation_content(self):
-        res = self.db_controller.get_relation_content(self.test_table, fetch_column_name=True)
-        self.assertTrue(res[0] == ('col_1', 'col_2'))
-        res_wo_header = self.db_controller.get_relation_content(self.test_table, fetch_column_name=False)
-        self.assertTrue(res[1:] == res_wo_header)
-        print(res, res_wo_header)
 
     def test_create_drop_index(self):
         index_name = "test_create_index"
@@ -117,7 +110,7 @@ class MyTestCase(unittest.TestCase):
     #     res = self.db_controller.get_all_indexes()
     #     print(res)
     def test_get_column_number_of_distinct_value_min_max_count(self):
-        res = self.db_controller.get_column_number_of_distinct_value(self.table, self.column)
+        res = self.db_controller.get_number_of_distinct_value(self.table, self.column)
         print(res)
         self.assertTrue(res == 784)
         res = self.db_controller.get_column_max(self.table, self.column)

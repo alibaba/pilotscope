@@ -274,7 +274,7 @@ class SysmlExecutor(ExecutorInterface):
             }
         }
         for view in self.PG_STAT_VIEWS:
-            columns, *results = self.db_controller.get_relation_content(view, fetch_column_name=True)
+            columns, *results = self.db_controller.execute("select * from {}".format(view), fetch_column_name=True)
             results = [dict(zip(columns, row)) for row in results]
             if view in ["pg_stat_archiver", "pg_stat_bgwriter"]:
                 metrics_dict['global'][view] = results[0]

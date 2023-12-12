@@ -33,41 +33,54 @@ class PilotDataInteractor:
 
     def push_hint(self, key_2_value_for_hint: dict):
         """
-        Sets the hint information and registers the hint push handler in the handlers dictionary.
-
+        Set the value of each hint (i.e., the run-time config) when execute SQL queries.
+        The hints can be used to control the behavior of the database system in a session.
+        For PostgreSQL, you can find all valid hints in https://www.postgresql.org/docs/13/runtime-config.html.
+        For Spark, you can find all valid hints (called conf in Spark) in https://spark.apache.org/docs/latest/configuration.html#runtime-sql-configuration
+        Note that you need to distinguish which parameter is static (push_knob) and which is run-time (push_hint).
         :param key_2_value_for_hint: A dictionary containing key-value pairs representing hint information, e.g.
-            {"hint_key": "hint_value"}
-        :type key_2_value_for_hint: dict
+            {"hint_key": "hint_value"}.
         """
         anchor: HintPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.HINT_PUSH_ANCHOR)
         anchor.key_2_value_for_hint = key_2_value_for_hint
         self._anchor_to_handlers[AnchorEnum.HINT_PUSH_ANCHOR] = anchor
 
-    def push_card(self, subquery_2_value: dict):
-        """
-        Assigns card information and registers the card push handler to the handlers dictionary.
-
-        :param subquery_2_value: A dictionary containing subquery to card value mappings, e.g.
-            {"subquery_1": "card_1", "subquery_2": "card_2"}
-        :type subquery_2_value: dict
-        """
-        anchor: CardPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.CARD_PUSH_ANCHOR)
-        anchor.subquery_2_card = subquery_2_value
-        self._anchor_to_handlers[AnchorEnum.CARD_PUSH_ANCHOR] = anchor
-
     def push_knob(self, key_2_value_for_knob: dict):
         """
-        Assigns knob information and registers the knob push handler to the handlers dictionary.
-
+        Set the value of each knob parameter (i.e., the static config) of database.
+        These parameters are valid after the database is restarted.
+        Thus, pilotscope will restart the database if this function is called.
+        For PostgreSQL, you can find all valid knob in https://www.postgresql.org/docs/13/runtime-config.html.
+        Pilotscope will modify the configuration file (i.e., postgresql.conf) of PostgreSQL to set the knob.
+        For Spark, you can find all valid hints (called conf in Spark) in https://spark.apache.org/docs/latest/configuration.html
+        Note that you need to distinguish which parameter is static (push_knob) and which is run-time (push_hint).
         :param key_2_value_for_knob: A dictionary containing key-value pairs for knob settings, e.g.
             {"knob_key": "knob_value"}
-        :type key_2_value_for_knob: dict
         """
         anchor: KnobPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.KNOB_PUSH_ANCHOR)
         anchor.key_2_value_for_knob = key_2_value_for_knob
         self._anchor_to_handlers[AnchorEnum.KNOB_PUSH_ANCHOR] = anchor
 
+    def push_card(self, subquery_2_value: dict):
+        """
+        Set the cardinality of each sub-plan query when execute a SQL query.
+        The cardinality of each sub-plan query will set to the estimated value of database if you don't provide the value.
+        :param subquery_2_value: A dictionary containing subquery to card value mappings, e.g.
+            {"subquery_1": "card_1", "subquery_2": "card_2"}
+        """
+        anchor: CardPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.CARD_PUSH_ANCHOR)
+        anchor.subquery_2_card = subquery_2_value
+        self._anchor_to_handlers[AnchorEnum.CARD_PUSH_ANCHOR] = anchor
+
     def push_pg_hint_comment(self, comment_str):
+        """
+        Set the comment of 'pg_hint_plan' into input SQL query. The function is only valid for PostgreSQL.
+        pg_hint_plan is an extension for the PostgreSQL database that allows users to influence the query planner's choice of execution plans.
+        You can find more information in https://github.com/ossc-db/pg_hint_plan.
+        :param comment_str: a pg_hint_comment like /*+ HashJoin(a b) SeqScan(a) */, which indicate the join method of a and b is HashJoin and the scan method of a is SeqScan.
+        :return:
+        """
+
         if self.config.db_type != DatabaseEnum.POSTGRESQL:
             raise NotImplementedError("PG Hint only is implemented for PostgresSQL database")
         anchor: CommentPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
@@ -75,14 +88,12 @@ class PilotDataInteractor:
         anchor.comment_str = comment_str
         self._anchor_to_handlers[AnchorEnum.COMMENT_PUSH_ANCHOR] = anchor
 
-    def push_subplan_cost(self, subplan_2_cost: dict):
+    def _push_subplan_cost(self, subplan_2_cost: dict):
         """
         Assigns cost information to subplans and registers the cost push handler.
 
         :param subplan_2_cost: A dictionary mapping subplans to their associated costs, e.g.
             {"subplan_1": 100, "subplan_2": 200}
-        :type subplan_2_cost: dict
-
         :raises NotImplementedError: Indicates that the method has not been implemented yet.
         """
         raise NotImplementedError
@@ -95,12 +106,10 @@ class PilotDataInteractor:
 
     def push_index(self, indexes: List[Index], drop_other=True):
         """
-        Assigns index information and registers the index push handler to the handlers dictionary.
-
+        Set the index information of each table when execute SQL queries.
+        The index will be built before executing all SQL queries in a session of PilotDataInteractor.
         :param indexes: A list of `Index` instances to be handled.
-        :type indexes: List[Index]
         :param drop_other: A flag indicating whether to drop other indexes not in the `indexes` list.
-        :type drop_other: bool
         """
         anchor: IndexPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
                                                                            AnchorEnum.INDEX_PUSH_ANCHOR)
@@ -111,7 +120,7 @@ class PilotDataInteractor:
 
     def pull_subquery_card(self):
         """
-        Retrieves the subquery card pull handler and registers it in the handlers dictionary.
+        Require PilotScope to collect all cardinality information of each sub-plan queries when execute a SQL query.
         """
         anchor: SubQueryCardPullHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
                                                                                   AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR)
@@ -128,21 +137,29 @@ class PilotDataInteractor:
 
     def pull_physical_plan(self):
         """
-        Retrieves the physical plan pull handler and registers it in the handlers dictionary.
+        Require PilotScope to collect physical plan when execute a SQL query.
         """
         anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.PHYSICAL_PLAN_PULL_ANCHOR)
         self._anchor_to_handlers[AnchorEnum.PHYSICAL_PLAN_PULL_ANCHOR] = anchor
 
     def pull_execution_time(self):
         """
-        Retrieves the execution time pull handler and registers it in the handlers dictionary.
+        Require PilotScope to collect execution time when execute a SQL query.
         """
         anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.EXECUTION_TIME_PULL_ANCHOR)
         self._anchor_to_handlers[AnchorEnum.EXECUTION_TIME_PULL_ANCHOR] = anchor
 
+    def pull_estimated_cost(self):
+        """
+        Require PilotScope to collect estimated cost from database's optimizer when execute a SQL query.
+        """
+        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.ESTIMATED_COST_PULL_ANCHOR)
+        self._anchor_to_handlers[AnchorEnum.ESTIMATED_COST_PULL_ANCHOR] = anchor
+
     def pull_record(self):
         """
-        Retrieves the record pull handler and registers it in the handlers dictionary.
+        Require PilotScope to collect execution records when execute a SQL query.
+        PilotScode will not to execute a complete process of recode retrieval, unless you require it to collect records.
         """
         anchor: RecordPullHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
                                                                             AnchorEnum.RECORD_PULL_ANCHOR)
@@ -150,7 +167,7 @@ class PilotDataInteractor:
 
     def pull_buffercache(self):
         """
-        Retrieves the buffer cache pull handler and registers it in the handlers dictionary.
+        Retrieves the buffer cache, where each item include a table name and the numbers of its buffer.
         """
         anchor: BuffercachePullHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
                                                                                  AnchorEnum.BUFFERCACHE_PULL_ANCHOR)
@@ -168,23 +185,13 @@ class PilotDataInteractor:
         """
         pass
 
-    def pull_estimated_cost(self):
-        """
-        Retrieves the estimated cost pull handler and registers it in the handlers dictionary.
-        """
-        anchor = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.ESTIMATED_COST_PULL_ANCHOR)
-        self._anchor_to_handlers[AnchorEnum.ESTIMATED_COST_PULL_ANCHOR] = anchor
-
     def execute_batch(self, sqls, is_reset=True) -> List[Optional[PilotTransData]]:
         """
-        Execute sqls sequentially.
+        Execute all sqls sequentially in a session. All SQL queries is executed using the identical push/pull configuration.
 
-        :param sqls: list of string, whose items are sqls 
-        :type sqls: list
+        :param sqls: list of string, whose items are sqls
         :param is_reset: If it is True, all anchors will be removed after execution
-        :type is_reset: bool, optional
         :return: list of the results
-        :rtype: List[Optional[PilotTransData]]
         """
         datas = []
         flag = False
@@ -196,17 +203,14 @@ class PilotDataInteractor:
 
     def execute_parallel(self, sqls, parallel_num=10, is_reset=True):
         """
-        Execute sqls parallel.
+        Execute all sqls parallel in a session.
+        All SQL queries is executed using the identical push/pull configuration.
 
-        :param sqls: list of string, whose items are sqls 
-        :type sqls: list
+        :param sqls: list of string, whose items are sqls
         :param parallel_num: the number of threads, defaults to 10
-        :type parallel_num: int, optional
         :param is_reset: If it is True, all anchors will be removed after execution
-        :type is_reset: bool, optional
         :raises RuntimeError: simulate index does not support execute_parallel
         :return: list of the results
-        :rtype: list of Future
         """
         if self.db_controller.enable_simulate_index:
             raise RuntimeError("simulate index does not support execute_parallel")
@@ -229,11 +233,8 @@ class PilotDataInteractor:
         Execute this SQL and finish all registered push-and-pull operators before.
 
         :param sql: sql statement
-        :type sql: str
         :param is_reset: If it is True, all anchors will be removed after execution
-        :type is_reset: bool, optional
-        :return: If no exceptions, it returns a `PilotTransData` representing extended result; otherwise, it returns None. 
-        :rtype: Optional[PilotTransData]
+        :return: If no exceptions, it returns a `PilotTransData` representing extended result; otherwise, it returns None.
         """
         try:
             origin_sql = sql
@@ -252,7 +253,7 @@ class PilotDataInteractor:
             # execution sqls. Sometimes, data do not need to be got from inner
             is_execute_comment_sql = self._is_execute_comment_sql(self._anchor_to_handlers)
 
-            records, python_sql_execution_time = self._execute_sqls(comment_sql, is_execute_comment_sql)
+            records, execution_time_from_outer = self._execute_sqls(comment_sql, is_execute_comment_sql)
 
             # wait to fetch data
             if self._is_need_to_receive_data(self._anchor_to_handlers):
@@ -270,7 +271,7 @@ class PilotDataInteractor:
             self._fetch_data_from_outer(origin_sql, data)
 
             if self.config.db_type == DatabaseEnum.SPARK:
-                self._add_execution_time_from_python(data, python_sql_execution_time)
+                self._add_execution_time(data, execution_time_from_outer)
 
             # clear state
             if is_reset:
@@ -301,9 +302,9 @@ class PilotDataInteractor:
         """
         return self._anchor_to_handlers.values()
 
-    def _add_execution_time_from_python(self, data: PilotTransData, python_sql_execution_time):
+    def _add_execution_time(self, data: PilotTransData, execution_time):
         if AnchorEnum.EXECUTION_TIME_PULL_ANCHOR in self._anchor_to_handlers:
-            data.execution_time = python_sql_execution_time
+            data.execution_time = execution_time
 
     def _is_need_to_receive_data(self, anchor_2_handlers):
         """
