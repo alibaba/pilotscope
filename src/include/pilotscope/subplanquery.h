@@ -52,12 +52,19 @@
 #include "utils/tuplesort.h"
 
 extern StringInfo sub_query;
+extern void get_single_rel (PlannerInfo *root, RelOptInfo *rel); 
+extern void get_parameterized_baserel (PlannerInfo *root, RelOptInfo *rel, List *param_clauses);
 extern void get_join_rel (PlannerInfo *root, 
 					RelOptInfo *join_rel,
 					RelOptInfo *outer_rel,
 					RelOptInfo *inner_rel,
 					SpecialJoinInfo *sjinfo,
 					List *restrictlist_in);
-extern void get_single_rel (PlannerInfo *root, RelOptInfo *rel); 
+extern void get_parameterized_join_rel(PlannerInfo *root, 
+					RelOptInfo *join_rel,
+					Path *outer_path,
+					Path *inner_path,
+					SpecialJoinInfo *sjinfo,
+					List *restrictlist_in);
 
 #endif

@@ -4753,6 +4753,38 @@ get_parameterized_baserel_size(PlannerInfo *root, RelOptInfo *rel,
 	/* For safety, make sure result is not more than the base estimate */
 	if (nrows > rel->rows)
 		nrows = rel->rows;
+
+	/** modification start **/
+	// get parameterized base rel subquery
+	if(subquery_card_pull_anchor!= NULL && subquery_card_pull_anchor->enable==1)
+	{
+		// get subquery
+		get_parameterized_baserel(root, rel, param_clauses);
+		save_subquery_and_card(nrows);
+	}
+
+	// set parameterized base rel subquery card
+	if(card_push_anchor != NULL && card_push_anchor->enable == 1)
+	{
+
+		// get subquery
+		get_parameterized_baserel(root, rel, param_clauses);
+
+		// set subquery of card if subquery exist in hash_table
+		char* row_from_push_anchor = get_card_from_push_anchor(table, sub_query->data);
+		if(row_from_push_anchor != NULL)
+		{
+			nrows = atof(row_from_push_anchor);
+		}
+
+		nrows = clamp_row_est(nrows);
+		/* For safety, make sure result is not more than the base estimate */
+		if (nrows > rel->rows)
+			nrows = rel->rows;
+	}
+	/** modification end **/
+
+
 	return nrows;
 }
 
@@ -4793,6 +4825,36 @@ set_joinrel_size_estimates(PlannerInfo *root, RelOptInfo *rel,
 											inner_rel->rows,
 											sjinfo,
 											restrictlist);
+			
+	/** modification start **/
+	double		nrows;
+
+	// get multi-table subquery
+	if(subquery_card_pull_anchor != NULL && subquery_card_pull_anchor->enable==1)
+	{	
+		// get subquery
+		get_join_rel(root, rel, outer_rel, inner_rel, sjinfo, restrictlist);
+		save_subquery_and_card(rel->rows);
+	}
+
+	// set multi-table subquery card
+	if(card_push_anchor != NULL && card_push_anchor->enable == 1)
+	{
+	
+		// get subquery
+		get_join_rel(root, rel, outer_rel, inner_rel, sjinfo, restrictlist);
+
+		// set subquery of card
+		char* row_from_push_anchor = get_card_from_push_anchor(table, sub_query->data);
+		if(row_from_push_anchor != NULL)
+		{
+			nrows = atof(row_from_push_anchor);
+		}
+
+		rel->rows = clamp_row_est(nrows);
+	}
+
+	/** modification end **/
 }
 
 /*
@@ -4839,6 +4901,39 @@ get_parameterized_joinrel_size(PlannerInfo *root, RelOptInfo *rel,
 	/* For safety, make sure result is not more than the base estimate */
 	if (nrows > rel->rows)
 		nrows = rel->rows;
+
+	/** modification start **/
+	// get parameterized multi-table subquery
+	if(subquery_card_pull_anchor != NULL && subquery_card_pull_anchor->enable==1)
+	{	
+		// get subquery
+		get_parameterized_join_rel(root, rel, outer_path, inner_path, sjinfo, restrict_clauses);
+		save_subquery_and_card(nrows);
+
+	}
+
+	// set parameterized multi-table subquery card
+	if(card_push_anchor != NULL && card_push_anchor->enable == 1)
+	{
+	
+		// get subquery
+		get_parameterized_join_rel(root, rel, outer_path, inner_path, sjinfo, restrict_clauses);
+
+		// set subquery of card
+		char* row_from_push_anchor = get_card_from_push_anchor(table, sub_query->data);
+		if(row_from_push_anchor != NULL)
+		{
+			nrows = atof(row_from_push_anchor);
+		}
+
+		nrows = clamp_row_est(nrows);
+		/* For safety, make sure result is not more than the base estimate */
+		if (nrows > rel->rows)
+			nrows = rel->rows;
+	}
+
+	/** modification end **/
+
 	return nrows;
 }
 
@@ -4984,33 +5079,6 @@ calc_joinrel_size_estimate(PlannerInfo *root,
 			nrows = 0;			/* keep compiler quiet */
 			break;
 	}
-
-	/** modification start **/
-	// get multi-table subquery
-	if(subquery_card_pull_anchor != NULL && subquery_card_pull_anchor->enable==1)
-	{	
-		// get subquery
-		get_join_rel(root, joinrel, outer_rel, inner_rel, sjinfo, restrictlist);
-		save_subquery_and_card(nrows);
-	}
-
-	// set multi-table subquery card
-	if(card_push_anchor != NULL && card_push_anchor->enable == 1)
-	{
-		// get subquery
-		get_join_rel(root, joinrel, outer_rel, inner_rel, sjinfo, restrictlist);
-
-		// set subquery of card
-		char* row_from_push_anchor = get_card_from_push_anchor(table, sub_query->data);
-		if(row_from_push_anchor != NULL)
-		{
-			nrows = atof(row_from_push_anchor);
-		}
-		else{
-			elog(ERROR, "Can not find the corresponding sub-plan query in push anchor");
-		}
-	}
-	/** modification end **/
 	return clamp_row_est(nrows);
 }
 

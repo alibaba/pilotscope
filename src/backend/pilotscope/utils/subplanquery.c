@@ -3,7 +3,7 @@
 *  	     Routines to generate sub-plan query to server and 
 *   receive its cardinality or selectivity by http service
 *
-*  Copyright (c) 2022-2023 Peng Jiazhen. 
+*  Copyright (c) 2023, Damo Academy of Alibaba Group
 *-----------------------------------------------------------
 */
 
@@ -37,7 +37,7 @@ typedef struct JoinClause
 
 typedef struct JoinClauseGroup
 {
-	Relids relids;     /* all relids in current group */ 
+	Relids relids;     
 	List* join_clauses;    /* List of JoinClause */ 
 }JoinClauseGroup;
 
@@ -45,8 +45,9 @@ typedef struct DeparseCxt
 {
 	DeparseTblRef **all_rels;       /* array of DeparseTblRef*, all relids in cur joinrel */
 	Relids where_join_rels;        /* List of RangeTblRef */
-	List* on_join_clauses;         /* List of JoinClauseGroup */
 	List* where_join_clauses;      /* List of JoinClause */ 
+	List* on_join_clauses;         /* List of JoinClauseGroup,  on_join_clauses->relids is all relids in current group */
+	List* ppi_clauses;  /* required_outer_clauses->relids is required_outer */
 }DeparseCxt;
 
 StringInfo sub_query;
@@ -60,10 +61,10 @@ static void get_restrictclauses(PlannerInfo *root, List *clauses);
 static void get_rels_for_deparse (PlannerInfo *root, Relids relids, bool visit);
 static void get_rels_from_dtr (PlannerInfo *root, Relids relids, bool comma);
 static void get_relids (PlannerInfo *root, Relids relids);
-static void append_join_clause_to_context(PlannerInfo *root, RelOptInfo *join_rel, JoinType jointype, Relids inner_relids, Relids outer_relids, List *clauses);
+static void get_parameterized_ndv_sql(PlannerInfo *root, Relids relids, List *param_clauses);
+static void append_join_clause_to_context(PlannerInfo *root, RelOptInfo *join_rel, JoinType jointype, List *clauses);
 static void get_on_join_restrictclauses(PlannerInfo *root, JoinClauseGroup* jg);
-static void get_where_join_rels(PlannerInfo *root, JoinType jointype, RestrictInfo *rinfo);
-static void get_path(PlannerInfo *root, Path *path);
+static void get_path(PlannerInfo *root, RelOptInfo *rel, Path *path);
 static void get_path_from_rel (PlannerInfo *root, RelOptInfo *rel);
 static void get_join_info (PlannerInfo *root);
 static void get_base_restrictclauses (PlannerInfo *root, Relids relids);
@@ -163,6 +164,25 @@ get_expr(const Node *expr, PlannerInfo *root)
 		case T_Param:
 		{
 			const Param *param = (const Param *) expr;
+
+			// convert Param to Const
+
+			/* see if we can replace the Param */
+			Node	   *subst = estimate_expression_value(root, param);
+
+			if (IsA(subst, Const))
+			{
+				/* bool constant is pretty easy... */
+				Const	   *con = (Const *) subst;
+				get_expr(con, root);
+			}
+			else
+			{
+				/* XXX any way to do better than default? */
+				printf("\nError!\n");
+			}
+
+			// convert Param to Var
 			if (param->paramkind == PARAM_EXEC){
 				while (root->parent_root){
 					PlannerInfo *ancestor = root->parent_root;
@@ -174,11 +194,15 @@ get_expr(const Node *expr, PlannerInfo *root)
 							if (IsA(pitem->item, Var)){
 								// printf("line 128: I am Var\n");
 								Node *pvar = pitem->item;
+								appendStringInfoString(sub_query, "/* ");
 								get_expr(pvar, ancestor);
+								appendStringInfoString(sub_query, " */");
 							}else{
 								printf("line 132: I am not Var\n");
 								Node *pvar = pitem->item;
+								appendStringInfoString(sub_query, "/* ");
 								get_expr(pvar, ancestor);
+								appendStringInfoString(sub_query, " */");
 							}
 						}
 					}
@@ -538,6 +562,43 @@ get_relids (PlannerInfo *root, Relids relids){
 }
 
 /*
+ * Get parameterized ndv subquery. Format: SELECT COUNT(DISTINCT r2.key from r2;  
+ * param_clauses are parameterized clauses
+ * relids are the rel->relids
+ */
+static void
+get_parameterized_ndv_sql(PlannerInfo *root, Relids relids, List *param_clauses){
+	ListCell   *l;
+    foreach(l, param_clauses)
+	{
+		RestrictInfo *c = lfirst(l);
+		if (bms_is_subset(c->required_relids, relids))
+			continue;
+		appendStringInfoString(sub_query, " SELECT COUNT(DISTINCT ");	
+		if (bms_is_subset(c->left_relids, relids)){ // right is outer
+			// get right hand 
+			// Expr       *ex = (Expr *) c->clause;
+			OpExpr	   *op = (OpExpr *) c->clause;
+			ListCell   *lc = list_tail(op->args);
+			get_expr(lfirst(lc), root);
+			appendStringInfoString(sub_query, ") FROM ");
+			get_relids(root, c->right_relids);
+		}
+		else{                                      // left is outer
+			// get left hand
+			// Expr       *ex = (Expr *) c->clause;
+			OpExpr	   *op = (OpExpr *) c->clause;
+			ListCell   *lc = list_head(op->args);
+			get_expr(lfirst(lc), root);
+			appendStringInfoString(sub_query, ") FROM ");
+			get_relids(root, c->left_relids);
+		}
+		appendStringInfoChar(sub_query, ';');
+    }
+}
+
+
+/*
  * Get single-relation subquery. Format: SELECT COUNT(*) FROM r1 (WHERE xxx);
  */
 void
@@ -552,10 +613,33 @@ get_single_rel (PlannerInfo *root, RelOptInfo *rel) {
 
 
 /*
- * Get single-relation subquery. Format: SELECT COUNT(*) FROM r1 (WHERE xxx);
+ * Get parameterized single-relation subquery. 
+ * Format: 
+ * SELECT COUNT(*) FROM r1 WHERE filter(r1); 
+ * SELECT COUNT(DISTINCT r2.key from r2; 
+ * /* SELECT COUNT(*) FROM r1 WHERE filter(r1) and r1.key = r2.key * /
  */
+void
+get_parameterized_baserel (PlannerInfo *root, RelOptInfo *rel, List *param_clauses) {
+	get_single_rel(root, rel);
+	if (list_length(param_clauses) == 0){
+		return;
+	}
+	get_parameterized_ndv_sql(root, rel->relids, param_clauses);
+	List *allclauses = list_concat_copy(param_clauses, rel->baserestrictinfo);
+	appendStringInfoString(sub_query, " /* ");
+	appendStringInfoString(sub_query, "SELECT COUNT(*) FROM ");
+	get_relids(root, rel->relids);
+	isWhereOrAnd = true;
+	get_restrictclauses(root, allclauses);
+	appendStringInfoChar(sub_query, ';');
+	appendStringInfoString(sub_query, " */");
+}
+
+
+
 static void
-append_join_clause_to_context(PlannerInfo *root, RelOptInfo *join_rel, JoinType jointype, Relids inner_relids, Relids outer_relids, List *clauses){
+append_join_clause_to_context(PlannerInfo *root, RelOptInfo *join_rel, JoinType jointype, List *clauses){
 	List	   *joinquals = NIL;
     ListCell   *l, *g;
 	foreach(l, clauses)
@@ -563,15 +647,20 @@ append_join_clause_to_context(PlannerInfo *root, RelOptInfo *join_rel, JoinType 
 		JoinClause  *joinclause = (JoinClause *) palloc (sizeof(JoinClause));
 		RestrictInfo *rinfo = lfirst_node(RestrictInfo, l);
 
-		if (IS_OUTER_JOIN(jointype) && join_rel != NIL && RINFO_IS_PUSHED_DOWN(rinfo, join_rel->relids))
-			continue;
+		if (join_rel != NIL && !bms_is_subset((rinfo)->required_relids, join_rel->relids)){
+			// should be treated as a filter clause rather than a join clause at that outer join. 
+			context->ppi_clauses = lappend(context->ppi_clauses, rinfo);
+			
+		}
 		else{   /* get join info */
 			joinclause->swap = false;
 			joinclause->jointype = jointype;
-			joinclause->left_relids = outer_relids;
-			joinclause->right_relids = inner_relids;
+			// joinclause->left_relids = outer_relids;
+			// joinclause->right_relids = inner_relids;
+			joinclause->left_relids = rinfo->left_relids;
+			joinclause->right_relids = rinfo->right_relids;
 			joinclause->join_clause = rinfo;
-    		if (bms_is_subset(inner_relids, context->where_join_rels) || bms_is_subset(outer_relids, context->where_join_rels)){
+    		if (bms_is_subset(joinclause->left_relids, context->where_join_rels) || bms_is_subset(joinclause->right_relids, context->where_join_rels)){
 				context->where_join_clauses = lappend(context->where_join_clauses, joinclause);
 			}else{
 				bool isOverlap = false;
@@ -591,7 +680,7 @@ append_join_clause_to_context(PlannerInfo *root, RelOptInfo *join_rel, JoinType 
 				}
 				if (!isOverlap){
 					JoinClauseGroup  *jg = (JoinClauseGroup *) palloc (sizeof(JoinClauseGroup));
-					jg->relids = bms_union(joinclause->right_relids, joinclause->right_relids);
+					jg->relids = bms_union(joinclause->left_relids, joinclause->right_relids);
 					jg->join_clauses = NIL;
 					jg->join_clauses = lappend(jg->join_clauses, joinclause);
 					context->on_join_clauses = lappend(context->on_join_clauses, jg);
@@ -669,23 +758,10 @@ get_on_join_restrictclauses(PlannerInfo *root, JoinClauseGroup* jg){
 }
 
 /*
- * Get relations from join restrict clauses union "where" clause 
- */
-static void
-get_where_join_rels(PlannerInfo *root, JoinType jointype, RestrictInfo *rinfo){
-
-	/* get join info */
-	Relids relids = bms_union(rinfo->left_relids, rinfo->right_relids);
-	/* get rel name */
-    get_rels_from_dtr(root, relids, true);
-	
-}
-
-/*
  * Generate the subquery for a given path.
  */
 static void
-get_path(PlannerInfo *root, Path *path)
+get_path(PlannerInfo *root, RelOptInfo *rel, Path *path)
 {
 	bool		join = false;
 	Path	   *subpath = NULL;
@@ -713,25 +789,32 @@ get_path(PlannerInfo *root, Path *path)
 			break;
 	}
 
+	if (path->param_info && path->param_info->ppi_clauses)
+	{
+		append_join_clause_to_context(root, rel, JOIN_INNER, path->param_info->ppi_clauses);
+	}
+
 	if (join)
 	{
 		JoinPath   *jp = (JoinPath *) path;
 		if (jp->joinrestrictinfo){
 			// get_restrictclauses(root, jp->joinrestrictinfo);
 			// appendStringInfoString(sub_query, ", ");
-			append_join_clause_to_context(root, NIL, jp->jointype, jp->innerjoinpath->parent->relids, jp->outerjoinpath->parent->relids, jp->joinrestrictinfo);
+			append_join_clause_to_context(root, rel, jp->jointype, jp->joinrestrictinfo);
 		}
-		else if (jp->innerjoinpath && jp->innerjoinpath->param_info && jp->innerjoinpath->param_info->ppi_clauses){
-			// appendStringInfoString(sub_query, ", ");
-			append_join_clause_to_context(root, NIL, jp->jointype, jp->innerjoinpath->parent->relids, jp->outerjoinpath->parent->relids, jp->innerjoinpath->param_info->ppi_clauses);
-		}
-		get_path(root, jp->outerjoinpath);
-		get_path(root, jp->innerjoinpath);
-		
-		
+		// else if (jp->innerjoinpath && jp->innerjoinpath->param_info && jp->innerjoinpath->param_info->ppi_clauses){
+		// 	// appendStringInfoString(sub_query, ", ");
+		// 	append_join_clause_to_context(root, rel, jp->jointype, jp->innerjoinpath->param_info->ppi_clauses);
+		// }
+		// else if (jp->outerjoinpath && jp->outerjoinpath->param_info && jp->outerjoinpath->param_info->ppi_clauses){
+		// 	// appendStringInfoString(sub_query, ", ");
+		// 	append_join_clause_to_context(root, rel, jp->jointype, jp->outerjoinpath->param_info->ppi_clauses);
+		// }
+		get_path(root, rel, jp->outerjoinpath);
+		get_path(root, rel, jp->innerjoinpath);
 	}
 	if (subpath)
-		get_path(root, subpath);
+		get_path(root, rel, subpath);
 }
 
 
@@ -744,12 +827,12 @@ get_path_from_rel (PlannerInfo *root, RelOptInfo *rel){
 	foreach(lc, rel->pathlist){
 		Path	   *path = (Path *) lfirst(lc);
 		if (path->pathtype == T_MergeJoin){
-			get_path(root, path);
+			get_path(root, rel, path);
 			return;
 		}
 	}
 	if (rel->cheapest_total_path)
-		get_path(root, rel->cheapest_total_path);
+		get_path(root, rel, rel->cheapest_total_path);
 }
 
 /*
@@ -793,7 +876,6 @@ get_join_info(PlannerInfo *root){
 	List *clauses = NIL;
 	foreach(l, context->where_join_clauses){
 		whereclause = (JoinClause *) lfirst(l);
-		get_where_join_rels(root, whereclause->jointype, whereclause->join_clause);
 		clauses = lappend(clauses, whereclause->join_clause);
 	}
 	first = true;
@@ -805,7 +887,7 @@ get_join_info(PlannerInfo *root){
 				if (context->all_rels[i]->rtekind == RTE_RELATION){
 					char *rname = context->all_rels[i]->rname;
 					char *alias = context->all_rels[i]->alias;
-					if (!first || (first && (context->where_join_clauses || context->on_join_clauses)))
+					if (!first || (first && context->on_join_clauses))
 						appendStringInfoString(sub_query, ", ");
 					if (strcmp(rname, alias)==0)
 						appendStringInfoString(sub_query, rname);
@@ -883,6 +965,7 @@ get_join_rel (PlannerInfo *root,
 	context->all_rels = makeDeparseTblRef(root->simple_rel_array_size);
 	context->where_join_clauses = NIL;
 	context->on_join_clauses = NIL;
+	context->ppi_clauses = NIL;
 	sub_query = makeStringInfo();
 	appendStringInfoString(sub_query, "SELECT COUNT(*) FROM ");
 	get_rels_for_deparse(root, join_rel->relids, false);
@@ -890,9 +973,51 @@ get_join_rel (PlannerInfo *root,
 	JoinType	jointype = sjinfo->jointype;
 	get_path_from_rel(root, outer_rel);
 	get_path_from_rel(root, inner_rel);
-	append_join_clause_to_context(root, join_rel, jointype, inner_rel->relids, outer_rel->relids, restrictlist_in);
+	append_join_clause_to_context(root, join_rel, jointype, restrictlist_in);
 	isWhereOrAnd = true;
 	get_join_info(root);
 	get_base_restrictclauses(root, join_rel->relids);
 	appendStringInfoChar(sub_query, ';');
+}
+
+void 
+get_parameterized_join_rel(PlannerInfo *root, 
+					RelOptInfo *join_rel,
+					Path *outer_path,
+					Path *inner_path,
+					SpecialJoinInfo *sjinfo,
+					List *restrictlist_in)
+{
+	rel_first = true;
+	context = (DeparseCxt *) palloc (sizeof(DeparseCxt));
+	context->all_rels = makeDeparseTblRef(root->simple_rel_array_size);
+	context->where_join_clauses = NIL;
+	context->on_join_clauses = NIL;
+	context->ppi_clauses = NIL;
+	sub_query = makeStringInfo();
+	appendStringInfoString(sub_query, "SELECT COUNT(*) FROM ");
+	get_rels_for_deparse(root, join_rel->relids, false);
+	context->where_join_rels = get_relids_only_in_rangetbl((Node *)root->parse->jointree);
+	JoinType	jointype = sjinfo->jointype;
+	get_path(root, join_rel, outer_path);
+	get_path(root, join_rel, inner_path);
+	append_join_clause_to_context(root, join_rel, jointype, restrictlist_in);
+	isWhereOrAnd = true;
+	get_join_info(root);
+	get_base_restrictclauses(root, join_rel->relids);
+	appendStringInfoChar(sub_query, ';');
+
+	// for parameterized path
+	get_parameterized_ndv_sql(root, join_rel->relids, context->ppi_clauses);
+
+	if(list_length(context->ppi_clauses) != 0){
+		appendStringInfoString(sub_query, " /* ");
+		appendStringInfoString(sub_query, "SELECT COUNT(*) FROM ");
+		isWhereOrAnd = true;
+		get_join_info(root);
+		get_restrictclauses(root, context->ppi_clauses);
+		get_base_restrictclauses(root, join_rel->relids);
+		appendStringInfoChar(sub_query, ';');
+		appendStringInfoString(sub_query, " */");
+	}
 }
