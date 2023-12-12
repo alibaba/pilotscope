@@ -4902,38 +4902,6 @@ get_parameterized_joinrel_size(PlannerInfo *root, RelOptInfo *rel,
 	if (nrows > rel->rows)
 		nrows = rel->rows;
 
-	/** modification start **/
-	// get parameterized multi-table subquery
-	if(subquery_card_pull_anchor != NULL && subquery_card_pull_anchor->enable==1)
-	{	
-		// get subquery
-		get_parameterized_join_rel(root, rel, outer_path, inner_path, sjinfo, restrict_clauses);
-		save_subquery_and_card(nrows);
-
-	}
-
-	// set parameterized multi-table subquery card
-	if(card_push_anchor != NULL && card_push_anchor->enable == 1)
-	{
-	
-		// get subquery
-		get_parameterized_join_rel(root, rel, outer_path, inner_path, sjinfo, restrict_clauses);
-
-		// set subquery of card
-		char* row_from_push_anchor = get_card_from_push_anchor(table, sub_query->data);
-		if(row_from_push_anchor != NULL)
-		{
-			nrows = atof(row_from_push_anchor);
-		}
-
-		nrows = clamp_row_est(nrows);
-		/* For safety, make sure result is not more than the base estimate */
-		if (nrows > rel->rows)
-			nrows = rel->rows;
-	}
-
-	/** modification end **/
-
 	return nrows;
 }
 
