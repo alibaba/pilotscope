@@ -35,9 +35,13 @@ class PilotDataInteractor:
         """
         Set the value of each hint (i.e., the run-time config) when execute SQL queries.
         The hints can be used to control the behavior of the database system in a session.
+
         For PostgreSQL, you can find all valid hints in https://www.postgresql.org/docs/13/runtime-config.html.
+
         For Spark, you can find all valid hints (called conf in Spark) in https://spark.apache.org/docs/latest/configuration.html#runtime-sql-configuration
+
         Note that you need to distinguish which parameter is static (push_knob) and which is run-time (push_hint).
+
         :param key_2_value_for_hint: A dictionary containing key-value pairs representing hint information, e.g.
             {"hint_key": "hint_value"}.
         """
@@ -50,10 +54,14 @@ class PilotDataInteractor:
         Set the value of each knob parameter (i.e., the static config) of database.
         These parameters are valid after the database is restarted.
         Thus, pilotscope will restart the database if this function is called.
+
         For PostgreSQL, you can find all valid knob in https://www.postgresql.org/docs/13/runtime-config.html.
         Pilotscope will modify the configuration file (i.e., postgresql.conf) of PostgreSQL to set the knob.
+
         For Spark, you can find all valid hints (called conf in Spark) in https://spark.apache.org/docs/latest/configuration.html
+
         Note that you need to distinguish which parameter is static (push_knob) and which is run-time (push_hint).
+
         :param key_2_value_for_knob: A dictionary containing key-value pairs for knob settings, e.g.
             {"knob_key": "knob_value"}
         """
@@ -64,7 +72,8 @@ class PilotDataInteractor:
     def push_card(self, subquery_2_value: dict):
         """
         Set the cardinality of each sub-plan query when execute a SQL query.
-        The cardinality of each sub-plan query will set to the estimated value of database if you don't provide the value.
+        The cardinality of each sub-plan query will set to the default estimated value if you don't provide the value.
+
         :param subquery_2_value: A dictionary containing subquery to card value mappings, e.g.
             {"subquery_1": "card_1", "subquery_2": "card_2"}
         """
@@ -74,11 +83,11 @@ class PilotDataInteractor:
 
     def push_pg_hint_comment(self, comment_str):
         """
-        Set the comment of 'pg_hint_plan' into input SQL query. The function is only valid for PostgreSQL.
-        pg_hint_plan is an extension for the PostgreSQL database that allows users to influence the query planner's choice of execution plans.
+        Set the comment of `pg_hint_plan` into input SQL query. The function is only valid for PostgreSQL.
+        The `pg_hint_plan` is an extension for the PostgreSQL database that allows users to influence the query planner's choice of execution plans.
         You can find more information in https://github.com/ossc-db/pg_hint_plan.
-        :param comment_str: a pg_hint_comment like /*+ HashJoin(a b) SeqScan(a) */, which indicate the join method of a and b is HashJoin and the scan method of a is SeqScan.
-        :return:
+
+        :param comment_str: a pg_hint_comment like ``/*+ HashJoin(a b) SeqScan(a) */``, which indicate the join method of `a` and `b` is HashJoin and the scan method of `a` is SeqScan.
         """
 
         if self.config.db_type != DatabaseEnum.POSTGRESQL:
@@ -108,6 +117,7 @@ class PilotDataInteractor:
         """
         Set the index information of each table when execute SQL queries.
         The index will be built before executing all SQL queries in a session of PilotDataInteractor.
+
         :param indexes: A list of `Index` instances to be handled.
         :param drop_other: A flag indicating whether to drop other indexes not in the `indexes` list.
         """
@@ -189,9 +199,9 @@ class PilotDataInteractor:
         """
         Execute all sqls sequentially in a session. All SQL queries is executed using the identical push/pull configuration.
 
-        :param sqls: list of string, whose items are sqls
+        :param sqls: a list of sqls to be executed
         :param is_reset: If it is True, all anchors will be removed after execution
-        :return: list of the results
+        :return: list of the results for each sql
         """
         datas = []
         flag = False
@@ -206,11 +216,11 @@ class PilotDataInteractor:
         Execute all sqls parallel in a session.
         All SQL queries is executed using the identical push/pull configuration.
 
-        :param sqls: list of string, whose items are sqls
+        :param sqls: a list of sqls to be executed
         :param parallel_num: the number of threads, defaults to 10
         :param is_reset: If it is True, all anchors will be removed after execution
         :raises RuntimeError: simulate index does not support execute_parallel
-        :return: list of the results
+        :return: list of the results for each sql
         """
         if self.db_controller.enable_simulate_index:
             raise RuntimeError("simulate index does not support execute_parallel")
@@ -232,7 +242,7 @@ class PilotDataInteractor:
         """
         Execute this SQL and finish all registered push-and-pull operators before.
 
-        :param sql: sql statement
+        :param sql: a sql statement to be executed
         :param is_reset: If it is True, all anchors will be removed after execution
         :return: If no exceptions, it returns a `PilotTransData` representing extended result; otherwise, it returns None.
         """
