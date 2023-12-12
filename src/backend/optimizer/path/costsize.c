@@ -104,6 +104,7 @@
 #include "pilotscope/hashtable.h"
 #include "pilotscope/utils.h"
 #include "time.h"
+bool enable_parameterized_path_rows_estimation = false;
 /** modification end **/
 
 #define LOG2(x)  (log(x) / 0.693147180559945)
@@ -4758,24 +4759,34 @@ get_parameterized_baserel_size(PlannerInfo *root, RelOptInfo *rel,
 	// get parameterized base rel subquery
 	if(subquery_card_pull_anchor!= NULL && subquery_card_pull_anchor->enable==1)
 	{
-		// get subquery
-		get_parameterized_baserel(root, rel, param_clauses);
-		save_subquery_and_card(nrows);
+		if (enable_parameterized_path_rows_estimation){
+			// get subquery
+			get_parameterized_baserel(root, rel, param_clauses);
+			save_subquery_and_card(nrows);
+		}
 	}
 
 	// set parameterized base rel subquery card
 	if(card_push_anchor != NULL && card_push_anchor->enable == 1)
 	{
+		if (enable_parameterized_path_rows_estimation){
+			// get subquery
+			get_parameterized_baserel(root, rel, param_clauses);
 
-		// get subquery
-		get_parameterized_baserel(root, rel, param_clauses);
-
-		// set subquery of card if subquery exist in hash_table
-		char* row_from_push_anchor = get_card_from_push_anchor(table, sub_query->data);
-		if(row_from_push_anchor != NULL)
-		{
-			nrows = atof(row_from_push_anchor);
+			// set subquery of card if subquery exist in hash_table
+			char* row_from_push_anchor = get_card_from_push_anchor(table, sub_query->data);
+			if(row_from_push_anchor != NULL)
+			{
+				nrows = atof(row_from_push_anchor);
+			}
+		}else{  // Inherited from injected rows, rather than rows estimated by PG.
+			nrows = rel->rows * clauselist_selectivity(root,
+							   param_clauses,
+							   rel->relid,	/* do not use 0! */
+							   JOIN_INNER,
+							   NULL);
 		}
+		
 
 		nrows = clamp_row_est(nrows);
 		/* For safety, make sure result is not more than the base estimate */
