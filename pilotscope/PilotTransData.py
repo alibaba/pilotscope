@@ -15,12 +15,6 @@ class PilotTransData:
         self.buffercache = None
         self.subquery_2_card: dict = {}
 
-        # experiment
-        self.parser_time = None
-        self.http_time = None
-        self.anchor_names = []
-        self.anchor_times = []
-
     def __str__(self) -> str:
         return "\n".join([str(k) + ": " + str(v) for k, v in self.__dict__.items()])
 
