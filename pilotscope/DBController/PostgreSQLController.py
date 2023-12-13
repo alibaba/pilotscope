@@ -319,7 +319,7 @@ class PostgreSQLController(BaseDBController):
         check_db_running_cmd = "su {} -c '{} status -D {}'".format(self.config.db_user, self.config.pg_ctl,
                                                                    self.config.pgdata)
 
-        if self.config.is_local:
+        if self.config._is_local:
             res = os.popen(check_db_running_cmd)
             status = res.read()
         else:
@@ -390,7 +390,7 @@ class PostgreSQLController(BaseDBController):
     # switch user and run
     def _surun(self, cmd):
         su_and_cmd = "su {} -c '{}'".format(self.config.db_user, cmd)
-        if self.config.is_local:
+        if self.config._is_local:
             return os.system(su_and_cmd)
         else:
             ssh_conn = SSHConnector(self.config.db_host, self.config.db_host_user, self.config.db_host_pwd,

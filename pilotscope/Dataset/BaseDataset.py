@@ -94,7 +94,7 @@ class BaseDataset(ABC):
     def _load_dump(self, dump_file_dir, db_controller: BaseDBController):
         if self.use_db_type == DatabaseEnum.POSTGRESQL:
             psql = os.path.join(db_controller.config.pg_bin_path, "psql")
-            if db_controller.config.is_local:
+            if db_controller.config._is_local:
                 os.system(f"{psql} {self.created_db_name} -U {db_controller.config.db_user} < {dump_file_dir}")
             else:
                 ssh_conn = SSHConnector(db_controller.config.db_host, db_controller.config.db_host_user, db_controller.config.db_host_pwd, db_controller.config.db_host_port)

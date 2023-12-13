@@ -34,10 +34,7 @@ class DataManager:
         Read all rows from a given table.
 
         :param table_name: The name of the table to read from.
-        :type table_name: str
-
         :return: All rows in the specified table as a pandas DataFrame.
-        :rtype: pandas.DataFrame
         """
         query = "select * from {}".format(table_name)
         data = DataFrame(self.db_controller.execute(query, fetch=True))
@@ -47,13 +44,11 @@ class DataManager:
 
     def read_update(self, table_name):
         """
-        Read and update the visited record of a given table.
+        Read the new rows from a given table since the last visit.
+        This function will also update the last visit record in the database.
 
-        :param table_name: The name of the table to read and update.
-        :type table_name: str
-
+        :param table_name: The name of the table to read .
         :return: The new rows in the specified table since the last visit as a pandas DataFrame.
-        :rtype: pandas.DataFrame
         """
         if self.config.db_type == DatabaseEnum.SPARK:
             raise RuntimeError("spark not support read_update")

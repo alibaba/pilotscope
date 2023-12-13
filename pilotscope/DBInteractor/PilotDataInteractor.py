@@ -81,20 +81,20 @@ class PilotDataInteractor:
         anchor.subquery_2_card = subquery_2_value
         self._anchor_to_handlers[AnchorEnum.CARD_PUSH_ANCHOR] = anchor
 
-    def push_pg_hint_comment(self, comment_str):
+    def push_pg_hint_comment(self, pg_hint_comment: str):
         """
         Set the comment of `pg_hint_plan` into input SQL query. The function is only valid for PostgreSQL.
         The `pg_hint_plan` is an extension for the PostgreSQL database that allows users to influence the query planner's choice of execution plans.
         You can find more information in https://github.com/ossc-db/pg_hint_plan.
 
-        :param comment_str: a pg_hint_comment like ``/*+ HashJoin(a b) SeqScan(a) */``, which indicate the join method of `a` and `b` is HashJoin and the scan method of `a` is SeqScan.
+        :param pg_hint_comment: a pg_hint_comment like ``/*+ HashJoin(a b) SeqScan(a) */``, which indicate the join method of `a` and `b` is HashJoin and the scan method of `a` is SeqScan.
         """
 
         if self.config.db_type != DatabaseEnum.POSTGRESQL:
             raise NotImplementedError("PG Hint only is implemented for PostgresSQL database")
         anchor: CommentPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
                                                                              AnchorEnum.COMMENT_PUSH_ANCHOR)
-        anchor.comment_str = comment_str
+        anchor.comment_str = pg_hint_comment
         self._anchor_to_handlers[AnchorEnum.COMMENT_PUSH_ANCHOR] = anchor
 
     def _push_subplan_cost(self, subplan_2_cost: dict):
@@ -200,7 +200,7 @@ class PilotDataInteractor:
         Execute all sqls sequentially in a session. All SQL queries is executed using the identical push/pull configuration.
 
         :param sqls: a list of sqls to be executed
-        :param is_reset: If it is True, all anchors will be removed after execution
+        :param is_reset: If it is true, all `push`/`pull` will be removed after execution
         :return: list of the results for each sql
         """
         datas = []
@@ -218,7 +218,7 @@ class PilotDataInteractor:
 
         :param sqls: a list of sqls to be executed
         :param parallel_num: the number of threads, defaults to 10
-        :param is_reset: If it is True, all anchors will be removed after execution
+        :param is_reset: If it is true, all `push`/`pull` will be removed after execution
         :raises RuntimeError: simulate index does not support execute_parallel
         :return: list of the results for each sql
         """
@@ -243,7 +243,7 @@ class PilotDataInteractor:
         Execute this SQL and finish all registered push-and-pull operators before.
 
         :param sql: a sql statement to be executed
-        :param is_reset: If it is True, all anchors will be removed after execution
+        :param is_reset: If it is true, all `push`/`pull` will be removed after execution
         :return: If no exceptions, it returns a `PilotTransData` representing extended result; otherwise, it returns None.
         """
         try:

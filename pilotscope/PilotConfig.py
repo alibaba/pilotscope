@@ -12,19 +12,22 @@ class PilotConfig:
     """
     The PilotConfig class is used for storing and managing configuration information for PilotScope,
     including the host address of PilotScope, the name of the database to connect to,
-    the user name and password to log into the database, etc.
+    the username and password to log into the database, etc.
     """
 
-    def __init__(self, db_type: DatabaseEnum, db="stats_tiny", pilotscope_core_host="localhost", is_local=True) -> None:
+    def __init__(self, db_type: DatabaseEnum, db="stats_tiny", pilotscope_core_host="localhost") -> None:
+        """
+        :param db_type: the type of database, i.e. PostgreSQL, SparkSQL, etc.
+        :param db: the name of connected database
+        :param pilotscope_core_host: the host address of PilotScope in ML side.
+        """
         self.db_type: DatabaseEnum = db_type
 
         self.pilotscope_core_host = pilotscope_core_host
         self.data_fetch_method = DataFetchMethodEnum.HTTP
         self.db = db
 
-        self.is_local = is_local
-
-        # second
+        self._is_local = False
         self.sql_execution_timeout = 300
         self.once_request_timeout = self.sql_execution_timeout
 
@@ -35,6 +38,9 @@ class PilotConfig:
         return self.__dict__.__str__()
 
     def print(self):
+        """
+        Print the configuration information of PilotScope.
+        """
         for key, value in self.__dict__.items():
             print("{} = {}".format(key, value))
 
@@ -42,6 +48,13 @@ class PilotConfig:
 class PostgreSQLConfig(PilotConfig):
     def __init__(self, pilotscope_core_host="localhost", db_host="localhost", db_port="5432", db_user="postgres",
                  db_user_pwd="postgres") -> None:
+        """
+        :param pilotscope_core_host: the host address of PilotScope in ML side.
+        :param db_host: the host address of database
+        :param db_port: the port of database
+        :param db_user: the username to log into the database
+        :param db_user_pwd: the password to log into the database
+        """
         super().__init__(db_type=DatabaseEnum.POSTGRESQL, pilotscope_core_host=pilotscope_core_host)
         self.db_host = db_host
         self.db_port = db_port
@@ -58,49 +71,50 @@ class PostgreSQLConfig(PilotConfig):
         self.db_host_pwd = None
         self.db_host_port = None
 
-    # def enable_deep_control(self, pg_bin_path, pgdata, db_host_user=None, db_host_pwd=None, db_host_ssh_port=54023):
-    def enable_deep_control_local(self, pg_bin_path, pgdata):
-        """Set value for local PostgreSQL. They influence the start, stop, changing config file, etc.
-            If you do not need these functions, it is not necessary to set these values.
+    def enable_deep_control_local(self, pg_bin_path: str, pg_data_path: str):
+        """
+        Enable deep control for PostgreSQL, such as  starting and stopping database, changing config file, etc.
+        If you do not need these functions, it is not necessary to set these values.
+        If the database and PilotScope Core are on the same machine, you can use this function, i.e., pilotscope_core_host != db_host.
+        Otherwise, use `enable_deep_control_remote`
         
-        :param pg_bin_path: the directory of binary file of postgresql, i.e. the path of 'postgres', 'pg_ctl' etc.
-        :type pg_bin_path: str
-        :param pgdata: location of the database storage area
-        :type pgdata: str
+        :param pg_bin_path: the directory of binary file of postgresql, e.g., /postgres_install_path/bin
+        :param pg_data_path: location of the database data storage
         """
 
         self.pg_bin_path = pg_bin_path
-        self.pgdata = pgdata
-        self.backup_db_config_path = os.path.join(pgdata, "pilotscope_postgresql_backup.conf")
-        self.db_config_path = os.path.join(pgdata, "postgresql.conf")
+        self.pgdata = pg_data_path
+        self.backup_db_config_path = os.path.join(pg_data_path, "pilotscope_postgresql_backup.conf")
+        self.db_config_path = os.path.join(pg_data_path, "postgresql.conf")
         self.pg_ctl = os.path.join(pg_bin_path, "pg_ctl")
         with open(self.db_config_path, "r") as f:
             with open(self.backup_db_config_path, "w") as w:
                 w.write(f.read())
         self.pg_ctl = os.path.join(pg_bin_path, "pg_ctl")
 
-    def enable_deep_control_remote(self, pg_bin_path, pgdata, db_host_user, db_host_pwd, db_host_ssh_port=22):
-        """Set value for local PostgreSQL. They influence the start, stop, changing config file, etc.
-            If you do not need these functions, it is not necessary to set these values.
-        
-        :param db_host_ssh_port:
-        :param db_host_user:
-        :param db_host_pwd:
-        :param pg_bin_path: the directory of binary file of postgresql, i.e. the path of 'postgres', 'pg_ctl' etc.
-        :type pg_bin_path: str
-        :param pgdata: location of the database storage area
-        :type pgdata: str
+    def enable_deep_control_remote(self, pg_bin_path, pg_data_path, db_host_user, db_host_pwd, db_host_ssh_port=22):
+        """
+        Enable deep control for PostgreSQL, such as starting and stopping database, changing config file, etc.
+        If you do not need these functions, it is not necessary to set these values.
+        If the database and PilotScope Core are not on the same machine, you can use this function, i.e., pilotscope_core_host != db_host.
+        Otherwise, use `enable_deep_control_local`
+
+        :param pg_bin_path:  the directory of binary file of postgresql, e.g., /postgres_install_path/bin
+        :param pg_data_path: location of the database data storage
+        :param db_host_user: the username to log into the database host
+        :param db_host_pwd: the password to log into the database host
+        :param db_host_ssh_port: the port of ssh service on the database host
         """
 
-        self.is_local = False
+        self._is_local = False
         self.db_host_user = db_host_user
         self.db_host_pwd = db_host_pwd
         self.db_host_port = db_host_ssh_port
 
         self.pg_bin_path = pg_bin_path
-        self.pgdata = pgdata
-        self.backup_db_config_path = os.path.join(pgdata, "pilotscope_postgresql_backup.conf")
-        self.db_config_path = os.path.join(pgdata, "postgresql.conf")
+        self.pgdata = pg_data_path
+        self.backup_db_config_path = os.path.join(pg_data_path, "pilotscope_postgresql_backup.conf")
+        self.db_config_path = os.path.join(pg_data_path, "postgresql.conf")
         self.pg_ctl = os.path.join(pg_bin_path, "pg_ctl")
 
         ssh_conn = SSHConnector(self.db_host, self.db_host_user, self.db_host_pwd, self.db_host_port)
