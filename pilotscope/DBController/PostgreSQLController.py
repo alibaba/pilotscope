@@ -6,22 +6,23 @@ from sqlalchemy.exc import OperationalError
 
 from pilotscope.Common.Index import Index
 from pilotscope.DBController.BaseDBController import BaseDBController
-from pilotscope.Exception.Exception import DBStatementTimeoutException, DatabaseCrashException, DatabaseStartException, PilotScopeInternalError
+from pilotscope.Exception.Exception import DBStatementTimeoutException, DatabaseCrashException, DatabaseStartException, \
+    PilotScopeInternalError
 from pilotscope.PilotConfig import PostgreSQLConfig
 from pilotscope.Common.SSHConnector import SSHConnector
 
 
 class PostgreSQLController(BaseDBController):
-    instances = set()
+    _instances = set()
 
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls)
-        cls.instances.add(instance)
+        cls._instances.add(instance)
         return instance
 
     def __del__(self):
         self._disconnect()
-        type(self).instances.remove(self)
+        type(self)._instances.remove(self)
 
     def __init__(self, config: PostgreSQLConfig, echo=True, enable_simulate_index=False):
         super().__init__(config, echo)
@@ -65,6 +66,7 @@ class PostgreSQLController(BaseDBController):
     def execute(self, sql, fetch=False, fetch_column_name=False):
         """
         Execute a SQL query.
+
         :param sql: the SQL query to execute
         :param fetch: it indicates whether to fetch the result of the query
         :param fetch_column_name: it indicates whether to fetch the column names of the result.
@@ -96,6 +98,7 @@ class PostgreSQLController(BaseDBController):
         Set the value of each hint (i.e., the run-time config) when execute SQL queries.
         The hints can be used to control the behavior of the database system in a session.
         For PostgreSQL, you can find all valid hints in https://www.postgresql.org/docs/13/runtime-config.html.
+
         :param key: the name of the hint
         :param value: the value of the hint
         """
@@ -105,8 +108,8 @@ class PostgreSQLController(BaseDBController):
     def create_index(self, index: Index):
         """
         Create an index on columns `index.columns` of table `index.table` with name `index.index_name`.
+
         :param index: a Index object including the information of the index
-        :return:
         """
         if self.enable_simulate_index:
             self.simulate_index_visitor.create_index(index)
@@ -118,15 +121,12 @@ class PostgreSQLController(BaseDBController):
     def drop_index(self, index: Index):
         """
         Drop an index by its index name.
+
         :param index: an index that will be dropped
-        :return:
         """
         if self.enable_simulate_index:
             self.simulate_index_visitor.drop_index(index)
         else:
-            # todo
-            if "pgsysml" in index.index_name:
-                return
             statement = (
                 f"DROP INDEX IF EXISTS {index.index_name};"
             )
@@ -135,7 +135,6 @@ class PostgreSQLController(BaseDBController):
     def drop_all_indexes(self):
         """
         Drop all indexes across all tables in the database.
-        :return:
         """
         if self.enable_simulate_index:
             self.simulate_index_visitor.drop_all_indexes()
@@ -147,7 +146,8 @@ class PostgreSQLController(BaseDBController):
     def get_all_indexes_byte(self):
         """
         Get the size of all indexes across all tables in the database in bytes.
-        :return:
+
+        :return: the size of all indexes in bytes
         """
         if self.enable_simulate_index:
             result = self.simulate_index_visitor.get_all_indexes_byte()
@@ -161,8 +161,9 @@ class PostgreSQLController(BaseDBController):
     def get_table_indexes_byte(self, table_name):
         """
         Get the size of all indexes on a table in bytes.
+
         :param table_name: a table name that the indexes belong to
-        :return:
+        :return: the size of all indexes on the table in bytes
         """
         if self.enable_simulate_index:
             result = self.simulate_index_visitor.get_table_indexes_byte(table_name)
@@ -174,8 +175,9 @@ class PostgreSQLController(BaseDBController):
     def get_index_byte(self, index: Index):
         """
         Get the size of an index in bytes by its index name.
+
         :param index: the index to get size
-        :return:
+        :return: the size of the index in bytes
         """
         if self.enable_simulate_index:
             return self.simulate_index_visitor.get_index_byte(index)
@@ -188,10 +190,7 @@ class PostgreSQLController(BaseDBController):
         Retrieves the existing index on the specified table.
 
         :param table: The name of the table to retrieve index information for.
-        :type table: str
-
         :return: The index information of the specified table.
-        :rtype: list
         """
         if self.enable_simulate_index:
             return self.simulate_index_visitor.get_existed_index(table)
@@ -224,18 +223,20 @@ class PostgreSQLController(BaseDBController):
     def explain_physical_plan(self, sql, comment=""):
         """
         Get the physical plan from database's optimizer of a SQL query.
-        :param sql:
-        :param comment:
-        :return:
+
+        :param sql: The SQL query to be explained.
+        :param comment: A SQL comment will be added to the beginning of the SQL query.
+        :return: The physical plan of the SQL query.
         """
         return self._explain(sql, comment, False)
 
     def explain_execution_plan(self, sql, comment=""):
         """
         Get the execution plan from database's optimizer of a SQL query.
-        :param sql:
-        :param comment:
-        :return:
+
+        :param sql: The SQL query to be explained.
+        :param comment: A SQL comment will be added to the beginning of the SQL query.
+        :return: The execution plan of the SQL query.
         """
         return self._explain(sql, comment, True)
 
@@ -245,8 +246,9 @@ class PostgreSQLController(BaseDBController):
     def get_estimated_cost(self, sql, comment=""):
         """
         Get an estimated cost of a SQL query.
+
         :param sql: The SQL query for which to estimate the cost.
-        :param comment: An optional comment to include with the query plan. Useful for debugging.
+        :param comment:  A SQL comment will be added to the beginning of the SQL query.
         :return: The estimated total cost of executing the SQL query.
         """
         plan = self.explain_physical_plan(sql, comment=comment)
@@ -257,10 +259,9 @@ class PostgreSQLController(BaseDBController):
         Constructs an EXPLAIN SQL statement for a given SQL query.
 
         :param sql: The SQL query to explain.
-        :param execute: A boolean flag indicating whether to include the ANALYZE option.
-                        If True, the ANALYZE option is included, and the query will be executed.
-        :param comment: An optional comment to add context to the EXPLAIN statement.
-        :return: The constructed EXPLAIN SQL statement.
+        :param execute: A boolean flag indicating whether to execute the query plan.
+        :param comment:  A SQL comment will be added to the beginning of the SQL query.
+        :return: The result of executing the `EXPLAIN` SQL statement.
         """
         return "{} explain ({} VERBOSE, SETTINGS, SUMMARY, FORMAT JSON) {}".format(comment,
                                                                                    "ANALYZE," if execute else "",
@@ -286,9 +287,9 @@ class PostgreSQLController(BaseDBController):
 
     def shutdown(self):
         """
-        Shutdown the DBMS
+        Shutdown the database
         """
-        for instance in type(self).instances:
+        for instance in type(self)._instances:
             # if hasattr(instance, "engine"):
             instance._disconnect()  # to set DBController's self.connection_thread.conn is None
             instance.engine.dispose(close=True)
@@ -310,12 +311,13 @@ class PostgreSQLController(BaseDBController):
                 raise DatabaseStartException
             else:
                 raise DatabaseCrashException
-        for instance in type(self).instances:
+        for instance in type(self)._instances:
             instance._connect_if_loss()
 
     def is_running(self):
         """
         Check whether the database is running.
+
         :return: True if the database is running, False otherwise.
         """
         check_db_running_cmd = "su {} -c '{} status -D {}'".format(self.config.db_user, self.config.pg_ctl,
@@ -334,15 +336,15 @@ class PostgreSQLController(BaseDBController):
 
         return "server is running" in status
 
-    def write_knob_to_file(self, knobs: dict):
+    def write_knob_to_file(self, key_2_value_knob: dict):
         """
         Write knobs to config file, you should restart database to make it work.
 
-        :param knobs: a dict with keys as the names of the knobs and values as the values to be set.
+        :param key_2_value_knob: a dict with keys as the names of the knobs and values as the values to be set.
         """
         with open(self.config.db_config_path, "a") as f:
             f.write("\n")
-            for k, v in knobs.items():
+            for k, v in key_2_value_knob.items():
                 f.write("{} = {}\n".format(k, v))
 
     def recover_config(self):

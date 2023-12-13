@@ -1,6 +1,8 @@
 import os
 import logging
 from typing_extensions import deprecated
+
+from pilotscope.Common.Index import Index
 from pilotscope.Common.Util import pilotscope_exit
 from pilotscope.DBController.BaseDBController import BaseDBController
 from pilotscope.Exception.Exception import DBStatementTimeoutException
@@ -213,8 +215,8 @@ class SparkIO:
 
     def has_table(self, table_name):
         return self.read(table_name="information_schema.tables") \
-            .filter("table_name = '{}'".format(table_name)) \
-            .count() > 0
+                   .filter("table_name = '{}'".format(table_name)) \
+                   .count() > 0
 
     def get_all_table_names_in_datasource(self) -> np.ndarray:
         return self.read(table_name="information_schema.tables") \
@@ -449,7 +451,7 @@ class SparkSQLController(BaseDBController):
         plan = self._physicalPlan(self.execute(sql)._jdf.queryExecution())
         return json.loads(plan.toJSON())[0]
 
-    def get_estimated_cost(self, sql) -> Tuple[int]:
+    def get_estimated_cost(self, sql, comment="") -> Tuple[int]:
         raise NotImplementedError(
             "Spark SQL does not support cost estimation.You can use row count or sizeByte instead.")
         plan = self._logicalPlan(self.execute(sql)._jdf.queryExecution())
@@ -459,8 +461,8 @@ class SparkSQLController(BaseDBController):
         return res.groups()[0], res.groups()[1]
 
     # done
-    def write_knob_to_file(self, knobs):
-        for k, v in knobs.items():
+    def write_knob_to_file(self, key_2_value_knob):
+        for k, v in key_2_value_knob.items():
             self.set_hint(k, v)
 
     # done
@@ -514,7 +516,7 @@ class SparkSQLController(BaseDBController):
     def create_index(self, index):
         pass
 
-    def drop_index(self, index_name):
+    def drop_index(self, index):
         pass
 
     def drop_all_indexes(self):
@@ -523,8 +525,8 @@ class SparkSQLController(BaseDBController):
     def get_all_indexes_byte(self):
         pass
 
-    def get_table_indexes_byte(self, table):
+    def get_table_indexes_byte(self, table_name):
         pass
 
-    def get_index_byte(self, index_name):
+    def get_index_byte(self, index: Index):
         pass

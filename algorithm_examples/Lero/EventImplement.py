@@ -41,9 +41,9 @@ def extract_plan_pairs(data: DataFrame):
 
 class LeroPretrainingModelEvent(PretrainingModelEvent):
 
-    def __init__(self, config: PilotConfig, bind_model: PilotModel, data_saving_table, enable_collection=True,
+    def __init__(self, config: PilotConfig, bind_pilot_model: PilotModel, data_saving_table, enable_collection=True,
                  enable_training=True):
-        super().__init__(config, bind_model, data_saving_table, enable_collection, enable_training)
+        super().__init__(config, bind_pilot_model, data_saving_table, enable_collection, enable_training)
         self.sqls = []
         self.pilot_data_interactor = PilotDataInteractor(self.config)
 
@@ -84,11 +84,11 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
                 column_2_value_list.append(column_2_value)
         return column_2_value_list, True
 
-    def custom_model_training(self, bind_model, db_controller: BaseDBController,
+    def custom_model_training(self, bind_pilot_model, db_controller: BaseDBController,
                               data_manager: DataManager):
         data: DataFrame = data_manager.read_all(self.data_saving_table)
         plans1, plans2 = extract_plan_pairs(data)
-        lero_model = training_pairwise_pilot_score(bind_model, plans1, plans2)
+        lero_model = training_pairwise_pilot_score(bind_pilot_model, plans1, plans2)
         return lero_model
 
 

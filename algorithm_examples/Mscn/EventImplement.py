@@ -14,9 +14,9 @@ from pilotscope.PilotTransData import PilotTransData
 
 class MscnPretrainingModelEvent(PretrainingModelEvent):
 
-    def __init__(self, config: PilotConfig, bind_model: PilotModel, data_saving_table, enable_collection=True,
+    def __init__(self, config: PilotConfig, bind_pilot_model: PilotModel, data_saving_table, enable_collection=True,
                  enable_training=True, training_data_file=None):
-        super().__init__(config, bind_model, data_saving_table, enable_collection, enable_training)
+        super().__init__(config, bind_pilot_model, data_saving_table, enable_collection, enable_training)
         self.sqls = []
         self.config.once_request_timeout = 60
         self.config.sql_execution_timeout = 60
@@ -39,7 +39,7 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
             column_2_value_list.append(column_2_value)
         return column_2_value_list, True
 
-    def custom_model_training(self, bind_model, db_controller: BaseDBController,
+    def custom_model_training(self, bind_pilot_model, db_controller: BaseDBController,
                               data_manager: DataManager):
         if not self.training_data_file is None:
             tokens, labels = load_tokens(self.training_data_file, self.training_data_file + ".token")

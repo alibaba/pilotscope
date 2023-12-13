@@ -8,16 +8,26 @@ lock = threading.Lock()
 
 
 class DBControllerFactory:
-    identifier_2_db_controller = {}
+    _identifier_2_db_controller = {}
 
     @classmethod
     def get_db_controller(cls, config: PilotConfig, echo=False, enable_simulate_index=False):
+        """
+        Get a db controller instance based on the config.
+        Each thread maintains a db controller instance with the same config.
+        A new db controller instance will be created when the thread does not exist an instance or the config is different.
+
+        :param config: The config of PilotScope.
+        :param echo: Whether to print the SQL statement.
+        :param enable_simulate_index: Whether to enable the simulated index. This is only valid for PostgreSQL.
+        :return: A new or cached db controller instance.
+        """
         lock.acquire()
         try:
             identifier = cls._get_identifier(config, enable_simulate_index)
 
-            if identifier in DBControllerFactory.identifier_2_db_controller:
-                db_controller: BaseDBController = cls.identifier_2_db_controller[identifier]
+            if identifier in DBControllerFactory._identifier_2_db_controller:
+                db_controller: BaseDBController = cls._identifier_2_db_controller[identifier]
                 db_controller._connect_if_loss()
                 return db_controller
 
@@ -32,7 +42,7 @@ class DBControllerFactory:
                 pass
             else:
                 raise RuntimeError()
-            DBControllerFactory.identifier_2_db_controller[identifier] = db_controller
+            DBControllerFactory._identifier_2_db_controller[identifier] = db_controller
             return db_controller
         finally:
             lock.release()

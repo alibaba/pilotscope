@@ -40,7 +40,7 @@ class MyTestCase(unittest.TestCase):
         self.db_controller.drop_table_if_exist(table)
 
     def test_get_table_column_name(self):
-        res = self.db_controller.get_table_column_name(self.table)
+        res = self.db_controller.get_table_columns(self.table)
         print(res)
         self.assertTrue(res == ['id', 'userid', 'date'])
         res = self.db_controller.get_table_columns(self.table)

@@ -48,7 +48,7 @@ class DataManager:
         This function will also update the last visit record in the database.
 
         :param table_name: The name of the table to read .
-        :return: The new rows in the specified table since the last visit as a pandas DataFrame.
+        :return: The new rows in the specified table since the last visit as a `pandas DataFrame`.
         """
         if self.config.db_type == DatabaseEnum.SPARK:
             raise RuntimeError("spark not support read_update")
@@ -67,9 +67,7 @@ class DataManager:
         Save data to the specified table in the database.
 
         :param table_name: The name of the table to insert the data into.
-        :type table_name: str
-        :param column_2_value: A dictionary of column names and their corresponding values, e.g. {'id': 1, 'name': 'John Doe', 'email': 'john.doe@example.com'}
-        :type column_2_value: Dict[str, Any]
+        :param column_2_value: A dictionary of column names and their corresponding values, e.g., {'id': 1, 'name': 'John Doe'}
         """
         if len(column_2_value) > 0:
             column_2_value = self._convert_data_type(column_2_value)
@@ -81,23 +79,16 @@ class DataManager:
         Save data batch.
 
         :param table_name: The name of the table to be saved.
-        :type table_name: str
-
-        :param column_2_value_list: A list of dictionaries, where each dictionary represents one row of data, e.g. [{'id': 1, 'name': 'John Doe', 'email': 'john.doe@example.com'}, {'id': 2, 'name': 'Jane Doe', 'email': 'jane.doe@example.com'}]
-        :type column_2_value_list: List[Dict[str, Any]]
-
-        :return: None
-        :rtype: NoneType
+        :param column_2_value_list: A list of dictionaries, where each dictionary represents one row of data, e.g., [{'id': 1, 'name': 'John Doe'}, {'id': 2, 'name': 'Jane Doe'}]
         """
         for i, column_2_value in enumerate(column_2_value_list):
             self.save_data(table_name, column_2_value)
 
     def remove_table_and_tracker(self, table_name):
         """
-        Drop the table if it exists.
+        Drop the table and its corresponding tracker.
 
         :param table_name: The name of the table to be dropped.
-        :type table_name: str
         """
         if self.db_controller.exist_table(table_name):
             self.db_controller.drop_table_if_exist(table_name)
@@ -110,7 +101,7 @@ class DataManager:
         :param table_name: The name of the table to create.
         :type table_name: str
 
-        :param column_2_value: A dictionary representing the columns and their default values for the new table, e.g. {'id': 0, 'name': '', 'email': ''}
+        :param column_2_value: A dictionary representing the columns and their default values for the new table, e.g. {'id': 0, 'name': ''}
         :type column_2_value: Dict[str, Any]
         """
         if self.config.db_type != DatabaseEnum.SPARK:

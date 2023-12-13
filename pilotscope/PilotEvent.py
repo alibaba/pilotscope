@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-from apscheduler.schedulers.background import BackgroundScheduler
-
 from pilotscope.DBController.BaseDBController import BaseDBController
 from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
@@ -45,15 +43,11 @@ class QueryFinishEvent(Event, ABC):
     @abstractmethod
     def process(self, db_controller: BaseDBController, data_manager: DataManager):
         """
-        Abstract method to process the event using a database controller and a data manager.
-        Subclasses should implement this method to define the specific processing logic
-        for the event based on the interactions with the provided `db_controller` and
-        `data_manager`.
+        This function will be called when `interval_count` query is finished.
+        The user can implement the function to define the process logic.
 
-        :param db_controller: The database controller to be used for database operations.
-        :type db_controller: BaseDBController
-        :param data_manager: The data manager to be used for managing data during processing.
-        :type data_manager: DataManager
+        :param db_controller: A `db_controller` initialized by the user's `PilotConfig` registered in `PilotScheduler`.
+        :param data_manager: A `data_manager` initialized by the user's `PilotConfig` registered in `PilotScheduler`.
         """
         pass
 
@@ -85,14 +79,12 @@ class WorkloadBeforeEvent(Event, ABC):
     @abstractmethod
     def process(self, db_controller: BaseDBController, data_manager: DataManager):
         """
-        Abstract method to define the processing logic for the event.
-        This method must be implemented by subclasses to provide specific logic for how
-        the event should be processed using the provided database controller and data manager.
+        This function will be called before start to deal with first SQL query of a workload, i.e., the first call
+        `PilotScheduler.execute()`.
+        The user can implement the function to define the process logic.
 
-        :param db_controller: The database controller to be used for any database operations required by the event.
-        :type db_controller: BaseDBController
-        :param data_manager: The data manager that provides access to the application's data.
-        :type data_manager: DataManager
+        :param db_controller: A `db_controller` initialized by the user's `PilotConfig` registered in `PilotScheduler`.
+        :param data_manager: A `data_manager` initialized by the user's `PilotConfig` registered in `PilotScheduler`.
         """
         pass
 
@@ -117,34 +109,28 @@ class PeriodicModelUpdateEvent(QueryFinishEvent, ABC):
     def custom_model_update(self, pilot_model: PilotModel, db_controller: BaseDBController,
                             data_manager: DataManager):
         """
-        Abstract method for custom updates to the pilot model.
-        This method must be implemented by subclasses to define specific update logic for the
-        pilot model using the provided database controller and data manager. It is meant to
-        be customized based on the event's needs and the state of the pilot model.
+        The user can implement the function to define the process logic of model update.
+        PilotScope will call this function periodically (i.e., per `interval_count` queries) for model update.
+        You should to return the updated user model, then PilotScope will save it automatically.
 
         :param pilot_model: The pilot model to be updated.
-        :type pilot_model: PilotModel
         :param db_controller: The database controller to be used for the update operations.
-        :type db_controller: BaseDBController
         :param data_manager: The data manager that provides access to the application's data.
-        :type data_manager: DataManager
+        :return: The updated user model (i.e., pilot_model.model).
         """
         pass
 
 
 class PretrainingModelEvent(Event, ABC):
     """
-    Abstract base class representing pre-training events for a `PilotModel`.
-    This class is responsible for managing the initial data collection and model training
-    routines prior to the model being deployed in a production environment. It utilizes
-    mechanisms for asynchronous data collection and model training.
+    A pretraining model event is an event that is used to collect data nad pretrain a model before the application starts.
     """
 
-    def __init__(self, config: PilotConfig, bind_model: PilotModel, data_saving_table, enable_collection=True,
+    def __init__(self, config: PilotConfig, bind_pilot_model: PilotModel, data_saving_table, enable_collection=True,
                  enable_training=True):
         super().__init__(config)
         self.config = config
-        self._model: PilotModel = bind_model
+        self._model: PilotModel = bind_pilot_model
         self.enable_collection = enable_collection
         self.enable_training = enable_training
         self.data_saving_table = data_saving_table
@@ -202,26 +188,29 @@ class PretrainingModelEvent(Event, ABC):
     @abstractmethod
     def iterative_data_collection(self, db_controller: BaseDBController, train_data_manager: DataManager):
         """
-        This abstract method defines the iterative process of collecting data from the database.
+        This user should implement this function to define the iterative process of custom data collection.
+        Each iteration should return a list where each item is a dict indicating each column's name and value.
+        All column names should be the same as the columns of `self.data_saving_table`.
+        PilotScope will save these data into the specified table `self.data_saving_table` automatically.
+        In addition, this function should return a bool value to indicate whether the iteration should be terminated.
 
         :param db_controller: The object that controls the database connection.
-        :type db_controller: BaseDBController
         :param train_data_manager: The object that manages the training data.
-        :type train_data_manager: DataManager
+        :return two values: A list where each item is a dict indicate each column's value and a bool value indicate whether the iteration should be terminated.
         """
         pass
 
     @abstractmethod
-    def custom_model_training(self, bind_model, db_controller: BaseDBController,
+    def custom_model_training(self, bind_pilot_model: PilotModel, db_controller: BaseDBController,
                               data_manager: DataManager):
         """
-        This abstract method defines the custom logic for training the model.
+        This user should implement this function to define the custom logic for training the model.
+        PilotScope will call this function after the data collection is finished.
+        You should return the updated user model, then PilotScope will save it automatically.
 
-        :param bind_model: The model to be trained.
-        :type bind_model: Model
+        :param bind_pilot_model: The model to be trained.
         :param db_controller: The object that controls the database connection.
-        :type db_controller: BaseDBController
         :param data_manager: The object that manages the data used for training the model.
-        :type data_manager: DataManager
+        :return: The updated user model (i.e., bind_pilot_model.model).
         """
         pass
