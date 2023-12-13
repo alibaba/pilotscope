@@ -6,7 +6,7 @@ from sqlalchemy.exc import OperationalError
 
 from pilotscope.Common.Index import Index
 from pilotscope.DBController.BaseDBController import BaseDBController
-from pilotscope.Exception.Exception import DBStatementTimeoutException, DatabaseCrashException, DatabaseStartException
+from pilotscope.Exception.Exception import DBStatementTimeoutException, DatabaseCrashException, DatabaseStartException, PilotScopeInternalError
 from pilotscope.PilotConfig import PostgreSQLConfig
 from pilotscope.Common.SSHConnector import SSHConnector
 
@@ -85,6 +85,8 @@ class PostgreSQLController(BaseDBController):
             else:
                 raise e
         except Exception as e:
+            if "Can not find the corresponding sub-plan query in push anchor" in str(e):
+                raise PilotScopeInternalError(str(e))
             if "PilotScopePullEnd" not in str(e):
                 raise e
         return row

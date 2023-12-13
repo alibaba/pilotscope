@@ -330,6 +330,8 @@ class PilotDataInteractor:
             extract_anchor_handlers(anchor_2_handlers, is_fetch_anchor=True))
         if AnchorEnum.RECORD_PULL_ANCHOR in filter_anchor_2_handlers:
             filter_anchor_2_handlers.pop(AnchorEnum.RECORD_PULL_ANCHOR)
+        if self.config.db_type == DatabaseEnum.SPARK and AnchorEnum.EXECUTION_TIME_PULL_ANCHOR in filter_anchor_2_handlers:
+            filter_anchor_2_handlers.pop(AnchorEnum.EXECUTION_TIME_PULL_ANCHOR)
         return len(filter_anchor_2_handlers) > 0
 
     def _is_execute_comment_sql(self, anchor_2_handlers):
