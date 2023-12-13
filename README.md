@@ -1,4 +1,8 @@
 # <center><font color=green size=10>PilotScope</font></center>
+<div style="text-align:center">
+  <img src="fig/banner.png", alt="PilotScope" />
+</div>
+
 ![](https://img.shields.io/badge/language-Python-blue.svg)
 ![](https://img.shields.io/badge/language-C-blue.svg)
 ![](https://img.shields.io/badge/language-Scala-blue.svg)
@@ -85,6 +89,15 @@ The quick start guide is available in [documentation](http://gitlab.alibaba-inc.
 
 ## Core Components
 The components of PilotScope Core in ML side can be divided into two categories: Database Components and Deployment Components. The Database Components are used to facilitate data exchange and control over database, while the Deployment Components are used to facilitate the automatic application of custom AI algorithms to each incoming SQL query. 
+
+A high-level overview of the PilotScope Core components is shown in the following figure.
+
+<div align="center">
+  <img src="fig/pilotscope_module_framework.png" alt="PilotScope" style="width: 80%;" />
+</div>
+
+The Database Components are highlighted in Yellow, while the Deployment Components are highlighted in green. We will discuss each of these components in detail in the following sections.
+
 
 To facilitate data exchange and control over database, PilotScope incorporates the following components:
 
