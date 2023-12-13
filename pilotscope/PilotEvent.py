@@ -17,6 +17,10 @@ class Event(ABC):
     """
 
     def __init__(self, config):
+        """
+
+        :param config: The configuration of PilotScope.
+        """
         self.config = config
 
 
@@ -26,6 +30,11 @@ class QueryFinishEvent(Event, ABC):
     """
 
     def __init__(self, config, interval_count=1):
+        """
+
+        :param config: The configuration of PilotScope.
+        :param interval_count: This event will be triggered when per `interval_count` query is finished.
+        """
         super().__init__(config)
         self.interval_count = interval_count
         self.query_execution_count = 0
@@ -58,6 +67,11 @@ class WorkloadBeforeEvent(Event, ABC):
     """
 
     def __init__(self, config, enable=True):
+        """
+
+        :param config: The configuration of PilotScope.
+        :param enable: The event will be triggered when the value is True.
+        """
         super().__init__(config)
         self.already_been_called = not enable
 
@@ -95,6 +109,13 @@ class PeriodicModelUpdateEvent(QueryFinishEvent, ABC):
     """
 
     def __init__(self, config, interval_count, pilot_model: PilotModel = None, execute_on_init=True):
+        """
+
+        :param config: The configuration of PilotScope.
+        :param interval_count: This event will be triggered when per `interval_count` query is finished.
+        :param pilot_model: The pilot model to be updated.
+        :param execute_on_init: Whether to execute the `custom_model_update` function when the `PilotScheduler` is initialized.
+        """
         super().__init__(config, interval_count)
         self.pilot_model = pilot_model
         self.execute_before_first_query = execute_on_init
@@ -128,6 +149,14 @@ class PretrainingModelEvent(Event, ABC):
 
     def __init__(self, config: PilotConfig, bind_pilot_model: PilotModel, data_saving_table, enable_collection=True,
                  enable_training=True):
+        """
+
+        :param config: The configuration of PilotScope.
+        :param bind_pilot_model: The pilot model to be pre-trained.
+        :param data_saving_table: The table to save the collected data.
+        :param enable_collection: A flag indicating whether to enable data collection.
+        :param enable_training: A flag indicating whether to enable model training.
+        """
         super().__init__(config)
         self.config = config
         self._model: PilotModel = bind_pilot_model

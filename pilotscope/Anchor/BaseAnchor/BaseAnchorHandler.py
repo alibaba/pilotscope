@@ -16,7 +16,7 @@ class BaseAnchorHandler(ABC):
         self.anchor_name = AnchorEnum.BASE_ANCHOR.name
         self.config = config
 
-    def add_trans_params(self, params: dict):
+    def _add_trans_params(self, params: dict):
         return params.update({"enable": self.enable, "name": self.anchor_name})
 
     def get_call_priority(self):

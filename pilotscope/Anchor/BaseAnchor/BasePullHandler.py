@@ -12,8 +12,8 @@ class BasePullHandler(BaseAnchorHandler):
         super().__init__(config)
         self.fetch_method = FetchMethod.OUTER
 
-    def add_trans_params(self, params: dict):
-        super().add_trans_params(params)
+    def _add_trans_params(self, params: dict):
+        super()._add_trans_params(params)
 
     def fetch_from_outer(self, db_controller, sql, pilot_comment, anchor_data: AnchorTransData,
                          fill_data: PilotTransData):

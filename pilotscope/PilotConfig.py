@@ -27,7 +27,7 @@ class PilotConfig:
         self.data_fetch_method = DataFetchMethodEnum.HTTP
         self.db = db
 
-        self._is_local = False
+        self._is_local = True
         self.sql_execution_timeout = 300
         self.once_request_timeout = self.sql_execution_timeout
 

@@ -18,6 +18,11 @@ class DataManager:
     """
 
     def __init__(self, config: PilotConfig) -> None:
+        """
+        Initialize the DataManager.
+
+        :param config: The configuration of PilotScope.
+        """
         self.config = deepcopy(config)
 
         self.config.db = PilotSysConfig.USER_DATA_DB_NAME

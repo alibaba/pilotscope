@@ -25,6 +25,11 @@ class PilotDataInteractor:
     """
 
     def __init__(self, config: PilotConfig, enable_simulate_index=False) -> None:
+        """
+
+        :param config: The configuration of PilotScope.
+        :param enable_simulate_index: A flag indicating whether to enable the simulated index. This flag is only valid for PostgreSQL.
+        """
         self.db_controller = DBControllerFactory.get_db_controller(config, enable_simulate_index=enable_simulate_index)
         self._anchor_to_handlers = {}
         self.config = config
@@ -367,7 +372,7 @@ class PilotDataInteractor:
         handlers = extract_handlers(self._anchor_to_handlers.values(), extract_pull_anchor=False)
         handlers = sorted(handlers, key=lambda x: cast(BaseAnchorHandler, x).get_call_priority())
         for handler in handlers:
-            handler.exec_commands_before_sql(self.db_controller)
+            handler._exec_commands_before_sql(self.db_controller)
 
         records = execution_time_from_outer = None
         if is_execute_comment_sql:
@@ -381,9 +386,9 @@ class PilotDataInteractor:
         for anchor, handle in self._anchor_to_handlers.items():
             params = {}
             if isinstance(handle, BasePushHandler):
-                handle.add_trans_params(params)
+                handle._add_trans_params(params)
             elif isinstance(handle, BasePullHandler) and handle.fetch_method == FetchMethod.INNER:
-                handle.add_trans_params(params)
+                handle._add_trans_params(params)
             if len(params) > 0:
                 anchor_params[anchor.name] = params
         return anchor_params
@@ -414,7 +419,7 @@ class PilotDataInteractor:
         for handle in handles:
             params = {}
             if isinstance(handle, BasePushHandler):
-                handle.add_trans_params(params)
+                handle._add_trans_params(params)
                 if len(params) > 0:
                     anchor_params[handle.anchor_name] = params
         return anchor_params

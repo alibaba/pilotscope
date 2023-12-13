@@ -14,6 +14,10 @@ from pilotscope.PilotTransData import PilotTransData
 class PilotScheduler:
 
     def __init__(self, config: PilotConfig) -> None:
+        """
+
+        :param config: The configuration of PilotScope.
+        """
         self.config = config
         self.table_name_for_store_data = None
         self.data_manager: DataManager = DataManager(self.config)
@@ -54,7 +58,7 @@ class PilotScheduler:
         # replace value based on user's method
 
         for replace_handle in self.user_tasks:
-            replace_handle.update_injected_data(sql)
+            replace_handle._update_injected_data(sql)
 
         result = data_interactor.execute(sql, is_reset=False)
 

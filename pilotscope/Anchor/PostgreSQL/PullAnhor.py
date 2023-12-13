@@ -60,6 +60,6 @@ class PostgreSQLSubQueryCardPullHandler(SubQueryCardPullHandler, PostgreSQLAncho
         super().__init__(config)
         self.enable_parameterized_subquery = False
 
-    def add_trans_params(self, params: dict):
-        super().add_trans_params(params)
+    def _add_trans_params(self, params: dict):
+        super()._add_trans_params(params)
         params.update({"enable_parameterized_subquery": self.enable_parameterized_subquery})
