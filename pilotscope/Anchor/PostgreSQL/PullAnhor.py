@@ -55,4 +55,11 @@ class PostgreSQLExecutionTimePullHandler(ExecutionTimePullHandler, PostgreSQLAnc
 
 
 class PostgreSQLSubQueryCardPullHandler(SubQueryCardPullHandler, PostgreSQLAnchorMixin):
-    pass
+
+    def __init__(self, config) -> None:
+        super().__init__(config)
+        self.enable_parameterized_subquery = False
+
+    def add_trans_params(self, params: dict):
+        super().add_trans_params(params)
+        params.update({"enable_parameterized_subquery": self.enable_parameterized_subquery})

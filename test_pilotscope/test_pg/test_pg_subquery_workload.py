@@ -37,7 +37,7 @@ class MyTestCase(unittest.TestCase):
     def test_job(self):
         self.config.db = "imdb_tiny"
         self.data_interactor = PilotDataInteractor(self.config)
-        sqls = load_test_sql("imdb")[56:]
+        sqls = load_test_sql("imdb")
         self._check_workload(sqls)
 
     def test_stats_ceb(self):

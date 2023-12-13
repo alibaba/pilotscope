@@ -69,17 +69,19 @@ class BasePushHandler(BaseAnchorHandler):
 
 class CardPushHandler(BasePushHandler):
 
-    def __init__(self, config, subquery_2_card: dict = None) -> None:
+    def __init__(self, config, subquery_2_card: dict = None, enable_parameterized_subquery=False) -> None:
         super().__init__(config)
         self.anchor_name = AnchorEnum.CARD_PUSH_ANCHOR.name
         self.subquery_2_card = subquery_2_card
+        self.enable_parameterized_subquery = enable_parameterized_subquery
 
     def update_injected_data(self, sql):
         self.subquery_2_card = self.acquire_injected_data(sql)
 
     def add_trans_params(self, params: dict):
         super().add_trans_params(params)
-        params.update({"subquery": list(self.subquery_2_card.keys()), "card": list(self.subquery_2_card.values())})
+        params.update({"subquery": list(self.subquery_2_card.keys()), "card": list(self.subquery_2_card.values()),
+                       "enable_parameterized_subquery": self.enable_parameterized_subquery})
 
 
 class CostPushHandler(BasePushHandler):
@@ -118,7 +120,7 @@ class HintPushHandler(BasePushHandler):
 
 class CommentPushHandler(BasePushHandler):
 
-    def __init__(self, config, comment_str = "") -> None:
+    def __init__(self, config, comment_str="") -> None:
         super().__init__(config)
         self.anchor_name = AnchorEnum.COMMENT_PUSH_ANCHOR.name
         self.comment_str = comment_str
@@ -126,6 +128,7 @@ class CommentPushHandler(BasePushHandler):
     def add_trans_params(self, params: dict):
         # the empty function is meaningful for removing all params from superclass.
         pass
+
 
 class KnobPushHandler(BasePushHandler):
 

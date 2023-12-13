@@ -69,16 +69,20 @@ class PilotDataInteractor:
         anchor.key_2_value_for_knob = key_2_value_for_knob
         self._anchor_to_handlers[AnchorEnum.KNOB_PUSH_ANCHOR] = anchor
 
-    def push_card(self, subquery_2_value: dict):
+    def push_card(self, subquery_2_value: dict, enable_parameterized_subquery=False):
         """
         Set the cardinality of each sub-plan query when execute a SQL query.
         The cardinality of each sub-plan query will set to the default estimated value if you don't provide the value.
 
         :param subquery_2_value: A dictionary containing subquery to card value mappings, e.g.
             {"subquery_1": "card_1", "subquery_2": "card_2"}
+        :param enable_parameterized_subquery: A flag indicating whether to enable parameterized subquery.
+
         """
         anchor: CardPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config, AnchorEnum.CARD_PUSH_ANCHOR)
         anchor.subquery_2_card = subquery_2_value
+        if self.config.db_type == DatabaseEnum.POSTGRESQL:
+            anchor.enable_parameterized_subquery = enable_parameterized_subquery
         self._anchor_to_handlers[AnchorEnum.CARD_PUSH_ANCHOR] = anchor
 
     def push_pg_hint_comment(self, pg_hint_comment: str):
@@ -128,13 +132,18 @@ class PilotDataInteractor:
         self._anchor_to_handlers[AnchorEnum.INDEX_PUSH_ANCHOR] = anchor
         pass
 
-    def pull_subquery_card(self):
+    def pull_subquery_card(self, enable_parameterized_subquery=False):
         """
         Require PilotScope to collect all cardinality information of each sub-plan queries when execute a SQL query.
+
+        :param enable_parameterized_subquery: A flag indicating whether to enable parameterized subquery.
         """
+
         anchor: SubQueryCardPullHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
                                                                                   AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR)
         self._anchor_to_handlers[AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR] = anchor
+        if self.config.db_type == DatabaseEnum.POSTGRESQL:
+            anchor.enable_parameterized_subquery = enable_parameterized_subquery
         if self.config.db_type == DatabaseEnum.SPARK and not self.spark_analyzed:
             self.db_controller.analyze_all_table_stats()
             self.spark_analyzed = True
@@ -360,12 +369,12 @@ class PilotDataInteractor:
         for handler in handlers:
             handler.exec_commands_before_sql(self.db_controller)
 
-        records = python_sql_execution_time = None
+        records = execution_time_from_outer = None
         if is_execute_comment_sql:
             start_time = time.time()
             records = self.db_controller.execute(comment_sql, fetch=True, fetch_column_name=True)
-            python_sql_execution_time = time.time() - start_time
-        return records, python_sql_execution_time
+            execution_time_from_outer = time.time() - start_time
+        return records, execution_time_from_outer
 
     def _get_anchor_params_as_comment(self):
         anchor_params = {}
