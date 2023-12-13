@@ -100,6 +100,7 @@ extern int subquery_count;
 extern int port;
 extern char* host;
 extern int enableSend;
+extern int enable_parameterized_path_rows_estimation;
 
 // function
 extern void init_some_vars();

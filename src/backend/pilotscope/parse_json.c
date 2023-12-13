@@ -142,6 +142,9 @@ static void parse_one_anchor(char* anchorname,char* anchor_json)
     {
         case SUBQUERY_CARD_PULL_ANCHOR:
             anchor_handler(anchor_json,subquery_card_pull_anchor,SubqueryCardPullAnchor,Subquery_Card_Fetcher_Anchor_ref_tbl);
+            cJSON* subquery_ancor_dict = cJSON_Parse(anchor_json);
+            cJSON *enable_parameterized_item         = cJSON_GetObjectItem(subquery_ancor_dict, "enable_parameterized_subquery");
+            enable_parameterized_path_rows_estimation = enable_parameterized_item->valueint;
             break;
         case CARD_PUSH_ANCHOR:
             anchor_handler(anchor_json,card_push_anchor,CardPushAnchor,Card_Replace_Anchor_ref_tbl);
@@ -185,13 +188,13 @@ static cJSON* parse_relative_infomation(char* queryString,char* check_start,char
     cJSON* anchor_dict = cJSON_Parse(string_of_anchor_dict);
 
     // get each item
-    cJSON *anchor_item          = cJSON_GetObjectItem(anchor_dict, "anchor");
-    cJSON *port_item            = cJSON_GetObjectItem(anchor_dict, "port");
-    cJSON *url_item             = cJSON_GetObjectItem(anchor_dict, "url");
-    cJSON *enableTerminate_item = cJSON_GetObjectItem(anchor_dict, "enableTerminate");
-    cJSON *tid_item             = cJSON_GetObjectItem(anchor_dict, "tid");
+    cJSON *anchor_item                           = cJSON_GetObjectItem(anchor_dict, "anchor");
+    cJSON *port_item                             = cJSON_GetObjectItem(anchor_dict, "port");
+    cJSON *url_item                              = cJSON_GetObjectItem(anchor_dict, "url");
+    cJSON *enableTerminate_item                  = cJSON_GetObjectItem(anchor_dict, "enableTerminate");
+    cJSON *tid_item                              = cJSON_GetObjectItem(anchor_dict, "tid");
 
-    // enableTerminate
+    // enableTerminate, enable_parameterized_path_rows_estimation
     enableTerminate = enableTerminate_item->valueint;
 
     // port、url

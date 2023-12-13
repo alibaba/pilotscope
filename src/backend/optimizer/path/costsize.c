@@ -104,7 +104,6 @@
 #include "pilotscope/hashtable.h"
 #include "pilotscope/utils.h"
 #include "time.h"
-bool enable_parameterized_path_rows_estimation = false;
 /** modification end **/
 
 #define LOG2(x)  (log(x) / 0.693147180559945)

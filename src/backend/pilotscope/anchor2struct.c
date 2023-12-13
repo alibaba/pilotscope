@@ -93,6 +93,7 @@ int subquery_count;
 int enableTerminate;
 int enableSend;
 int enablePilotscope;
+int enable_parameterized_path_rows_estimation;
 int port;
 char* host;
 
@@ -147,6 +148,7 @@ reflect_item_t Record_Fetch_Anchor_ref_tbl[] = {
     enableSend                      = 1;
     enableTerminate                 = false;
     enablePilotscope                = 1;
+    enable_parameterized_path_rows_estimation = false;
     subquery_count                  = 0;
     host                            = NULL;
     port                            = 8888;
