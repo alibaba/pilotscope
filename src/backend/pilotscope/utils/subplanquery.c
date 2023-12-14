@@ -57,8 +57,7 @@ static bool isSwap = false;  // for lexicographic order of join clause
 bool rel_first; 
 DeparseCxt* context;
 
-static int comp_string(const StringInfo str1, const StringInfo str2);
-static StringInfo get_var(const Var  *var, PlannerInfo *root);
+static int joinclause_relation_order_compare(const ListCell *a, const ListCell *b);
 static void get_expr(const Node *expr, PlannerInfo *root);
 static void get_restrictclauses(PlannerInfo *root, List *clauses);
 static void get_rels_for_deparse (PlannerInfo *root, Relids relids, bool visit);
@@ -75,30 +74,21 @@ static DeparseTblRef **makeDeparseTblRef(int num);
 static Relids get_relids_only_in_rangetbl(Node *jtnode);
 
 /* 
- * Compare the lexicographic order of strings.
+ * Compare the relation order of join clause.
  */
-static int 
-comp_string(const StringInfo str1, const StringInfo str2){
-	return strcmp(str1->data, str2->data);
+static int
+joinclause_relation_order_compare(const ListCell *a, const ListCell *b)
+{
+	JoinClause	   *jc1 = (JoinClause *) lfirst(a);
+	JoinClause	   *jc2 = (JoinClause *) lfirst(b);
+	int			cmp;
+
+	Relids r1 = bms_union(jc1->left_relids, jc1->right_relids);
+	Relids r2 = bms_union(jc2->left_relids, jc2->right_relids);
+	return bms_compare(r1, r2);
 }
 
 
-/* 
- * get the string value of Var
- */
-static StringInfo 
-get_var(const Var  *var, PlannerInfo *root){
-	StringInfo name = makeStringInfo();
-	char	*relname, *attname;
-	const List *rtable = root->parse->rtable;
-    RangeTblEntry *rte;
-    Assert(var->varno > 0 && (int) var->varno <= list_length(rtable));
-	rte = rt_fetch(var->varno, rtable);
-    relname = rte->eref->aliasname;
-    attname = get_rte_attribute_name(rte, var->varattno);
-	appendStringInfo(name, "%s.%s", relname, attname);
-	return name;
-}
 
 /* 
  * transform expression into string and append them to the subquery string.
@@ -270,20 +260,12 @@ get_expr(const Node *expr, PlannerInfo *root)
 			// B.k = A.k convert to A.k = B.k
 			isSwap = false;
 			if (strcmp(opname, "=") == 0){
-				StringInfo left_var, right_var;
-				lc = list_head(e->args);
-				Expr  *ex = (Expr *) lfirst(lc);
-				if (nodeTag(ex) == T_Var){
-					left_var = get_var((Var *) ex, root);
-					lc = list_tail(e->args);
-					ex = (Expr *) lfirst(lc);
-					if (nodeTag(ex) == T_Var){
-						right_var = get_var((Var *) ex, root);
-						if (comp_string(left_var, right_var) > 0)
-							isSwap = true;
-					}
+				Expr	   *ex1 = (Expr *) lfirst(list_head(e->args));
+				Expr	   *ex2 = (Expr *) lfirst(list_tail(e->args));
+				if (nodeTag(ex1) == T_Var && nodeTag(ex2) == T_Var){
+					if (((Var *) ex1)->varno > ((Var *) ex2)->varno)
+						isSwap = true;
 				}
-
 			}
 
 			if (!isSwap){
@@ -938,6 +920,7 @@ get_join_info(PlannerInfo *root){
 		first = false;
 	}
 	List *clauses = NIL;
+	list_sort(context->where_join_clauses, joinclause_relation_order_compare);
 	foreach(l, context->where_join_clauses){
 		whereclause = (JoinClause *) lfirst(l);
 		clauses = lappend(clauses, whereclause->join_clause);
