@@ -31,6 +31,6 @@ typedef struct
 extern int table_size;
 extern Hashtable* table;
 Hashtable* create_hashtable();
-void put(Hashtable* table, const char* key, const char* value);
-char* get(Hashtable* table, const char* key);
+void put(Hashtable* table, const char* key, const int key_len, const char* value);
+char* get(Hashtable* table, const char* key, const int key_len);
 #endif

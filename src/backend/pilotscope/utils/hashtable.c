@@ -19,9 +19,9 @@ Hashtable* table;
 static Entry* create_entry(const char* key, const char* value);
 
 // get hash
-unsigned int hash(const char* key) 
+unsigned int hash(const char* key, int key_len) 
 {
-    unsigned int hash_val=hash_bytes((const unsigned char*)key,strlen(key));
+    unsigned int hash_val=hash_bytes((const unsigned char*)key, key_len);
     return hash_val % table_size;
 }
 
@@ -46,9 +46,9 @@ Hashtable* create_hashtable()
 }
 
 // put item into hashtable
-void put(Hashtable* table, const char* key, const char* value) 
+void put(Hashtable* table, const char* key, const int key_len, const char* value) 
 {
-    unsigned int index = hash(key);
+    unsigned int index = hash(key, key_len);
     if (table->entries[index] == NULL) 
     {
         table->entries[index] = create_entry(key, value);
@@ -72,13 +72,13 @@ void put(Hashtable* table, const char* key, const char* value)
 }
 
 // get value from hashtable according to the key
-char* get(Hashtable* table, const char* key) 
+char* get(Hashtable* table, const char* key, const int key_len) 
 {
-    unsigned int index = hash(key);
+    unsigned int index = hash(key, key_len);
     Entry* current = table->entries[index];
     while (current != NULL) 
     {
-        if (strcmp(current->key, key) == 0) 
+        if (strncmp(current->key, key, key_len) == 0) 
         {
             return current->value;
         }

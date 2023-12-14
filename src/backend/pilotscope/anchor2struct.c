@@ -271,10 +271,30 @@ void end_anchor()
     }
 }
 
+int get_subquery_key_len(const char* key){
+    int len = strlen(key);
+    char* key_start = NULL;
+    for(int i = 1; i < len; ++i){
+        if(key[i - 1] == '/' && key[i] == '*'){
+            key_start = key + i + 1;
+            break;
+        }
+    }
+    if(key_start == NULL){
+        elog(ERROR, "no sub-plan query key start sign");
+    }
+    for(int i = key_start - key + 1; i < len; ++i){
+        if(key[i - 1] == '*' && key[i] == '/'){
+            return i;
+        }
+    }
+    elog(ERROR, "no sub-plan query key end sign");
+}
+
 // get_card_from_push_anchor
 char* get_card_from_push_anchor(Hashtable* table, const char* key)
 {
-    char* card = get(table, key);
+    char* card = get(table, key, get_subquery_key_len(key));
     if(card == NULL)
     {
         return NULL;
@@ -288,8 +308,7 @@ char* get_card_from_push_anchor(Hashtable* table, const char* key)
 // put_aimodel_subquery2card
 static void put_aimodel_subquery2card(Hashtable* table, const char* key, const char* value)
 {
-    put(table, key, value);
-    
+    put(table, key, get_subquery_key_len(key), value);   
 }
 
 // add string array to cjson object
