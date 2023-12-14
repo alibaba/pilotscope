@@ -149,9 +149,9 @@ static void parse_one_anchor(char* anchorname,char* anchor_json)
         case CARD_PUSH_ANCHOR:
             anchor_handler(anchor_json,card_push_anchor,CardPushAnchor,Card_Replace_Anchor_ref_tbl);
             store_aimodel_subquery2card();
-            cJSON* subquery_ancor_dict = cJSON_Parse(anchor_json);
-            cJSON *enable_parameterized_item         = cJSON_GetObjectItem(subquery_ancor_dict, "enable_parameterized_subquery");
-            enable_parameterized_path_rows_estimation = enable_parameterized_item->valueint;
+            cJSON* subquery_ancor_dict_ = cJSON_Parse(anchor_json);
+            cJSON *enable_parameterized_item_         = cJSON_GetObjectItem(subquery_ancor_dict_, "enable_parameterized_subquery");
+            enable_parameterized_path_rows_estimation = enable_parameterized_item_->valueint;
             break;
         case EXECUTION_TIME_PULL_ANCHOR:
             anchor_handler(anchor_json,execution_time_pull_anchor,ExecutionTimePullAnchor,Execution_Time_Fetch_Anchor_ref_tbl);
