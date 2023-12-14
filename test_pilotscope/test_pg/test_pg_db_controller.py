@@ -1,10 +1,9 @@
 import unittest
 
+from pilotscope.Common.Index import Index
 from pilotscope.DBController.PostgreSQLController import PostgreSQLController
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
-from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
-from pilotscope.PilotEnum import DatabaseEnum
-from pilotscope.Common.Index import Index
+from pilotscope.PilotConfig import PostgreSQLConfig
 
 
 class MyTestCase(unittest.TestCase):

@@ -3,27 +3,31 @@ import unittest
 from pandas import DataFrame
 
 from pilotscope.DBController.PostgreSQLController import PostgreSQLController
-from pilotscope.Factory.DBControllerFectory import DBControllerFactory
-from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
 from pilotscope.DataManager.DataManager import DataManager
-from pilotscope.PilotEnum import DatabaseEnum
+from pilotscope.DataManager.TableVisitedTracker import TableVisitedTracker
+from pilotscope.Factory.DBControllerFectory import DBControllerFactory
+from pilotscope.PilotConfig import PostgreSQLConfig
 from pilotscope.PilotSysConfig import PilotSysConfig
 
 
-class MyTestCase(unittest.TestCase):
+class TestDataManager(unittest.TestCase):
 
     def __init__(self, methodName='runTest'):
         super().__init__(methodName)
         self.config = PostgreSQLConfig()
-        self.data_manager = DataManager(self.config)
         self.config.db = PilotSysConfig.USER_DATA_DB_NAME
-        # DataManager always connects to PilotSysConfig.USER_DATA_DB_NAME
+
         self.test_table_name = "data_manager_test_table"
+        self.data_visit_table = PilotSysConfig.DATA_VISIT_RECORD_TABLE
+
         self.db_controller: PostgreSQLController = DBControllerFactory.get_db_controller(self.config)
+        self.data_manager = DataManager(self.config)
+        self.table_visited_tracker = TableVisitedTracker(self.db_controller)
 
     def test_drop_table(self):
         self.data_manager.remove_table_and_tracker(self.test_table_name)
         self.assertFalse(self.db_controller.exist_table(self.test_table_name))
+        self.assertEqual(self.table_visited_tracker.read_data_visit_id(self.test_table_name), None)
 
     def test_create_table(self):
         data = {"name": "wlg", "age": 1}
@@ -50,6 +54,7 @@ class MyTestCase(unittest.TestCase):
         data_size = self.init_table()
         data: DataFrame = self.data_manager.read_update(self.test_table_name)
         self.assertTrue(len(data) == data_size)
+        self.assertEqual(self.table_visited_tracker.read_data_visit_id(self.test_table_name), data_size)
 
         # add one new rows
         write_data = {"name": "name4", "age": 11}
@@ -63,7 +68,8 @@ class MyTestCase(unittest.TestCase):
         data = [
             {"name": "name1", "age": 10},
             {"name": "name2", "age": 11},
-            {"name": "name3", "age": 11}
+            {"name": "name3", "age": 11},
+            {"name": "name3", "age": 12}
         ]
         self.data_manager.save_data_batch(self.test_table_name, data)
         return len(data)
