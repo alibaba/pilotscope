@@ -33,10 +33,6 @@ class TrainSwitchMode(PilotEnum):
     DB = 1
 
 
-class ExperimentTimeEnum:
-    SQL_END_TO_END = "SQLEndToEnd"
-
-
 class SparkSQLDataSourceEnum(PilotEnum):
     CSV = "csv"
     JSON = "json"

@@ -7,7 +7,6 @@ from pilotscope.Common.Drawer import Drawer
 from pilotscope.Common.TimeStatistic import TimeStatistic
 from pilotscope.Common.Util import pilotscope_exit
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
-from pilotscope.PilotEnum import ExperimentTimeEnum
 from algorithm_examples.ExampleConfig import get_time_statistic_img_path
 from algorithm_examples.utils import load_test_sql
 from algorithm_examples.Index.IndexPresetScheduler import get_index_preset_scheduler
