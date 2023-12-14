@@ -56,29 +56,29 @@ could steer any database in a unified manner. By applying PilotScope, we obtain 
 ```
 PilotScope/
 ├── algorithm_examples                         # Algorithm examples
-├── fig                                        # Figures used in readme.md
+├── fig                                        # Saved some Figures
 ├── pilotscope
-│   ├── Anchor                                 # Base anchors and implementation of specific anchors       
+│   ├── Anchor                                 # Base push and pull anchors for implementing push and pull opearators       
 │   │   ├── AnchorHandler.py
 │   │   ├── AnchorEnum.py
 │   │   ├── AnchorTransData.py
 │   │   ├── ...
 │   ├── Common                                 # Useful tools for PilotScope
-│   │   ├── Cache.py
-│   │   ├── CardMetricCalc.py
+│   │   ├── Index.py
+│   │   ├── CardMetricCalc.py                   
 │   │   ├── ...
-│   ├── DBController                           # Base controllers of DB and implementation of specific controllers
+│   ├── DBController                           # The implemenation of DB controllers for different databased
 │   │   ├── BaseDBController.py
 │   │   ├── PostgreSQLController.py
 │   │   ├── ...
-│   ├── DBInteractor                           # Interactors of DB and implementation of specific interactors
+│   ├── DBInteractor                           # The funtionalities for interaction with database
 │   │   ├── HttpInteractorReceiver.py
-│   │   ├── InteractorReceiver.py
+│   │   ├── PilotDataInteractor.py
 │   │   ├── ...
 │   ├── DataManager                            # The management of data
 │   │   ├── DataManager.py
 │   │   └── TableVisitedTracker.py
-│   ├── Dataset                                # Some datasets and relative codes     
+│   ├── Dataset                                # An easy-to-use API for loading benchmarks
 │   │   ├── BaseDataset.py
 │   │   ├── Imdb
 │   │   ├── ...
@@ -88,22 +88,21 @@ PilotScope/
 │   │   ├── AnchorHandlerFactory.py
 │   │   ├── DBControllerFectory.py
 │   │   ├── ...
-│   ├── PilotConfig.py                         # Configurations for specific databases
-│   ├── PilotEnum.py                           # Enumeration types
-│   ├── PilotEvent.py                          # Base events of pilotscope
+│   ├── PilotConfig.py                         # Configurations of PilotScope
+│   ├── PilotEnum.py                           # Some related enumeration types
+│   ├── PilotEvent.py                          # Some predefined events
 │   ├── PilotModel.py                          # Base models of pilotscope 
 │   ├── PilotScheduler.py                      # Sheduling data traing、inference、collection push-and-pull and so on
-│   ├── PilotSysConfig.py                      # Configuration for data collection and storage
-│   └── PilotTransData.py                      # Parsing and storing data
+│   ├── PilotSysConfig.py                      # System configuration of PilotScope 
+│   └── PilotTransData.py                      # A unified data object for data collection
 ├── requirements.txt                           # Requirements for PilotScope
 ├── setup.py                                   # Setup for PilotScope
-├── test_example_algorithms                    # Examples of some tasks and models
+├── test_example_algorithms                    # Examples of some tasks, such as index recommendation, knob tuning, etc.
 └── test_pilotscope                            # Unittests of PilotScope
 ```
 
 ## Installation
-
-You can install PilotScope Core and modified database (e.g., PostgreSQL and Spark) following
+You can install PilotScope Core and modified databases (e.g., PostgreSQL and Spark) following
 the [documentation](https://woodybryant.github.io/PilotScopeDoc.io/).
 
 ## Feature Overview
@@ -206,10 +205,9 @@ in [documentation](https://woodybryant.github.io/PilotScopeDoc.io/).
 
 PilotScope is released under Apache License 2.0.
 
-## Publications
+## References
 
-If you find PilotScope useful for your research or development, please cite the following [paper]():
-
+If you find our work useful for your research or development, please kindly cite the following
 ```
 ```
 
