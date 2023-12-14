@@ -25,17 +25,13 @@ class MyTestCase(unittest.TestCase):
         all_operators = ['pull_buffercache', 'pull_estimated_cost', 'pull_execution_time', 'pull_physical_plan',
                          'pull_record', 'pull_subquery_card', 'push_card', 'push_hint', 'push_index', 'push_knob']
         data_for_push = {
-            "push_card": {"select count(*) from posts p where p.creationdate >= 1279570117 and p.score < 50": 910.94886,
-                          "select count(*) from postlinks pl": 111.0,
-                          "select count(*) from posthistory ph where ph.creationdate >= 1279585800": 3030.693895,
-                          "select count(*) from posts p, postlinks pl where p.id = pl.postid and p.creationdate >= 1279570117 and p.score < 50;": 110.033732,
-                          "select count(*) from posts p, posthistory ph where p.id = ph.postid and p.creationdate >= 1279570117 and p.score < 50 and ph.creationdate >= 1279585800;": 930.337264,
-                          "select count(*) from postlinks pl, posthistory ph where pl.postid = ph.postid and ph.creationdate >= 1279585800;": 113.356132,
-                          "select count(*) from posts p, postlinks pl, posthistory ph where p.id = ph.postid and p.id = pl.postid and p.creationdate >= 1279570117 and p.score < 50 and ph.creationdate >= 1279585800;": 112.334906},
             "push_index": self.data_interactor.db_controller.get_all_indexes(),
             "push_hint": {"enable_nestloop": "off"},
             "push_knob": {"max_connections": "101"}
         }
+        self.data_interactor.pull_subquery_card()
+        result = self.data_interactor.execute(self.sql)
+        data_for_push["push_card"] = result.subquery_2_card
         max_val = 1 << len(all_operators)
         print(max_val)
         random.seed(0)
