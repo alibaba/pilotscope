@@ -55,45 +55,50 @@ could steer any database in a unified manner. By applying PilotScope, we obtain 
 
 ```
 PilotScope/
-├── cacheData                               
-├── common                                  # Useful tools for PilotScope
-│   ├── Cache.py
-│   ├── dotDrawer.py
-│   ├── ...
-├── components                              
-│   ├── Anchor                              # Base anchors and implementation of specific anchors       
-│   │   ├── BaseAnchor
+├── algorithm_examples                         # Algorithm examples
+├── fig                                        # Figures used in readme.md
+├── pilotscope
+│   ├── Anchor                                 # Base anchors and implementation of specific anchors       
+│   │   ├── AnchorHandler.py
+│   │   ├── AnchorEnum.py
 │   │   ├── AnchorTransData.py
 │   │   ├── ...
-│   ├── Dao                                 # Management of user's data and training data
-│   │   ├── PilotTrainDataManager.py
-│   │   └── PilotUserDataManager.py
-│   ├── DataFetcher                         # Details of the entire process about fetching data. 
-│   │   ├── BaseDataFetcher.py
-│   │   ├── HttpDataFetch.py
-│   │   ├── PilotCommentCreator.py
-│   │   └── PilotStateManager.py
-│   ├── DBController                        # Base controllers of DB and implementation of specific controllers
+│   ├── Common                                 # Useful tools for PilotScope
+│   │   ├── Cache.py
+│   │   ├── CardMetricCalc.py
+│   │   ├── ...
+│   ├── DBController                           # Base controllers of DB and implementation of specific controllers
 │   │   ├── BaseDBController.py
 │   │   ├── PostgreSQLController.py
-│   │   └── SparkSQLController.py
-│   ├── Exception                           # Some exception which may occur in the lifecycle of pilotscope
-│   │   └── Exception.py
-│   ├── Factory                             # Factory patterns
-│   │   ├── AnchorHandlerFactory.py
-│   │   ├── DataFetchFactory.py
 │   │   ├── ...
-│   ├── PilotConfig.py                      # Configurations for specific databases
-│   ├── PilotEnum.py                        # Enumeration types
-│   ├── PilotEvent.py                       # Base events of pilotscope
-│   ├── PilotModel.py                       # Base models of pilotscope
-│   ├── PilotScheduler.py                   # Sheduling data traing、inference、collection push-and-pull and so on
-│   ├── PilotSysConfig.py                   # Configuration for data collection and storage
-│   ├── PilotTransData.py                   # Parsing and storing data
-│   └── Server                              # HTTP server for receiving data
-│       └── Server.py                       
-├── test_example_algorithm                  # Examples of some tasks and models
-└── test_pilotscope                         # Unittests of PilotScope
+│   ├── DBInteractor                           # Interactors of DB and implementation of specific interactors
+│   │   ├── HttpInteractorReceiver.py
+│   │   ├── InteractorReceiver.py
+│   │   ├── ...
+│   ├── DataManager                            # The management of data
+│   │   ├── DataManager.py
+│   │   └── TableVisitedTracker.py
+│   ├── Dataset                                # Some datasets and relative codes     
+│   │   ├── BaseDataset.py
+│   │   ├── Imdb
+│   │   ├── ...
+│   ├── Exception                              # Some exception which may occur in the lifecycle of pilotscope
+│   │   └── Exception.py
+│   ├── Factory                                # Factory patterns
+│   │   ├── AnchorHandlerFactory.py
+│   │   ├── DBControllerFectory.py
+│   │   ├── ...
+│   ├── PilotConfig.py                         # Configurations for specific databases
+│   ├── PilotEnum.py                           # Enumeration types
+│   ├── PilotEvent.py                          # Base events of pilotscope
+│   ├── PilotModel.py                          # Base models of pilotscope 
+│   ├── PilotScheduler.py                      # Sheduling data traing、inference、collection push-and-pull and so on
+│   ├── PilotSysConfig.py                      # Configuration for data collection and storage
+│   └── PilotTransData.py                      # Parsing and storing data
+├── requirements.txt                           # Requirements for PilotScope
+├── setup.py                                   # Setup for PilotScope
+├── test_example_algorithms                    # Examples of some tasks and models
+└── test_pilotscope                            # Unittests of PilotScope
 ```
 
 ## Installation
