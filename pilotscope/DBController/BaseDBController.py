@@ -38,14 +38,10 @@ class BaseDBController(ABC):
         if not database_exists(conn_str):
             create_database(conn_str, encoding="utf8", template="template0")
 
-        # return create_engine(conn_str, echo=self.echo, pool_size=10, pool_recycle=3600,
-        #                      connect_args={
-        #                          "options": "-c statement_timeout={},'connect_timeout': {}".format(
-        #                              # int(self.config.sql_execution_timeout * 1000))},
-        #                              1, 2)},
-        #                      client_encoding='utf8', isolation_level="AUTOCOMMIT")
         return create_engine(conn_str, echo=self.echo, pool_size=10, pool_recycle=3600,
-                             client_encoding='utf8', isolation_level="AUTOCOMMIT")
+                             connect_args={"options": "-c statement_timeout={}".format(
+                                 self.config.sql_execution_timeout * 1000)}, client_encoding='utf8',
+                             isolation_level="AUTOCOMMIT")
 
     def _get_connection(self):
         """
