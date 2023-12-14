@@ -248,7 +248,7 @@ class PilotDataInteractor:
                 futures.append(future)
             results = wait_futures_results(futures)
         if is_reset:
-            self._reset()
+            self.reset()
 
         return results
 
@@ -299,7 +299,7 @@ class PilotDataInteractor:
 
             # clear state
             if is_reset:
-                self._reset()
+                self.reset()
             return data
 
         except (DBStatementTimeoutException, InteractorReceiveTimeoutException) as e:
@@ -308,11 +308,10 @@ class PilotDataInteractor:
         except Exception as e:
             raise e
 
-    def _reset(self):
+    def reset(self):
         """
         Resets the internal state of the object.
-        This method clears the anchor_to_handlers dictionary to remove all handler
-        associations and then resets the connection by calling the `_reset_connection` method.
+        This method clears all registered push and pull operators, and database connection.
         """
         self._anchor_to_handlers.clear()
         self._reset_connection()

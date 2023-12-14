@@ -81,7 +81,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         data = self.rfile.read(content_length).decode('utf-8')
 
         data = json.loads(data)
-        cur_time = time.time_ns() / 1000000000.0
         with data_lock:
             # receive data
             tid = data["tid"]
