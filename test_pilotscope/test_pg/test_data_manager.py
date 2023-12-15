@@ -15,7 +15,7 @@ class TestDataManager(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         super().__init__(methodName)
         self.config = PostgreSQLConfig()
-        self.config.db = PilotSysConfig.USER_DATA_DB_NAME
+        self.config.db = self.config.user_data_db_name
 
         self.test_table_name = "data_manager_test_table"
         self.data_visit_table = PilotSysConfig.DATA_VISIT_RECORD_TABLE

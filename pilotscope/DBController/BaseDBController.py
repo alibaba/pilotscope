@@ -444,5 +444,5 @@ class BaseDBController(ABC):
         return Table(table_name, self.metadata, autoload_with=self.engine)
 
     def _check_enable_deep_control(self):
-        if not self.config.enable_deep_control:
+        if not self.config._enable_deep_control:
             raise DatabaseDeepControlException()

@@ -25,7 +25,7 @@ class DataManager:
         """
         self.config = deepcopy(config)
 
-        self.config.db = PilotSysConfig.USER_DATA_DB_NAME
+        self.config.db = self.config.user_data_db_name
 
         self.db_controller: BaseDBController = DBControllerFactory.get_db_controller(self.config)
 

@@ -15,22 +15,30 @@ class PilotConfig:
     the username and password to log into the database, etc.
     """
 
-    def __init__(self, db_type: DatabaseEnum, db="stats_tiny", pilotscope_core_host="localhost") -> None:
+    def __init__(self, db_type: DatabaseEnum, db="stats_tiny", pilotscope_core_host="localhost",
+                 user_data_db_name="PilotScopeUserData2", sql_execution_timeout=300, once_request_timeout=300) -> None:
         """
+        Initialize the PilotConfig.
+
         :param db_type: the type of database, i.e. PostgreSQL, SparkSQL, etc.
         :param db: the name of connected database
         :param pilotscope_core_host: the host address of PilotScope in ML side.
+        :param user_data_db_name: the created database name for saving the user data. If users want to visit these data, they can set db=user_data_db_name.
+        :param sql_execution_timeout: the timeout of sql execution, unit: second
+        :param once_request_timeout: the timeout of once request, unit: second
         """
+
         self.db_type: DatabaseEnum = db_type
 
         self.pilotscope_core_host = pilotscope_core_host
         self.data_fetch_method = DataFetchMethodEnum.HTTP
         self.db = db
-        self.enable_deep_control = False
+        self.user_data_db_name = user_data_db_name
 
+        self._enable_deep_control = False
         self._is_local = True
-        self.sql_execution_timeout = 300
-        self.once_request_timeout = self.sql_execution_timeout
+        self.sql_execution_timeout = sql_execution_timeout
+        self.once_request_timeout = once_request_timeout
 
         # pretraining
         self.pretraining_model = TrainSwitchMode.WAIT
@@ -83,7 +91,7 @@ class PostgreSQLConfig(PilotConfig):
         :param pg_data_path: location of the database data storage
         """
 
-        self.enable_deep_control = True
+        self._enable_deep_control = True
         self.pg_bin_path = pg_bin_path
         self.pgdata = pg_data_path
         self.backup_db_config_path = os.path.join(pg_data_path, "pilotscope_postgresql_backup.conf")
@@ -109,7 +117,7 @@ class PostgreSQLConfig(PilotConfig):
         """
 
         self._is_local = False
-        self.enable_deep_control = True
+        self._enable_deep_control = True
 
         self.db_host_user = db_host_user
         self.db_host_pwd = db_host_pwd

@@ -10,7 +10,7 @@ class TestTableVisitedTracker(TestCase):
     def __init__(self, methodName='TestTableVisitedTracker'):
         super().__init__(methodName)
         self.config = PostgreSQLConfig()
-        self.config.db = PilotSysConfig.USER_DATA_DB_NAME
+        self.config.db = self.config.user_data_db_name
         self.table_visited_tracker = TableVisitedTracker(DBControllerFactory.get_db_controller(config=self.config))
         self.test_table = "table_visited_tracker_test_table"
 
