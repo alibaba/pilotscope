@@ -9,6 +9,7 @@ from pilotscope.Exception.Exception import DBStatementTimeoutException
 from pilotscope.PilotConfig import PilotConfig, SparkConfig
 from pilotscope.PilotEnum import PilotEnum
 from pilotscope.PilotEnum import DataFetchMethodEnum, DatabaseEnum, TrainSwitchMode
+from pilotscope.Exception.Exception import PilotScopeNotSupportedOperationException
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql import DataFrame
@@ -59,17 +60,6 @@ def sparkSessionFromConfig(spark_config: SparkConfig):
         session = session.config("spark.jars.packages", spark_config.jdbc)
     return session.getOrCreate()
 
-
-# class SparkConnection:
-#    def __init__(self, config: SparkConfig):
-#        self.config = config
-#        self._conn = None
-
-#    def create(self):
-#        self._conn = sparkSessionFromConfig(self.config)
-
-#    def close(self):
-#        self._conn = None
 
 class SparkColumn(StructField):
     def __init__(self, column_name, column_type: SparkSQLTypeEnum):
@@ -122,7 +112,7 @@ class SparkTable:
         if analyze:
             self.analyzeStats(engine)
         if persist:
-            engine.io.write(new_row, mode=SparkIOWriteModeEnum.APPEND, target_table_name=self.table_name)
+            self.persist(engine) # persist self.df, now self.df is the table after inserting, so overwriting the whole table is right
 
     def nrows(self):
         return self.df.count()
@@ -182,6 +172,8 @@ class SparkIO:
             elif isinstance(table_or_rows, SparkTable):
                 table_name = table_or_rows.table_name
         if self.datasource_type == SparkSQLDataSourceEnum.POSTGRESQL:
+            df.cache()
+            rows = df.count() # do not delete this read operation of df, which make it possible to overwrite tables.
             write = df.write \
                 .mode(mode.value) \
                 .format("jdbc") \
@@ -190,7 +182,8 @@ class SparkIO:
                 .option("user", self.conn_info['user']) \
                 .option("password", self.conn_info['pwd']) \
                 .option("dbtable", table_name)
-        write.save()
+            write.save()
+            assert rows == df.count()
 
     def has_table(self, table_name):
         return self.read(table_name="information_schema.tables") \
@@ -422,74 +415,50 @@ class SparkSQLController(BaseDBController):
         return json.loads(plan.toJSON())[0]
 
     def get_estimated_cost(self, sql, comment="") -> Tuple[int]:
-        raise NotImplementedError(
+        raise PilotScopeNotSupportedOperationException(
             "Spark SQL does not support cost estimation.You can use row count or sizeByte instead.")
-        plan = self._logicalPlan(self.execute(sql)._jdf.queryExecution())
-        cost_str = plan.stats().simpleString()
-        pattern = re.compile(r"sizeInBytes=([0-9.]+) B, rowCount=([0-9]+)")
-        res = pattern.search(cost_str)
-        return res.groups()[0], res.groups()[1]
 
-    # done
     def write_knob_to_file(self, key_2_value_knob):
         for k, v in key_2_value_knob.items():
             self.set_hint(k, v)
 
-    # done
     def recover_config(self):
         # reset all modifiable runtime configurations
         self._get_connection().sql("RESET")
 
-    # switch user and run
-    def _surun(self, cmd):
-        # os.system("su {} -c '{}'".format(self.config.user, cmd))
-        pass
-
     def shutdown(self):
-        # self._surun("{} stop -D {}".format(self.config.pg_ctl, self.config.pgdata))
         pass
 
     def start(self):
-        # self._surun("{} start -D {}".format(self.config.pg_ctl, self.config.pgdata))
-        # for instance in type(self).instances:
-        #    instance.connect()
         pass
 
     def explain_execution_plan(self, sql, comment=""):
-        # return self._explain(sql, comment, True)
-        pass
+        raise NotImplementedError
 
-    def get_explain_sql(self, sql, execute: bool, comment=""):
-        # return "{} explain (ANALYZE {}, VERBOSE, SETTINGS, SUMMARY, FORMAT JSON) {}".format(comment,
-        #                                                                                    "" if execute else "False",
-        #                                                                                    sql)
-        pass
 
     def status(self):
-        # res = os.popen("su {} -c '{} status -D {}'".format(self.config.user,self.config.pg_ctl, self.config.pgdata))
-        # return res.read()
-        pass
+        raise PilotScopeNotSupportedOperationException
 
     def get_buffercache(self):
-        raise NotImplementedError
+        raise PilotScopeNotSupportedOperationException
 
     def create_index(self, index_name, table, columns):
-        raise NotImplementedError
+        raise PilotScopeNotSupportedOperationException
 
     def create_index(self, index):
-        raise NotImplementedError
+        raise PilotScopeNotSupportedOperationException
 
     def drop_index(self, index):
-        raise NotImplementedError
+        raise PilotScopeNotSupportedOperationException
 
     def drop_all_indexes(self):
-        raise NotImplementedError
+        raise PilotScopeNotSupportedOperationException
 
     def get_all_indexes_byte(self):
-        raise NotImplementedError
+        raise PilotScopeNotSupportedOperationException
 
     def get_table_indexes_byte(self, table_name):
-        raise NotImplementedError
+        raise PilotScopeNotSupportedOperationException
 
     def get_index_byte(self, index: Index):
-        raise NotImplementedError
+        raise PilotScopeNotSupportedOperationException

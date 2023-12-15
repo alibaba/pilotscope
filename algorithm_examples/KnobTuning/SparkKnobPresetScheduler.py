@@ -11,22 +11,8 @@ from pilotscope.DBController.SparkSQLController import SparkSQLDataSourceEnum
 
 
 def get_knob_spark_preset_scheduler(config: PilotConfig) -> PilotScheduler:
-    datasource_type = SparkSQLDataSourceEnum.POSTGRESQL
-    datasource_conn_info = {
-        'host': 'localhost',
-        'db': config.db,
-        'user': 'postgres',
-        'pwd': 'postgres'
-    }
-    config.set_datasource(
-        datasource_type,
-        host=datasource_conn_info["host"],
-        db=datasource_conn_info["db"],
-        user=datasource_conn_info["user"],
-        pwd=datasource_conn_info["pwd"]
-    )
+
     config.set_spark_session_config({
-        "spark.sql.pilotscope.enabled": True,
         "spark.driver.memory": "20g",
         "spark.executor.memory": "20g",
         "spark.network.timeout": "1200s",

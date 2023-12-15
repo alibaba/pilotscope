@@ -140,6 +140,11 @@ class PostgreSQLConfig(PilotConfig):
 
 class SparkConfig(PilotConfig):
     def __init__(self, app_name = "testApp", master_url = "local[*]") -> None:
+        """
+        :param app_name: the name of the application of Spark
+        :param master_url: the master URL of Spark cluster
+        """
+
         super().__init__(db_type=DatabaseEnum.SPARK, db = None)
         # spark
         self.app_name = app_name
@@ -155,15 +160,31 @@ class SparkConfig(PilotConfig):
 
         self.spark_configs = {}
 
-        # spark config file path
-        self.db_config_path = None
-        self.backup_db_config_path = None
+        self.set_spark_session_config({
+            "spark.sql.pilotscope.enabled": True
+        })
 
     def set_spark_session_config(self, config: dict):
         self.spark_configs.update(config)
         return self
+    
+    def enable_cardinality_estimation(self):
+        """
+        If you need to enable `pull_subquery_card` and `push_card`, please turn them on.
+        """
+        self.set_spark_session_config({
+            "spark.sql.cbo.enabled": True,
+            "spark.sql.cbo.joinReorder.enabled": True
+        })
 
     def set_datasource(self, datasource_type: SparkSQLDataSourceEnum, **datasource_conn_info):
+        """
+        A generic interface for configuring data sources. Since different data sources have varying parameters,
+        use the `datasource_conn_info` dictionary to pass the respective parameters.
+
+        :param datasource_type: the type of datasource of spark, now support SparkSQLDataSourceEnum.POSTGRESQL
+        :param datasource_conn_info: parameters
+        """
         self.datasource_type = datasource_type
         if self.datasource_type == SparkSQLDataSourceEnum.POSTGRESQL:
             self.db_host = datasource_conn_info["db_host"]
@@ -179,5 +200,19 @@ class SparkConfig(PilotConfig):
 
     def use_postgresql_datasource(self, db_host="localhost", db_port="5432", db_user="postgres",
                                    db_user_pwd="postgres", db = "stats_tiny"):
+        """
+        Set up a PostgreSQL data source
+
+        :param db_host: the host of postgresql, defaults to "localhost"
+        :type db_host: str, optional
+        :param db_port: the network port of postgresql, defaults to "5432"
+        :type db_port: str, optional
+        :param db_user: the user name to log into postgresql, defaults to "postgres"
+        :type db_user: str, optional
+        :param db_user_pwd: the password of the user, defaults to "postgres"
+        :type db_user_pwd: str, optional
+        :param db: database name, defaults to "stats_tiny"
+        :type db: str, optional
+        """
         self.set_datasource(SparkSQLDataSourceEnum.POSTGRESQL, db_host = db_host, db_port = db_port, db_user = db_user,
                             db_user_pwd = db_user_pwd, db = db)

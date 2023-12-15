@@ -384,23 +384,16 @@ class SparkExecutor(ExecutorInterface):
         self.config: PilotConfig = SparkConfig(app_name="testApp", master_url="local[*]")
         self.config.once_request_timeout = 120
         self.config.sql_execution_timeout = 120
-        datasource_type = SparkSQLDataSourceEnum.POSTGRESQL
-        datasource_conn_info = {
-            'host': 'localhost',
-            'db': kwargs["db_name"],
-            'user': 'postgres',
-            'pwd': 'postgres'
-        }
         self.config = SparkConfig(
             app_name="testApp",
             master_url="local[*]"
         )
-        self.config.set_datasource(
-            datasource_type,
-            host=datasource_conn_info["host"],
-            db=datasource_conn_info["db"],
-            user=datasource_conn_info["user"],
-            pwd=datasource_conn_info["pwd"]
+        self.config.use_postgresql_datasource(
+            db_host='localhost',
+            db_port="5432",
+            db='stats_tiny',
+            db_user='postgres',
+            db_user_pwd='postgres'
         )
         self.config.set_spark_session_config({
             "spark.sql.pilotscope.enabled": True,
