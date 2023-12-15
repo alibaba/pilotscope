@@ -18,28 +18,26 @@ class MyTestCase(unittest.TestCase):
         cls.data_interactor.pull_estimated_cost()
         cls.data_interactor.pull_physical_plan()
         cls.origin_result = cls.data_interactor.execute(cls.sql)
-        
-        
+
     def test_push_card_to_cost(self):
-        larger_card = {k:v*10000 for k,v in self.origin_result.subquery_2_card.items()}
+        larger_card = {k: v * 10000 for k, v in self.origin_result.subquery_2_card.items()}
         self.data_interactor.push_card(larger_card)
         self.data_interactor.pull_physical_plan()
         self.data_interactor.pull_estimated_cost()
         result = self.data_interactor.execute(self.sql)
-        print("cost is ",result.estimated_cost,". before push_card, cost is",self.origin_result.estimated_cost)
-        self.assertTrue(result.estimated_cost>self.origin_result.estimated_cost*100)
+        print("cost is ", result.estimated_cost, ". before push_card, cost is", self.origin_result.estimated_cost)
+        self.assertTrue(result.estimated_cost > self.origin_result.estimated_cost * 100)
         print(result.physical_plan)
-        
+
         self.data_interactor.push_card(larger_card)
         self.data_interactor.push_pg_hint_comment("/*+SeqScan(b) SeqScan(u) SeqScan(c) SeqScan(v)*/")
         self.data_interactor.pull_physical_plan()
         self.data_interactor.pull_estimated_cost()
         result = self.data_interactor.execute(self.sql)
-        print("after set pg_hint_plan, cost is ",result.estimated_cost)
+        print("after set pg_hint_plan, cost is ", result.estimated_cost)
         self.assertTrue("Index Scan" not in str(result.physical_plan))
         print(result.physical_plan)
-        
-        
+
 
 if __name__ == '__main__':
     unittest.main()

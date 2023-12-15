@@ -2,7 +2,7 @@ import unittest
 from algorithm_examples.ExampleConfig import example_pg_bin, example_pgdata
 from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
 from pilotscope.PilotConfig import PostgreSQLConfig
-from test_pilotscope.test_data_interactor import TestDataInteractor
+from test_pilotscope.test_pg.test_data_interactor import TestDataInteractor
 
 
 class TestDataInteractorRemote(TestDataInteractor):
