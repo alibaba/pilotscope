@@ -68,8 +68,9 @@ class BaseDBController(ABC):
         This function closes the current connection, recreates the pool, and establishes a new connection
         to the database.
         """
-        self.connection_thread.conn.close()
-        self.engine.pool = self.engine.pool.recreate()
+        self.connection_thread.conn.invalidate()
+        # self.connection_thread.conn.close()
+        # self.engine.pool = self.engine.pool.recreate()
         self.connection_thread.conn = self.engine.connect()
 
     def _disconnect(self):

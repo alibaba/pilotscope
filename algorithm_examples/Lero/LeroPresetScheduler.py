@@ -1,5 +1,7 @@
 import sys
 
+from pilotscope.DataManager.DataManager import DataManager
+
 sys.path.append("../")
 sys.path.append("../algorithm_examples/Lero/source")
 
@@ -21,6 +23,9 @@ def get_lero_preset_scheduler(config, enable_collection, enable_training) -> Pil
     model_name = "lero_pair"
     test_data_table = "{}_test_data_table".format(model_name)
     pretraining_data_table = "lero_pretraining_collect_data"
+
+    data_manager = DataManager(config)
+    data_manager.remove_table_and_tracker(pretraining_data_table)
 
     lero_pilot_model: PilotModel = LeroPilotModel(model_name)
     lero_pilot_model.load_model()
