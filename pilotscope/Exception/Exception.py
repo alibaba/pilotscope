@@ -36,3 +36,7 @@ class PilotScopeInternalError(Exception):
 class PilotScopeMutualExclusionException(Exception):
     def __init__(self, anchors):
         super().__init__("{} are mutually exclusive. Please choose one of them".format(anchors))
+
+class PilotScopeNotSupportedOperationException(Exception):
+    def __init__(self, message=""):
+        super().__init__(message)

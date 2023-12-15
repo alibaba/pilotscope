@@ -2,7 +2,7 @@ import unittest
 
 from pilotscope.DBController.SparkSQLController import SparkSQLController, SparkConfig, SparkSQLDataSourceEnum
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
-
+from pilotscope.PilotConfig import PostgreSQLConfig
 
 class MyTestCase(unittest.TestCase):
     def __init__(self, methodName='runTest'):
@@ -45,29 +45,22 @@ class MyTestCase(unittest.TestCase):
         self.assertTrue(self.db_controller.exist_table("test_create_table"))
         self.db_controller.clear_all_tables()
 
-    def test_persist_tables(self):
-        self.db_controller.load_all_tables_from_datasource()
-        res = self.db_controller.get_table_row_count("badges")
-        print(res)
-        self.db_controller.persist_tables()
-        res = self.db_controller.get_table_row_count("badges")
-        print(res)
-
     def test_insert(self):
-        return
         self.db_controller.create_table_if_absences("test_create_table", {"ID": 1, "name": "Tom"})
         self.db_controller.load_table_if_exists_in_datasource("test_create_table")
         self.db_controller.create_table_if_absences("test_create_table", {"ID": 1, "name": "Tom"})
-        res = self.db_controller.get_table_row_count("test_create_table")
         assert (self.db_controller.get_table_row_count("test_create_table") == 0)
         self.db_controller.persist_tables()
+
         self.db_controller.insert("test_create_table", {"ID": 1, "name": "Tom"}, persist=False)
         assert (self.db_controller.get_table_row_count("test_create_table") == 1)
         self.db_controller.clear_all_tables()
         # as the insertion above was not persisted, here the table will still be empty
         self.db_controller.load_table_if_exists_in_datasource("test_create_table")
         assert (self.db_controller.get_table_row_count("test_create_table") == 0)
-        self.db_controller.insert("test_create_table", {"ID": 1, "name": "Tom"}, persist=True) #TODO this row has bug
+
+        self.db_controller.insert("test_create_table", {"ID": 1, "name": "Tom"}, persist=True)
+        print(self.db_controller.get_table_row_count("test_create_table"))
         assert (self.db_controller.get_table_row_count("test_create_table") == 1)
         self.db_controller.clear_all_tables()
         # as the insertion above was persisted, here the table will be non-empty
@@ -77,6 +70,11 @@ class MyTestCase(unittest.TestCase):
         # reset the table status
         self.db_controller.name_2_table["test_create_table"].clear_rows(self.db_controller.engine, persist=True)
         self.db_controller.clear_all_tables()
+
+        pg_db_controller = DBControllerFactory.get_db_controller(PostgreSQLConfig(db_host = self.config.db_host, db_port = self.config.db_port,
+                                                                                  db_user = self.config.db_user, db_user_pwd = self.config.db_user_pwd,
+                                                                                  db = self.config.db))
+        pg_db_controller.drop_table_if_exist("test_create_table") # clean table for testing next time
 
     def test_set_and_recover_knobs(self):
         # self.db_controller.load_all_tables_from_datasource()
@@ -93,28 +91,6 @@ class MyTestCase(unittest.TestCase):
         assert (self.db_controller._get_connection().conf.get("spark.sql.autoBroadcastJoinThreshold") == '10485760b')
         self.db_controller.clear_all_tables()
 
-    def test_plan_and_get_cost(self):
-        return
-        # self.db_controller.load_all_tables_from_datasource()
-        self.db_controller.load_table_if_exists_in_datasource("test_create_table")
-        # self.db_controller.connect_if_loss()
-
-        self.db_controller.write_knob_to_file({
-            "spark.sql.cbo.enabled": "true",
-            "spark.sql.cbo.joinReorder.enabled": "true",
-            "spark.sql.pilotscope.enabled": "true"
-        })
-
-        self.db_controller.create_table_if_absences("test_create_table", {"ID": 1, "name": "Tom"})
-        self.db_controller.insert("test_create_table", {"ID": 2, "name": "Jerry"})
-        self.db_controller.analyze_table_stats("test_create_table")
-
-        sql = "SELECT * FROM test_create_table"
-
-        print(self.db_controller.get_estimated_cost(sql))
-
-        self.db_controller.name_2_table["test_create_table"].clear_rows(self.db_controller.engine, persist=True)
-        self.db_controller.clear_all_tables()
 
     def test_execute(self):
         # self.db_controller.load_all_tables_from_datasource()

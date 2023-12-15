@@ -7,7 +7,7 @@ from sqlalchemy_utils import database_exists, create_database
 from pilotscope.Common.Index import Index
 from pilotscope.Exception.Exception import DatabaseDeepControlException
 from pilotscope.PilotConfig import PilotConfig
-
+from pilotscope.PilotEnum import DatabaseEnum
 
 class BaseDBController(ABC):
     def __init__(self, config: PilotConfig, echo=True):
@@ -385,8 +385,8 @@ class BaseDBController(ABC):
         """
         restart the database
         """
-
-        self._check_enable_deep_control()
+        if self.config.db_type != DatabaseEnum.SPARK:
+            self._check_enable_deep_control()
 
         self.shutdown()
         self.start()
