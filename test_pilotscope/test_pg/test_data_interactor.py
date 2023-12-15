@@ -3,6 +3,7 @@ import unittest
 from algorithm_examples.ExampleConfig import example_pg_bin, example_pgdata
 from pilotscope.Common.Index import Index
 from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
+from pilotscope.Exception.Exception import PilotScopeMutualExclusionException
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PostgreSQLConfig
 from pilotscope.PilotTransData import PilotTransData
@@ -125,6 +126,16 @@ class TestDataInteractor(unittest.TestCase):
         origin_cost = res.estimated_cost
         print("index_cost is {}, origin_cost is {}".format(index_cost, origin_cost))
         self.assertTrue(origin_cost - index_cost > 0)
+
+    def test_anchor_mutual_exclusion(self):
+        try:
+            self.data_interactor.pull_subquery_card()
+            self.data_interactor.push_card({})
+            self.data_interactor.execute(self.sql)
+        except PilotScopeMutualExclusionException as e:
+            self.assertTrue(True)
+        except Exception as e:
+            self.assertTrue(False)
 
 
 if __name__ == '__main__':

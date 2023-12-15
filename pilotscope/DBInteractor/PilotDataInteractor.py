@@ -10,7 +10,8 @@ from pilotscope.Anchor.BaseAnchor.BasePushHandler import *
 from pilotscope.Common.Util import extract_anchor_handlers, extract_handlers, wait_futures_results
 from pilotscope.DBInteractor.InteractorReceiver import InteractorReceiver
 from pilotscope.DBInteractor.PilotCommentCreator import PilotCommentCreator
-from pilotscope.Exception.Exception import DBStatementTimeoutException, InteractorReceiveTimeoutException
+from pilotscope.Exception.Exception import DBStatementTimeoutException, InteractorReceiveTimeoutException, \
+    PilotScopeMutualExclusionException
 from pilotscope.Factory.AnchorHandlerFactory import AnchorHandlerFactory
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.Factory.InteractorReceiverFactory import InteractorReceiverFactory
@@ -30,6 +31,12 @@ class PilotDataInteractor:
         :param config: The configuration of PilotScope.
         :param enable_simulate_index: A flag indicating whether to enable the simulated index. This flag is only valid for PostgreSQL.
         """
+
+        # if all items of any one comb occur in registered anchors, they will raise an exception
+        self.mutual_exclusion_combs = [
+            [AnchorEnum.CARD_PUSH_ANCHOR, AnchorEnum.SUBQUERY_CARD_PULL_ANCHOR]
+        ]
+
         self.db_controller = DBControllerFactory.get_db_controller(config, enable_simulate_index=enable_simulate_index)
         self._anchor_to_handlers = {}
         self.config = config
@@ -261,6 +268,7 @@ class PilotDataInteractor:
         :return: If no exceptions, it returns a `PilotTransData` representing extended result; otherwise, it returns None.
         """
         try:
+            self._check_anchor_mutual_exclusion()
             origin_sql = sql
             enable_receive_pilot_data = self._is_need_to_receive_data(self._anchor_to_handlers)
 
@@ -450,3 +458,15 @@ class PilotDataInteractor:
         if isinstance(anchor, str):
             anchor = AnchorEnum.to_anchor_enum(anchor)
         self._anchor_to_handlers[anchor] = handler
+
+    def _check_anchor_mutual_exclusion(self):
+        """
+        Checks if there are any mutual exclusion anchors in the current session.
+        """
+        for exclusion_anchors in self.mutual_exclusion_combs:
+            anchors = []
+            for exclusion_anchor in exclusion_anchors:
+                if exclusion_anchor in self._anchor_to_handlers:
+                    anchors.append(exclusion_anchor)
+            if len(anchors) == len(exclusion_anchors):
+                raise PilotScopeMutualExclusionException(exclusion_anchors)

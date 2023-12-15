@@ -1,7 +1,7 @@
-from enum import Enum
+from pilotscope.PilotEnum import PilotEnum
 
 
-class AnchorEnum(Enum):
+class AnchorEnum(PilotEnum):
     BASE_ANCHOR = "BASE_ANCHOR",
 
     # push Anchors

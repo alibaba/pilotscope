@@ -31,3 +31,8 @@ class PilotScopeInternalError(Exception):
     def __init__(self, message=""):
         super().__init__(
             "An internal error of pilotscope has occurred. Please submit an issue to contact us for a fix. Error info is: " + message)
+
+
+class PilotScopeMutualExclusionException(Exception):
+    def __init__(self, anchors):
+        super().__init__("{} are mutually exclusive. Please choose one of them".format(anchors))
