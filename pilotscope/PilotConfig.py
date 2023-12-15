@@ -16,7 +16,7 @@ class PilotConfig:
     """
 
     def __init__(self, db_type: DatabaseEnum, db="stats_tiny", pilotscope_core_host="localhost",
-                 user_data_db_name="PilotScopeUserData2", sql_execution_timeout=300, once_request_timeout=300) -> None:
+                 user_data_db_name="PilotScopeUserData", sql_execution_timeout=300, once_request_timeout=300) -> None:
         """
         Initialize the PilotConfig.
 
