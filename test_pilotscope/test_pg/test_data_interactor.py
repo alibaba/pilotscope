@@ -1,4 +1,5 @@
 import unittest
+import random
 
 from algorithm_examples.ExampleConfig import example_pg_bin, example_pgdata
 from pilotscope.Common.Index import Index
@@ -126,6 +127,77 @@ class TestDataInteractor(unittest.TestCase):
         origin_cost = res.estimated_cost
         print("index_cost is {}, origin_cost is {}".format(index_cost, origin_cost))
         self.assertTrue(origin_cost - index_cost > 0)
+
+    def test_push_pg_hint_comment(self):
+        self.data_interactor.pull_subquery_card()
+        self.data_interactor.pull_estimated_cost()
+        self.data_interactor.pull_physical_plan()
+        self.origin_result = self.data_interactor.execute(self.sql)
+
+        larger_card = {k: v * 10000 for k, v in self.origin_result.subquery_2_card.items()}
+        self.data_interactor.push_card(larger_card)
+        self.data_interactor.pull_physical_plan()
+        self.data_interactor.pull_estimated_cost()
+        result = self.data_interactor.execute(self.sql)
+        print("cost is ", result.estimated_cost, ". before push_card, cost is", self.origin_result.estimated_cost)
+        self.assertTrue(result.estimated_cost > self.origin_result.estimated_cost * 10)
+        print(result.physical_plan)
+
+        self.data_interactor.push_card(larger_card)
+        self.data_interactor.push_pg_hint_comment("/*+SeqScan(b) SeqScan(u) SeqScan(c) SeqScan(v)*/")
+        self.data_interactor.pull_physical_plan()
+        self.data_interactor.pull_estimated_cost()
+        result = self.data_interactor.execute(self.sql)
+        print("after set pg_hint_plan, cost is ", result.estimated_cost)
+        self.assertTrue("Index Scan" not in str(result.physical_plan))
+        print(result.physical_plan)
+
+    def test_push_pull_any_combination(self):
+        # all_operators = [x for x in dir(self.data_interactor) if (x.startswith("push_") or x.startswith("pull_"))]
+        all_operators = ['pull_buffercache', 'pull_estimated_cost', 'pull_execution_time', 'pull_physical_plan',
+                         'pull_record', 'pull_subquery_card', 'push_card', 'push_hint', 'push_index', 'push_knob']
+        data_for_push = {
+            "push_index": self.data_interactor.db_controller.get_all_indexes(),
+            "push_hint": {"enable_nestloop": "off"},
+            "push_knob": {"max_connections": "101"}
+        }
+        self.data_interactor.pull_subquery_card()
+        result = self.data_interactor.execute(self.sql)
+        data_for_push["push_card"] = result.subquery_2_card
+        max_val = 1 << len(all_operators)
+        print(max_val)
+        random.seed(0)
+        for v in random.sample(range(1, max_val), 50):  # enlarge this to test more
+            applied_op = set()
+            for i in range(len(all_operators)):
+                if ((v >> i) & 1) == 1:
+                    op_name = all_operators[i]
+                    applied_op.add(op_name)
+                    if op_name.startswith("push_"):
+                        getattr(self.data_interactor, op_name)(data_for_push[op_name])
+                    else:
+                        getattr(self.data_interactor, op_name)()
+            try:
+                data = self.data_interactor.execute(self.sql)
+                print(applied_op)
+            except PilotScopeMutualExclusionException as e:
+                continue
+            if "pull_buffercache" in applied_op:
+                self.assertTrue(data.buffercache is not None)
+            if "pull_estimated_cost" in applied_op:
+                self.assertTrue(data.estimated_cost > 0)
+            if "pull_execution_time" in applied_op:
+                self.assertTrue(data.execution_time > 0)
+            if "pull_physical_plan" in applied_op:
+                self.assertTrue(data.physical_plan is not None)
+            if "pull_record" in applied_op:
+                self.assertTrue(data.records is not None)
+        print(all_operators)
+        self.data_interactor.push_knob({"max_connections": "100"})
+        try:
+            self.data_interactor.execute("select 1")
+        except PilotScopeMutualExclusionException as e:
+            pass
 
     def test_anchor_mutual_exclusion(self):
         try:
