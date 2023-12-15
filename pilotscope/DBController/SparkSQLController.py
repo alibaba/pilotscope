@@ -48,27 +48,6 @@ class SparkIOWriteModeEnum(PilotEnum):
     IGNORE = "ignore"
 
 
-"""
-class SparkConfig(PilotConfig):
-    def __init__(self, app_name, master_url,
-                 datasource_type, datasource_conn_info,
-                 db_config_path="./pilotscope_spark_sql_config.txt",
-                 backup_db_config_path="./pilotscope_spark_sql_config.backup.txt",
-                 other_configs=None) -> None:
-        super().__init__()
-        self.appName = app_name
-        self.master = master_url
-        self.datasource_type = datasource_type
-        self.datasource_conn_info = datasource_conn_info
-        self.db_config_path = db_config_path
-        self.backup_db_config_path = backup_db_config_path
-        self.configs = {}
-        if other_configs is not None:
-            for config_name in other_configs:
-                self.configs[config_name] = other_configs[config_name]
-        self.db_type = DatabaseEnum.SPARK
-"""
-
 
 def sparkSessionFromConfig(spark_config: SparkConfig):
     session = SparkSession.builder \
@@ -177,7 +156,7 @@ class SparkIO:
             self.reader = engine.session.read \
                 .format("jdbc") \
                 .option("driver", "org.postgresql.Driver") \
-                .option("url", "jdbc:postgresql://{}/{}".format(self.conn_info['host'], self.conn_info['db'])) \
+                .option("url", "jdbc:postgresql://{}:{}/{}".format(self.conn_info['host'], self.conn_info["port"], self.conn_info['db'])) \
                 .option("user", self.conn_info['user']) \
                 .option("password", self.conn_info['pwd'])
 
@@ -207,11 +186,11 @@ class SparkIO:
                 .mode(mode.value) \
                 .format("jdbc") \
                 .option("driver", "org.postgresql.Driver") \
-                .option("url", "jdbc:postgresql://{}/{}".format(self.conn_info['host'], self.conn_info['db'])) \
+                .option("url", "jdbc:postgresql://{}:{}/{}".format(self.conn_info['host'], self.conn_info["port"], self.conn_info['db'])) \
                 .option("user", self.conn_info['user']) \
                 .option("password", self.conn_info['pwd']) \
                 .option("dbtable", table_name)
-        write.save_model()
+        write.save()
 
     def has_table(self, table_name):
         return self.read(table_name="information_schema.tables") \
@@ -220,7 +199,8 @@ class SparkIO:
 
     def get_all_table_names_in_datasource(self) -> np.ndarray:
         return self.read(table_name="information_schema.tables") \
-            .filter("table_schema == 'public'").toPandas()["table_name"].values
+            .filter("table_schema == 'public'")\
+            .filter("table_type == 'BASE TABLE'").toPandas()["table_name"].values
 
 
 class SparkEngine:
@@ -231,8 +211,8 @@ class SparkEngine:
 
     def connect(self):
         self.session = sparkSessionFromConfig(self.config)
-        self.io = SparkIO(self.config.datasource_type, self, host=self.config.host, db=self.config.db,
-                          user=self.config.user, pwd=self.config.pwd)
+        self.io = SparkIO(self.config.datasource_type, self, host=self.config.db_host, port = self.config.db_port, db=self.config.db,
+                          user=self.config.db_user, pwd=self.config.db_user_pwd)
         return self.session
 
     def _has_table_in_datasource(self, table_name):
@@ -257,16 +237,6 @@ class SparkEngine:
 
 
 class SparkSQLController(BaseDBController):
-
-    # instances = set()
-
-    # def __new__(cls, *args, **kwargs):
-    #    instance = super().__new__(cls)
-    #    cls.instances.add(instance)
-    #    return instance
-
-    # def __del__(self):
-    #    type(self).instances.remove(self)
 
     def __init__(self, config: SparkConfig, echo=False):
         super().__init__(config, echo)
@@ -501,32 +471,25 @@ class SparkSQLController(BaseDBController):
         pass
 
     def get_buffercache(self):
-        pass
-
-    # NOTE: modified from DBTune (MIT liscense)
-    def get_internal_metrics(self):
-        pass
-
-    def execute_batch(self, sql, fetch=False):
-        pass
+        raise NotImplementedError
 
     def create_index(self, index_name, table, columns):
-        pass
+        raise NotImplementedError
 
     def create_index(self, index):
-        pass
+        raise NotImplementedError
 
     def drop_index(self, index):
-        pass
+        raise NotImplementedError
 
     def drop_all_indexes(self):
-        pass
+        raise NotImplementedError
 
     def get_all_indexes_byte(self):
-        pass
+        raise NotImplementedError
 
     def get_table_indexes_byte(self, table_name):
-        pass
+        raise NotImplementedError
 
     def get_index_byte(self, index: Index):
-        pass
+        raise NotImplementedError

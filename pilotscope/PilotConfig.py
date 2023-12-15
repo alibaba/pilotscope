@@ -56,7 +56,7 @@ class PilotConfig:
 
 class PostgreSQLConfig(PilotConfig):
     def __init__(self, pilotscope_core_host="localhost", db_host="localhost", db_port="5432", db_user="postgres",
-                 db_user_pwd="postgres") -> None:
+                 db_user_pwd="postgres", db = "stats_tiny") -> None:
         """
         :param pilotscope_core_host: the host address of PilotScope in ML side.
         :param db_host: the host address of database
@@ -64,7 +64,7 @@ class PostgreSQLConfig(PilotConfig):
         :param db_user: the username to log into the database
         :param db_user_pwd: the password to log into the database
         """
-        super().__init__(db_type=DatabaseEnum.POSTGRESQL, pilotscope_core_host=pilotscope_core_host)
+        super().__init__(db_type=DatabaseEnum.POSTGRESQL, db = db, pilotscope_core_host=pilotscope_core_host)
         self.db_host = db_host
         self.db_port = db_port
         self.db_user = db_user
@@ -139,17 +139,18 @@ class PostgreSQLConfig(PilotConfig):
 
 
 class SparkConfig(PilotConfig):
-    def __init__(self, app_name, master_url) -> None:
-        super().__init__(db_type=DatabaseEnum.SPARK)
+    def __init__(self, app_name = "testApp", master_url = "local[*]") -> None:
+        super().__init__(db_type=DatabaseEnum.SPARK, db = None)
         # spark
         self.app_name = app_name
         self.master_url = master_url
 
-        # datasource
+        # postgresql datasource
         self.datasource_type = None
-        self.host = None
-        self.user = None
-        self.pwd = None
+        self.db_host = None
+        self.db_port = None
+        self.db_user = None
+        self.db_user_pwd = None
         self.jdbc = "org.postgresql:postgresql:42.6.0"
 
         self.spark_configs = {}
@@ -165,29 +166,18 @@ class SparkConfig(PilotConfig):
     def set_datasource(self, datasource_type: SparkSQLDataSourceEnum, **datasource_conn_info):
         self.datasource_type = datasource_type
         if self.datasource_type == SparkSQLDataSourceEnum.POSTGRESQL:
-            self.host = datasource_conn_info["host"]
+            self.db_host = datasource_conn_info["db_host"]
+            self.db_port = datasource_conn_info["db_port"]
             self.db = datasource_conn_info["db"]
-            self.user = datasource_conn_info["user"]
-            self.pwd = datasource_conn_info["pwd"]
+            self.db_user = datasource_conn_info["db_user"]
+            self.db_user_pwd = datasource_conn_info["db_user_pwd"]
             if "jdbc" in datasource_conn_info and datasource_conn_info["jdbc"] is not None:
                 self.jdbc = datasource_conn_info["jdbc"]
         else:
             raise NotImplementedError("Unsupported datasource type: '{}'".format(self.datasource_type))
         return self
 
-    def use_postgresql_datasource(self, datasource_type: SparkSQLDataSourceEnum, host, db, user, pwd):
-        self.datasource_type = datasource_type
-        jdbc = "org.postgresql:postgresql:42.6.0"
-        self._use_dbms_datasource(host, db, user, pwd, jdbc)
-
-    def _use_dbms_datasource(self, host, db, user, pwd, jdbc):
-        self.host = host
-        self.db = db
-        self.user = user
-        self.pwd = pwd
-        self.jdbc = jdbc
-
-    def push_knob_config(self, db_config_path, backup_db_config_path):
-        self.db_config_path = db_config_path
-        self.backup_db_config_path = backup_db_config_path
-        return self
+    def use_postgresql_datasource(self, db_host="localhost", db_port="5432", db_user="postgres",
+                                   db_user_pwd="postgres", db = "stats_tiny"):
+        self.set_datasource(SparkSQLDataSourceEnum.POSTGRESQL, db_host = db_host, db_port = db_port, db_user = db_user,
+                            db_user_pwd = db_user_pwd, db = db)

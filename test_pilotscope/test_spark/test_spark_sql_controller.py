@@ -8,23 +8,17 @@ class MyTestCase(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         super().__init__(methodName)
     def setUp(self):
-        datasource_type = SparkSQLDataSourceEnum.POSTGRESQL
-        datasource_conn_info = {
-            'host': 'localhost',
-            'db': 'stats_tiny',
-            'user': 'postgres',
-            'pwd': 'postgres'
-        }
         self.config = SparkConfig(
             app_name="testApp",
             master_url="local[*]"
         )
         self.config.set_datasource(
-            datasource_type,
-            host=datasource_conn_info["host"],
-            db=datasource_conn_info["db"],
-            user=datasource_conn_info["user"],
-            pwd=datasource_conn_info["pwd"]
+            SparkSQLDataSourceEnum.POSTGRESQL,
+            db_host='localhost',
+            db_port="5432",
+            db='stats_tiny',
+            db_user='postgres',
+            db_user_pwd='postgres'
         )
         self.config.set_spark_session_config({
             "spark.sql.pilotscope.enabled": True,
@@ -36,30 +30,35 @@ class MyTestCase(unittest.TestCase):
         self.table = "badges"
         self.column = "date"
         self.db_controller._connect_if_loss()
-        print("1" + str(self.db_controller.name_2_table))
 
     def test_get_hint_sql(self):
         # print(self.db_controller.connection.sparkContext.getConf().getAll())
         self.db_controller.load_all_tables_from_datasource()
         self.db_controller.set_hint("spark.sql.autoBroadcastJoinThreshold", "1234")
         self.db_controller.set_hint("spark.execution.memory", "1234")
-        self.db_controller.clear_all_tables()
 
     def test_create_table(self):
         # self.db_controller.load_all_tables_from_datasource()
         self.db_controller.load_table_if_exists_in_datasource("test_create_table")
         # self.db_controller.connect_if_loss()
         self.db_controller.create_table_if_absences("test_create_table", {"ID": 1, "name": "Tom"})
+        self.assertTrue(self.db_controller.exist_table("test_create_table"))
         self.db_controller.clear_all_tables()
+
+    def test_persist_tables(self):
+        self.db_controller.load_all_tables_from_datasource()
+        res = self.db_controller.get_table_row_count("badges")
+        print(res)
+        self.db_controller.persist_tables()
+        res = self.db_controller.get_table_row_count("badges")
+        print(res)
 
     def test_insert(self):
         return
-        # self.db_controller.load_all_tables_from_datasource()
         self.db_controller.create_table_if_absences("test_create_table", {"ID": 1, "name": "Tom"})
         self.db_controller.load_table_if_exists_in_datasource("test_create_table")
         self.db_controller.create_table_if_absences("test_create_table", {"ID": 1, "name": "Tom"})
         res = self.db_controller.get_table_row_count("test_create_table")
-        print(res)
         assert (self.db_controller.get_table_row_count("test_create_table") == 0)
         self.db_controller.persist_tables()
         self.db_controller.insert("test_create_table", {"ID": 1, "name": "Tom"}, persist=False)
