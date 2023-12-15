@@ -8,10 +8,14 @@ from pilotscope.DataManager.DataManager import DataManager
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig
-from pilotscope.PilotEvent import PeriodicModelUpdateEvent
+from pilotscope.PilotEvent import PeriodicModelUpdateEvent, QueryFinishEvent, WorkloadBeforeEvent
 from pilotscope.PilotModel import PilotModel
 from pilotscope.PilotScheduler import PilotScheduler
 from pilotscope.PilotTransData import PilotTransData
+
+query_finish_trigger_count = 0
+workload_before_trigger_count = 0
+model_update_trigger_count = 0
 
 
 class ExamplePilotModel(PilotModel):
@@ -50,7 +54,27 @@ class ExampleCardPushHandler(CardPushHandler):
 class ExamplePeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
     def custom_model_update(self, pilot_model: PilotModel, db_controller: BaseDBController,
                             data_manager: DataManager):
-        print("IN ExamplePeriodicDbControllerEvent")
+        global model_update_trigger_count
+        model_update_trigger_count += 1
+
+
+class ExampleQueryFinishEvent(QueryFinishEvent):
+
+    def __init__(self, config, interval_count=1):
+        super().__init__(config, interval_count)
+
+    def process(self, db_controller: BaseDBController, data_manager: DataManager):
+        global query_finish_trigger_count
+        query_finish_trigger_count += 1
+
+
+class ExampleWorkloadBeforeEvent(WorkloadBeforeEvent):
+    def __init__(self, config, enable=True):
+        super().__init__(config, enable)
+
+    def process(self, db_controller: BaseDBController, data_manager: DataManager):
+        global workload_before_trigger_count
+        workload_before_trigger_count += 1
 
 
 class TestScheduler(unittest.TestCase):
@@ -59,9 +83,12 @@ class TestScheduler(unittest.TestCase):
     def setUpClass(cls):
         cls.config = PostgreSQLConfig()
         cls.config.db = "stats_tiny"
-        cls.sql = "select date from badges where date=1406838696"
+        cls.sqls = ["select date from badges where date=1406838696"] * 10
+        cls.data_manager: DataManager = DataManager(cls.config)
 
     def test_scheduler(self):
+        query_finish_interval = 2
+        model_update_interval = 5
         config = self.config
         scheduler: PilotScheduler = SchedulerFactory.create_scheduler(config)
         model = ExamplePilotModel("test_model")
@@ -71,24 +98,29 @@ class TestScheduler(unittest.TestCase):
 
         handler = ExampleCardPushHandler(model, config)
         scheduler.register_custom_handlers([handler])
-        event = ExamplePeriodicModelUpdateEvent(config, 2, execute_on_init=True)
-        scheduler.register_events([event])
+
+        # regiser events
+        model_update_event = ExamplePeriodicModelUpdateEvent(config, model_update_interval, execute_on_init=True)
+        query_finish_event = ExampleQueryFinishEvent(config, query_finish_interval)
+        workload_before_event = ExampleWorkloadBeforeEvent(config)
+        scheduler.register_events([model_update_event, query_finish_event, workload_before_event])
 
         test_scheduler_table = "test_scheduler_table"
         scheduler.register_required_data(test_scheduler_table, pull_buffer_cache=True, pull_estimated_cost=True,
                                          pull_execution_time=True, pull_physical_plan=True, pull_subquery_2_cards=False)
         scheduler.init()
-        data = scheduler.execute(self.sql)
-        print(data)
 
-        config.db = "PilotScopeUserData"
-        db_controller = DBControllerFactory.get_db_controller(config, echo=True)
-        res = db_controller.get_table_row_count(test_scheduler_table)
-        self.assertAlmostEqual(res, 1)
+        self.data_manager.remove_table_and_tracker(test_scheduler_table)
+        for sql in self.sqls:
+            data = scheduler.execute(sql)
+            print(data)
 
-        scheduler.execute(self.sql)
+        self.assertEqual(len(self.data_manager.read_all(test_scheduler_table)), len(self.sqls))
+        self.assertEqual(query_finish_trigger_count, len(self.sqls) // query_finish_interval)
+        self.assertEqual(model_update_trigger_count, len(self.sqls) // model_update_interval + 1)
+        self.assertEqual(workload_before_trigger_count, 1)
 
-        db_controller.drop_table_if_exist(test_scheduler_table)
+        self.data_manager.remove_table_and_tracker(test_scheduler_table)
 
 
 if __name__ == '__main__':
