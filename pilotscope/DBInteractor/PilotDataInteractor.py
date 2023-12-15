@@ -305,9 +305,6 @@ class PilotDataInteractor:
             if self.config.db_type == DatabaseEnum.SPARK:
                 self._add_execution_time(data, execution_time_from_outer)
 
-            # clear state
-            if is_reset:
-                self.reset()
             return data
 
         except (DBStatementTimeoutException, InteractorReceiveTimeoutException) as e:
@@ -315,6 +312,9 @@ class PilotDataInteractor:
             return None
         except Exception as e:
             raise e
+        finally:
+            if is_reset:
+                self.reset()
 
     def reset(self):
         """

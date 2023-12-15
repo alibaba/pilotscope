@@ -46,9 +46,9 @@ class MyTestCase(unittest.TestCase):
                         getattr(self.data_interactor, op_name)(data_for_push[op_name])
                     else:
                         getattr(self.data_interactor, op_name)()
-            print(applied_op)
             try:
                 data = self.data_interactor.execute(self.sql)
+                print(applied_op)
             except PilotScopeMutualExclusionException as e:
                 continue
             if "pull_buffercache" in applied_op:
@@ -67,7 +67,6 @@ class MyTestCase(unittest.TestCase):
             self.data_interactor.execute("select 1")
         except PilotScopeMutualExclusionException as e:
             pass
-
 
 if __name__ == "__main__":
     unittest.main()
