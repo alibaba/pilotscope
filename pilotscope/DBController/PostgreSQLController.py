@@ -5,11 +5,11 @@ from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 
 from pilotscope.Common.Index import Index
+from pilotscope.Common.SSHConnector import SSHConnector
 from pilotscope.DBController.BaseDBController import BaseDBController
 from pilotscope.Exception.Exception import DBStatementTimeoutException, DatabaseCrashException, DatabaseStartException, \
     PilotScopeInternalError
 from pilotscope.PilotConfig import PostgreSQLConfig
-from pilotscope.Common.SSHConnector import SSHConnector
 
 
 class PostgreSQLController(BaseDBController):
@@ -285,6 +285,9 @@ class PostgreSQLController(BaseDBController):
         """
         Shutdown the database
         """
+
+        self._check_enable_deep_control()
+
         for instance in type(self)._instances:
             # if hasattr(instance, "engine"):
             instance._disconnect()  # to set DBController's self.connection_thread.conn is None
@@ -299,6 +302,9 @@ class PostgreSQLController(BaseDBController):
 
         :raises DatabaseStartException
         """
+
+        self._check_enable_deep_control()
+
         self._surun("{} start -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.pgdata))
         if not self.is_running():
             self.recover_config()
@@ -316,12 +322,13 @@ class PostgreSQLController(BaseDBController):
 
         :return: True if the database is running, False otherwise.
         """
+        self._check_enable_deep_control()
+
         check_db_running_cmd = "su {} -c '{} status -D {}'".format(self.config.db_user, self.config.pg_ctl,
                                                                    self.config.pgdata)
-
         if self.config._is_local:
-            res = os.popen(check_db_running_cmd)
-            status = res.read()
+            with os.popen(check_db_running_cmd) as res:
+                status = res.read()
         else:
             ssh_conn = SSHConnector(self.config.db_host, self.config.db_host_user, self.config.db_host_pwd,
                                     self.config.db_host_port)
@@ -338,6 +345,9 @@ class PostgreSQLController(BaseDBController):
 
         :param key_2_value_knob: a dict with keys as the names of the knobs and values as the values to be set.
         """
+
+        self._check_enable_deep_control()
+
         with open(self.config.db_config_path, "a") as f:
             f.write("\n")
             for k, v in key_2_value_knob.items():
@@ -347,6 +357,9 @@ class PostgreSQLController(BaseDBController):
         """
         Recover config file of database to the lasted saved config file by `backup_config()`
         """
+
+        self._check_enable_deep_control()
+
         with open(self.config.backup_db_config_path, "r") as f:
             db_config_file = f.read()
         with open(self.config.db_config_path, "w") as f:
@@ -356,6 +369,9 @@ class PostgreSQLController(BaseDBController):
         """
         Creates a backup of the database configuration file.
         """
+
+        self._check_enable_deep_control()
+
         with open(self.config.db_config_path, "r") as f:
             with open(self.config.backup_db_config_path, "w") as w:
                 w.write(f.read())

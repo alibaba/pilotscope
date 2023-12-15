@@ -5,6 +5,7 @@ from sqlalchemy import create_engine, String, Integer, Float, MetaData, Table, i
 from sqlalchemy_utils import database_exists, create_database
 
 from pilotscope.Common.Index import Index
+from pilotscope.Exception.Exception import DatabaseDeepControlException
 from pilotscope.PilotConfig import PilotConfig
 
 
@@ -383,6 +384,9 @@ class BaseDBController(ABC):
         """
         restart the database
         """
+
+        self._check_enable_deep_control()
+
         self.shutdown()
         self.start()
 
@@ -438,3 +442,7 @@ class BaseDBController(ABC):
         """
         # update info of existed tables
         return Table(table_name, self.metadata, autoload_with=self.engine)
+
+    def _check_enable_deep_control(self):
+        if not self.config.enable_deep_control:
+            raise DatabaseDeepControlException()

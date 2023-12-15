@@ -26,6 +26,7 @@ class PilotConfig:
         self.pilotscope_core_host = pilotscope_core_host
         self.data_fetch_method = DataFetchMethodEnum.HTTP
         self.db = db
+        self.enable_deep_control = False
 
         self._is_local = True
         self.sql_execution_timeout = 300
@@ -82,6 +83,7 @@ class PostgreSQLConfig(PilotConfig):
         :param pg_data_path: location of the database data storage
         """
 
+        self.enable_deep_control = True
         self.pg_bin_path = pg_bin_path
         self.pgdata = pg_data_path
         self.backup_db_config_path = os.path.join(pg_data_path, "pilotscope_postgresql_backup.conf")
@@ -107,6 +109,8 @@ class PostgreSQLConfig(PilotConfig):
         """
 
         self._is_local = False
+        self.enable_deep_control = True
+
         self.db_host_user = db_host_user
         self.db_host_pwd = db_host_pwd
         self.db_host_port = db_host_ssh_port

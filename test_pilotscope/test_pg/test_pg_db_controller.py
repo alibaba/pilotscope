@@ -1,5 +1,6 @@
 import unittest
 
+from algorithm_examples.ExampleConfig import example_pg_bin, example_pgdata
 from pilotscope.Common.Index import Index
 from pilotscope.DBController.PostgreSQLController import PostgreSQLController
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
@@ -13,7 +14,9 @@ class TestPostgreSQLDBController(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.config = PostgreSQLConfig()
+        cls.config.enable_deep_control_local(example_pg_bin, example_pgdata)
         cls.config.db = "stats_tiny"
+
         cls.table = "badges"
         cls.column = "date"
         cls.new_table = "test_postgresql_db_controller_table"
@@ -74,23 +77,12 @@ class TestPostgreSQLDBController(unittest.TestCase):
         print(cache)
         self.assertTrue(cache is not None)
 
-    def test_shutdown(self):
-        pass
-
-    def test_start(self):
-        pass
-
-    def test_is_running(self):
-        pass
-
-    def test_write_knob_to_file(self):
-        pass
-
-    def test_recover_config(self):
-        pass
-
-    def test_backup_config(self):
-        pass
+    def test_start_and_shutdown(self):
+        self.assertTrue(self.db_controller.is_running())
+        self.db_controller.shutdown()
+        self.assertFalse(self.db_controller.is_running())
+        self.db_controller.start()
+        self.assertTrue(self.db_controller.is_running())
 
     def test_get_existed_index(self):
         res = self.db_controller.get_existed_indexes("badges")
@@ -110,6 +102,18 @@ class TestPostgreSQLDBController(unittest.TestCase):
         self.assertEqual(cur_n, n)
 
     def test_drop_all_indexes(self):
+        # cancel the test
+        pass
+
+    def test_write_knob_to_file(self):
+        # cancel the test
+        pass
+
+    def test_recover_config(self):
+        # cancel the test
+        pass
+
+    def test_backup_config(self):
         # cancel the test
         pass
 
