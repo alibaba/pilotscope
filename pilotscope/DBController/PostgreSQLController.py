@@ -134,7 +134,7 @@ class PostgreSQLController(BaseDBController):
 
     def drop_all_indexes(self):
         """
-        Drop all indexes across all tables in the database.
+        Drop all indexes across all tables in the database. This will not delete the system indexes and unique indexes.
         """
         if self.enable_simulate_index:
             self.simulate_index_visitor.drop_all_indexes()
@@ -146,6 +146,7 @@ class PostgreSQLController(BaseDBController):
     def get_all_indexes_byte(self):
         """
         Get the size of all indexes across all tables in the database in bytes.
+        This will include the system indexes and unique indexes.
 
         :return: the size of all indexes in bytes
         """
@@ -161,6 +162,7 @@ class PostgreSQLController(BaseDBController):
     def get_table_indexes_byte(self, table_name):
         """
         Get the size of all indexes on a table in bytes.
+        This will include the system indexes and unique indexes.
 
         :param table_name: a table name that the indexes belong to
         :return: the size of all indexes on the table in bytes
@@ -186,12 +188,6 @@ class PostgreSQLController(BaseDBController):
         return result
 
     def get_existed_indexes(self, table):
-        """
-        Retrieves the existing index on the specified table.
-
-        :param table: The name of the table to retrieve index information for.
-        :return: The index information of the specified table.
-        """
         if self.enable_simulate_index:
             return self.simulate_index_visitor.get_existed_index(table)
         else:

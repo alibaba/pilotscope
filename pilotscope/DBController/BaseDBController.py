@@ -164,6 +164,7 @@ class BaseDBController(ABC):
     def drop_all_indexes(self):
         """
         Drop all indexes across all tables in the database.
+        This will not delete the system indexes and unique indexes.
         """
         pass
 
@@ -171,6 +172,7 @@ class BaseDBController(ABC):
     def get_all_indexes_byte(self):
         """
         Get the size of all indexes across all tables in the database in bytes.
+        This will include the system indexes and unique indexes.
 
         :return: the size of all indexes in bytes
         """
@@ -180,6 +182,8 @@ class BaseDBController(ABC):
     def get_table_indexes_byte(self, table_name):
         """
         Get the size of all indexes on a table in bytes.
+        This will include the system indexes and unique indexes.
+
 
         :param table_name: a table name that the indexes belong to
         :return: the size of all indexes on the table in bytes
@@ -210,6 +214,7 @@ class BaseDBController(ABC):
     def get_existed_indexes(self, table):
         """
         Retrieves the existing index on the specified table.
+        This will not include the system indexes and unique indexes.
 
         :param table: the name of the table
         :return: a list of pilotscope.common.Index
@@ -283,7 +288,9 @@ class BaseDBController(ABC):
         :param table_name: the name of the table
         """
         if self.exist_table(table_name):
-            Table(table_name, self.metadata, autoload_with=self.engine).drop(self.engine)
+            table = Table(table_name, self.metadata, autoload_with=self.engine)
+            table.drop(self.engine)
+            self.metadata.remove(table)
 
     def exist_table(self, table_name) -> bool:
         """

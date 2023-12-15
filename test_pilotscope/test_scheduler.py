@@ -53,7 +53,7 @@ class ExamplePeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
         print("IN ExamplePeriodicDbControllerEvent")
 
 
-class MyTestCase(unittest.TestCase):
+class TestScheduler(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):

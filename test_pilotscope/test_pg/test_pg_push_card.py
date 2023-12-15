@@ -18,23 +18,22 @@ class MyTestCase(unittest.TestCase):
         cls.data_interactor.pull_estimated_cost()
         cls.data_interactor.pull_physical_plan()
         cls.origin_result = cls.data_interactor.execute(cls.sql)
-        
-        
+
     def test_push_card_to_cost(self):
-        larger_card = {k:v*10000 for k,v in self.origin_result.subquery_2_card.items()}
+        larger_card = {k: v * 10000 for k, v in self.origin_result.subquery_2_card.items()}
         self.data_interactor.push_card(larger_card)
         self.data_interactor.pull_estimated_cost()
         result = self.data_interactor.execute(self.sql)
-        print("cost is ",result.estimated_cost,". before push_card, cost is",self.origin_result.estimated_cost)
-        self.assertTrue(result.estimated_cost>self.origin_result.estimated_cost*100)
-        
-        smaller_card = {k:max(1,v/100) for k,v in self.origin_result.subquery_2_card.items()}
+        print("cost is ", result.estimated_cost, ". before push_card, cost is", self.origin_result.estimated_cost)
+        self.assertTrue(result.estimated_cost > self.origin_result.estimated_cost * 100)
+
+        smaller_card = {k: max(1, v / 100) for k, v in self.origin_result.subquery_2_card.items()}
         self.data_interactor.push_card(smaller_card)
         self.data_interactor.pull_estimated_cost()
         result = self.data_interactor.execute(self.sql)
-        print("cost is ",result.estimated_cost,". before push_card, cost is",self.origin_result.estimated_cost)
-        self.assertTrue(result.estimated_cost<self.origin_result.estimated_cost*2)
-        
+        print("cost is ", result.estimated_cost, ". before push_card, cost is", self.origin_result.estimated_cost)
+        self.assertTrue(result.estimated_cost < self.origin_result.estimated_cost * 2)
+
     def test_card_consistency(self):
         model_subquery_2_card = {}
         for i, subquery in enumerate(self.origin_result.subquery_2_card):
@@ -44,11 +43,10 @@ class MyTestCase(unittest.TestCase):
         self.data_interactor.pull_physical_plan()
         result = self.data_interactor.execute(self.sql)
         flag = False
-        for _,v in model_subquery_2_card.items():
+        for _, v in model_subquery_2_card.items():
             flag = (str(v) in str(result.physical_plan)) or flag
-        self.assertTrue(flag) # check if some new values have injected to plan
-        
-        
+        self.assertTrue(flag)  # check if some new values have injected to plan
+
 
 if __name__ == '__main__':
     unittest.main()
