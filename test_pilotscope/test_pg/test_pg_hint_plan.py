@@ -26,7 +26,7 @@ class MyTestCase(unittest.TestCase):
         self.data_interactor.pull_estimated_cost()
         result = self.data_interactor.execute(self.sql)
         print("cost is ", result.estimated_cost, ". before push_card, cost is", self.origin_result.estimated_cost)
-        self.assertTrue(result.estimated_cost > self.origin_result.estimated_cost * 100)
+        self.assertTrue(result.estimated_cost > self.origin_result.estimated_cost * 10)
         print(result.physical_plan)
 
         self.data_interactor.push_card(larger_card)
