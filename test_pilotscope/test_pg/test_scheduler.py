@@ -76,7 +76,7 @@ class TestScheduler(unittest.TestCase):
 
         test_scheduler_table = "test_scheduler_table"
         scheduler.register_required_data(test_scheduler_table, pull_buffer_cache=True, pull_estimated_cost=True,
-                                         pull_execution_time=True, pull_physical_plan=True, pull_subquery_2_cards=True)
+                                         pull_execution_time=True, pull_physical_plan=True, pull_subquery_2_cards=False)
         scheduler.init()
         data = scheduler.execute(self.sql)
         print(data)

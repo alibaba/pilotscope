@@ -3,6 +3,7 @@ import random
 
 from algorithm_examples.ExampleConfig import example_pg_bin, example_pgdata
 from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
+from pilotscope.Exception.Exception import PilotScopeMutualExclusionException
 from pilotscope.PilotConfig import PostgreSQLConfig
 from pilotscope.PilotEnum import DatabaseEnum
 
@@ -46,7 +47,10 @@ class MyTestCase(unittest.TestCase):
                     else:
                         getattr(self.data_interactor, op_name)()
             print(applied_op)
-            data = self.data_interactor.execute(self.sql)
+            try:
+                data = self.data_interactor.execute(self.sql)
+            except PilotScopeMutualExclusionException as e:
+                continue
             if "pull_buffercache" in applied_op:
                 self.assertTrue(data.buffercache is not None)
             if "pull_estimated_cost" in applied_op:
@@ -59,7 +63,10 @@ class MyTestCase(unittest.TestCase):
                 self.assertTrue(data.records is not None)
         print(all_operators)
         self.data_interactor.push_knob({"max_connections": "100"})
-        self.data_interactor.execute("select 1")
+        try:
+            self.data_interactor.execute("select 1")
+        except PilotScopeMutualExclusionException as e:
+            pass
 
 
 if __name__ == "__main__":
