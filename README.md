@@ -19,7 +19,7 @@
 ![](https://img.shields.io/badge/AI4DB_driver-E2E_Query_Optimizer-4E29FF.svg)
 
 ![](https://img.shields.io/badge/database-PostgreSQL_13.1-FFD21E.svg)
-![](https://img.shields.io/badge/database-Spark_3.1-FFD21E.svg)
+![](https://img.shields.io/badge/database-Spark_3.3.2-FFD21E.svg)
 
 **PilotScope** is a middleware to bridge the gaps of deploying AI4DB (Artificial Intelligence for Databases) algorithms
 into actual database systems. It aims at hindering the underlying details of different databases so that an AI4DB driver
@@ -102,6 +102,13 @@ PilotScope/
 ```
 
 ## Installation
+
+Required Software Versions:
+
+- Python: 3.8
+- PostgreSQL: 13.1
+- Apache Spark: 3.3.2
+
 You can install PilotScope Core and modified databases (e.g., PostgreSQL and Spark) following
 the [documentation](https://woodybryant.github.io/PilotScopeDoc.io/).
 
