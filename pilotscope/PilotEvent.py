@@ -26,7 +26,7 @@ class Event(ABC):
 
 class QueryFinishEvent(Event, ABC):
     """
-     THe process function will be called when `interval_count` query is finished.
+     The process function will be called when `interval_count` query is finished.
     """
 
     def __init__(self, config, interval_count=1):
@@ -93,7 +93,7 @@ class WorkloadBeforeEvent(Event, ABC):
     @abstractmethod
     def process(self, db_controller: BaseDBController, data_manager: DataManager):
         """
-        This function will be called before start to deal with first SQL query of a workload, i.e., the first call
+        This function will be called before start to deal with first SQL query of a workload, i.e., the first call to
         `PilotScheduler.execute()`.
         The user can implement the function to define the process logic.
 

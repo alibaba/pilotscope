@@ -84,14 +84,14 @@ class PilotScheduler:
     def register_required_data(self, table_name_for_store_data, pull_execution_time=False, pull_physical_plan=False,
                                pull_subquery_2_cards=False, pull_buffer_cache=False, pull_estimated_cost=False):
         """
-        Register data need to collect when execute a sql
+        Register data need to collect when executing a sql
 
         :param table_name_for_store_data: the table name for storing the collected data
-        :param pull_execution_time: the execution time of a sql
-        :param pull_physical_plan: the physical plan of a sql
-        :param pull_subquery_2_cards: the sub-plan queries and their cardinality of a sql
-        :param pull_buffer_cache: the buffer cache of table after executing a sql
-        :param pull_estimated_cost: the estimated cost of a sql
+        :param pull_execution_time: whether to get the execution time of a sql
+        :param pull_physical_plan: whether to get the physical plan of a sql
+        :param pull_subquery_2_cards: whether to get the sub-plan queries and their cardinality of a sql
+        :param pull_buffer_cache: whether to get the buffer cache of table after executing a sql
+        :param pull_estimated_cost: whether to get the estimated cost of a sql
         :return:
         """
         if pull_execution_time:

@@ -91,7 +91,7 @@ class DataManager:
 
     def remove_table_and_tracker(self, table_name):
         """
-        Drop the table and its corresponding tracker.
+        Drop the table and its corresponding tracker which is used to track the last visit id.
 
         :param table_name: The name of the table to be dropped.
         """

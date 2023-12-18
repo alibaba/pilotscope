@@ -163,7 +163,7 @@ class CommentPushHandler(BasePushHandler):
         The pilotscope will set these data into database automatically when execute the current SQL query.
 
         :param sql: current SQL query
-        :return: A comment string that will be added to the before the SQL query. This can be used to add `pg_hint_plan` comments, and apply join order alrogithms.
+        :return: A comment string that will be added before the SQL query. This can be used to add `pg_hint_plan` comments, and apply join order alrogithms.
         """
         pass
 
