@@ -70,6 +70,7 @@ class TestDataInteractor(unittest.TestCase):
         self.data_interactor.push_knob({"max_connections": "101"})
         self.data_interactor.pull_record()
         data = self.data_interactor.execute("show max_connections;")
+        self.db_controller.recover_config()
         print(data.records)
         self.assertEqual(data.records.values[0][0], '101')  # even reset, knob don't change
 
