@@ -190,7 +190,7 @@ class PilotDataInteractor:
     def pull_record(self):
         """
         Require PilotScope to collect execution records when execute a SQL query.
-        PilotScode will not to execute a complete process of recode retrieval, unless you require it to collect records.
+        PilotScope will not to execute a complete process of recode retrieval, unless you require it to collect records.
         """
         anchor: RecordPullHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
                                                                             AnchorEnum.RECORD_PULL_ANCHOR)
@@ -234,7 +234,7 @@ class PilotDataInteractor:
 
     def execute_parallel(self, sqls, parallel_num=10, is_reset=True):
         """
-        Execute all sqls parallel in a session.
+        Execute all SQL statements in parallel within a session.
         All SQL queries is executed using the identical push/pull configuration.
 
         :param sqls: a list of sqls to be executed
