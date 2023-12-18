@@ -3,8 +3,6 @@ import sys
 sys.path.append("../")
 
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
-from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
-from pilotscope.PilotEnum import EventEnum
 from pilotscope.PilotModel import PilotModel
 from pilotscope.PilotScheduler import PilotScheduler
 from algorithm_examples.Mscn.EventImplement import MscnPretrainingModelEvent

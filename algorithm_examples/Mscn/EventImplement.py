@@ -24,23 +24,26 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
         self.training_data_file = training_data_file
 
     def iterative_data_collection(self, db_controller: BaseDBController, train_data_manager: DataManager):
+        print("start to collect data for MSCN algorithms")
         self.sqls = load_training_sql(self.config.db)
         column_2_value_list = []
-        for sql in self.sqls:
-            print(sql, flush=True)
+        for i, sql in enumerate(self.sqls):
+            # print per 10
+            if i % 10 == 0:
+                print("current is the {}-th sql,total is {}".format(i, len(self.sqls)))
             self.pilot_data_interactor.pull_subquery_card()
             data: PilotTransData = self.pilot_data_interactor.execute(sql)
             for sub_sql in data.subquery_2_card.keys():
                 self.pilot_data_interactor.pull_record()
                 data: PilotTransData = self.pilot_data_interactor.execute(sub_sql)
             if (not data.records is None):
-                column_2_value = {"query": sub_sql, "card": data.records.values[0][0]}
-                print(column_2_value)
+                column_2_value = {"query": sub_sql, "card": int(data.records.values[0][0])}
             column_2_value_list.append(column_2_value)
         return column_2_value_list, True
 
     def custom_model_training(self, bind_pilot_model, db_controller: BaseDBController,
                               data_manager: DataManager):
+        print("start to train model in {}".format(MscnPretrainingModelEvent))
         if not self.training_data_file is None:
             tokens, labels = load_tokens(self.training_data_file, self.training_data_file + ".token")
             schema = load_schema(self.pilot_data_interactor.db_controller)

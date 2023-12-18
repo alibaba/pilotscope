@@ -96,7 +96,7 @@ class MscnModel():
 
     def save(self, path):
         os.makedirs(path, exist_ok=True)
-        torch.save_model(self._net.state_dict(), _nn_path(path))
+        torch.save(self._net.state_dict(), _nn_path(path))
         with open(_feature_generator_path(path), "wb") as f:
             joblib.dump(self._feature_generator, f)
         with open(_input_feature_dim_path(path), "wb") as f:

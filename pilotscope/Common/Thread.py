@@ -7,7 +7,6 @@ class ValueThread(Thread):
 
     def __init__(self, group=None, target=None, name=None, args=(), kwargs=None, *, daemon=True):
         super().__init__(group, target, name, args, kwargs, daemon=daemon)
-        print("start thread {}".format(name))
         self.result = None
 
     def run(self):
