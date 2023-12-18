@@ -14,7 +14,7 @@ class BaseDBController(ABC):
     def __init__(self, config: PilotConfig, echo=True):
         """ 
         :param config: The config of PilotScope including the config of database.
-        :param echo: if true, the more detailed information will be printed when executing sql statement.
+        :param echo: if true, the more detailed information will be printed when executing the sql statement.
         """
         self.config = config
         self.echo = echo
@@ -296,7 +296,7 @@ class BaseDBController(ABC):
         """
         If the table named `table_name` exist or not
 
-        :return: the table named `table_name` exist, it is return True; otherwise, it is return False
+        :return: the table named `table_name` exist, it returns True; otherwise, it returns False
         """
         return self.engine.dialect.has_table(self._get_connection(), table_name)
 
@@ -360,7 +360,7 @@ class BaseDBController(ABC):
 
         :param table_name: the name of the table that the column belongs to
         :param column_name: the name of the column
-        :return: the maximum, type of which is same as the data of the column
+        :return: the minimum, type of which is same as the data of the column
         """
         table = self._get_sqla_table(table_name)
         stmt = select(func.min(table.c[column_name])).select_from(table)
