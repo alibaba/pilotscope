@@ -34,8 +34,4 @@ class TrainSwitchMode(PilotEnum):
 
 
 class SparkSQLDataSourceEnum(PilotEnum):
-    CSV = "csv"
-    JSON = "json"
-    PARQUET = "parquet"
-    HIVE = "hive"
     POSTGRESQL = "postgresql"

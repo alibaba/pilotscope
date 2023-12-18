@@ -1,25 +1,22 @@
 import unittest
 
+from pilotscope.DBController.SparkSQLController import SparkConfig, SparkSQLDataSourceEnum
 from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
-from pilotscope.PilotConfig import SparkConfig
-from pilotscope.DBController.SparkSQLController import SparkSQLController, SparkConfig, SparkSQLDataSourceEnum
-from pilotscope.PilotEnum import DatabaseEnum
-from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.Exception.Exception import PilotScopeNotSupportedOperationException
+
 
 class MyTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.config = SparkConfig(
             app_name="testDataInteractor",
-            master_url="local[*]"
+            master_url="local[*]2"
         )
-        self.config.set_datasource(
-            SparkSQLDataSourceEnum.POSTGRESQL,
+        self.config.use_postgresql_datasource(
             db_host='localhost',
             db_port="5432",
-            db='stats_tiny',
             db_user='postgres',
-            db_user_pwd='postgres'
+            db_user_pwd='postgres',
+            db='stats_tiny',
         )
         self.config.set_spark_session_config({
             "spark.executor.memory": "20g"
@@ -37,12 +34,12 @@ class MyTestCase(unittest.TestCase):
 
         self.sql_timestamp_subquery_2_value = {
             'SELECT COUNT(*) FROM posts AS p WHERE ((((p.CreationDate IS NOT NULL) AND (p.Score IS NOT NULL)) AND ((p.CreationDate >= 1279570117) AND (p.Score < 50))) AND (p.Id IS NOT NULL)) ': 11000.0,
-            'SELECT COUNT(*) FROM postlinks AS pl WHERE (pl.PostId IS NOT NULL) ': 22000.0, 
-            'SELECT COUNT(*) FROM posthistory AS ph WHERE (((ph.CreationDate IS NOT NULL) AND (ph.CreationDate >= 1279585800)) AND (ph.PostId IS NOT NULL)) ':33000.0,
-            'SELECT COUNT(*) FROM posts AS p, postlinks AS pl WHERE ((((p.CreationDate IS NOT NULL) AND (p.Score IS NOT NULL)) AND ((p.CreationDate >= 1279570117) AND (p.Score < 50))) AND (p.Id IS NOT NULL)) AND  (pl.PostId IS NOT NULL) AND  (p.Id = pl.PostId) ': 48000.0, 
-            'SELECT COUNT(*) FROM postlinks AS pl, posthistory AS ph WHERE (pl.PostId IS NOT NULL) AND  (((ph.CreationDate IS NOT NULL) AND (ph.CreationDate >= 1279585800)) AND (ph.PostId IS NOT NULL)) AND  (pl.PostId = ph.PostId) ': 53000.0, 
+            'SELECT COUNT(*) FROM postlinks AS pl WHERE (pl.PostId IS NOT NULL) ': 22000.0,
+            'SELECT COUNT(*) FROM posthistory AS ph WHERE (((ph.CreationDate IS NOT NULL) AND (ph.CreationDate >= 1279585800)) AND (ph.PostId IS NOT NULL)) ': 33000.0,
+            'SELECT COUNT(*) FROM posts AS p, postlinks AS pl WHERE ((((p.CreationDate IS NOT NULL) AND (p.Score IS NOT NULL)) AND ((p.CreationDate >= 1279570117) AND (p.Score < 50))) AND (p.Id IS NOT NULL)) AND  (pl.PostId IS NOT NULL) AND  (p.Id = pl.PostId) ': 48000.0,
+            'SELECT COUNT(*) FROM postlinks AS pl, posthistory AS ph WHERE (pl.PostId IS NOT NULL) AND  (((ph.CreationDate IS NOT NULL) AND (ph.CreationDate >= 1279585800)) AND (ph.PostId IS NOT NULL)) AND  (pl.PostId = ph.PostId) ': 53000.0,
             'SELECT COUNT(*) FROM postlinks AS pl, posthistory AS ph, posts AS p WHERE (pl.PostId IS NOT NULL) AND  (((ph.CreationDate IS NOT NULL) AND (ph.CreationDate >= 1279585800)) AND (ph.PostId IS NOT NULL)) AND  ((((p.CreationDate IS NOT NULL) AND (p.Score IS NOT NULL)) AND ((p.CreationDate >= 1279570117) AND (p.Score < 50))) AND (p.Id IS NOT NULL)) AND  (p.Id = pl.PostId) AND  (pl.PostId = ph.PostId) ': 115.0
-        } 
+        }
 
     def test_pull_execution_time(self):
         self.data_interactor.pull_execution_time()
@@ -96,13 +93,13 @@ class MyTestCase(unittest.TestCase):
         self.data_interactor.push_card(self.sql_timestamp_subquery_2_value)
         result = self.data_interactor.execute(self.sql_timestamp)
         print(result)
-        
+
     def test_push_card_and_pull_time(self):
         self.data_interactor.push_card(self.sql_timestamp_subquery_2_value)
         self.data_interactor.pull_execution_time()
         result = self.data_interactor.execute(self.sql_timestamp)
         print(result)
-        
+
     def test_pull_record_and_time(self):
         self.data_interactor.pull_record()
         self.data_interactor.pull_execution_time()
@@ -121,6 +118,7 @@ class MyTestCase(unittest.TestCase):
         result2 = self.data_interactor.execute(self.sql_timestamp)
         print("replaced physical plan:\n", result2.physical_plan)
         self.assertFalse(result1.physical_plan == result2.physical_plan)
+
 
 if __name__ == '__main__':
     unittest.main()

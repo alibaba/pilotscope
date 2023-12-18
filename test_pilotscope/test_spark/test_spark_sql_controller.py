@@ -4,21 +4,22 @@ from pilotscope.DBController.SparkSQLController import SparkSQLController, Spark
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PostgreSQLConfig
 
+
 class MyTestCase(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         super().__init__(methodName)
+
     def setUp(self):
         self.config = SparkConfig(
             app_name="testApp",
             master_url="local[*]"
         )
-        self.config.set_datasource(
-            SparkSQLDataSourceEnum.POSTGRESQL,
+        self.config.use_postgresql_datasource(
             db_host='localhost',
             db_port="5432",
-            db='stats_tiny',
             db_user='postgres',
-            db_user_pwd='postgres'
+            db_user_pwd='postgres',
+            db='stats_tiny',
         )
         self.config.set_spark_session_config({
             "spark.sql.pilotscope.enabled": True,
@@ -71,10 +72,11 @@ class MyTestCase(unittest.TestCase):
         self.db_controller.name_2_table["test_create_table"].clear_rows(self.db_controller.engine, persist=True)
         self.db_controller.clear_all_tables()
 
-        pg_db_controller = DBControllerFactory.get_db_controller(PostgreSQLConfig(db_host = self.config.db_host, db_port = self.config.db_port,
-                                                                                  db_user = self.config.db_user, db_user_pwd = self.config.db_user_pwd,
-                                                                                  db = self.config.db))
-        pg_db_controller.drop_table_if_exist("test_create_table") # clean table for testing next time
+        pg_db_controller = DBControllerFactory.get_db_controller(
+            PostgreSQLConfig(db_host=self.config.db_host, db_port=self.config.db_port,
+                             db_user=self.config.db_user, db_user_pwd=self.config.db_user_pwd,
+                             db=self.config.db))
+        pg_db_controller.drop_table_if_exist("test_create_table")  # clean table for testing next time
 
     def test_set_and_recover_knobs(self):
         # self.db_controller.load_all_tables_from_datasource()
@@ -90,7 +92,6 @@ class MyTestCase(unittest.TestCase):
         assert (self.db_controller._get_connection().conf.get("spark.sql.ansi.enabled") == 'false')
         assert (self.db_controller._get_connection().conf.get("spark.sql.autoBroadcastJoinThreshold") == '10485760b')
         self.db_controller.clear_all_tables()
-
 
     def test_execute(self):
         # self.db_controller.load_all_tables_from_datasource()

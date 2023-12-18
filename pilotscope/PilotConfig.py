@@ -56,7 +56,7 @@ class PilotConfig:
 
 class PostgreSQLConfig(PilotConfig):
     def __init__(self, pilotscope_core_host="localhost", db_host="localhost", db_port="5432", db_user="postgres",
-                 db_user_pwd="postgres", db = "stats_tiny") -> None:
+                 db_user_pwd="postgres", db="stats_tiny") -> None:
         """
         :param pilotscope_core_host: the host address of PilotScope in ML side.
         :param db_host: the host address of database
@@ -64,7 +64,7 @@ class PostgreSQLConfig(PilotConfig):
         :param db_user: the username to log into the database
         :param db_user_pwd: the password to log into the database
         """
-        super().__init__(db_type=DatabaseEnum.POSTGRESQL, db = db, pilotscope_core_host=pilotscope_core_host)
+        super().__init__(db_type=DatabaseEnum.POSTGRESQL, db=db, pilotscope_core_host=pilotscope_core_host)
         self.db_host = db_host
         self.db_port = db_port
         self.db_user = db_user
@@ -139,16 +139,19 @@ class PostgreSQLConfig(PilotConfig):
 
 
 class SparkConfig(PilotConfig):
-    def __init__(self, app_name = "testApp", master_url = "local[*]") -> None:
+    def __init__(self, app_name="testApp", master_url="local[*]") -> None:
         """
         :param app_name: the name of the application of Spark
         :param master_url: the master URL of Spark cluster
         """
 
-        super().__init__(db_type=DatabaseEnum.SPARK, db = None)
+        super().__init__(db_type=DatabaseEnum.SPARK, db=None)
         # spark
         self.app_name = app_name
         self.master_url = master_url
+        if self.master_url != "local[*]":
+            raise NotImplementedError(
+                "PilotScope only support master_url=local[*]. The more functionalities is developing")
 
         # postgresql datasource
         self.datasource_type = None
@@ -167,52 +170,32 @@ class SparkConfig(PilotConfig):
     def set_spark_session_config(self, config: dict):
         self.spark_configs.update(config)
         return self
-    
+
     def enable_cardinality_estimation(self):
         """
-        If you need to enable `pull_subquery_card` and `push_card`, please turn them on.
+        Spark SQL support cost-based optimization but it is disabled by default.
+        If you need to enable `pull_subquery_card` and `push_card`, please call this function, and PilotScope will set the corresponding parameters.
+        This will consume more time, but the performance of the SQL will be better.
         """
         self.set_spark_session_config({
             "spark.sql.cbo.enabled": True,
             "spark.sql.cbo.joinReorder.enabled": True
         })
 
-    def set_datasource(self, datasource_type: SparkSQLDataSourceEnum, **datasource_conn_info):
-        """
-        A generic interface for configuring data sources. Since different data sources have varying parameters,
-        use the `datasource_conn_info` dictionary to pass the respective parameters.
-
-        :param datasource_type: the type of datasource of spark, now support SparkSQLDataSourceEnum.POSTGRESQL
-        :param datasource_conn_info: parameters
-        """
-        self.datasource_type = datasource_type
-        if self.datasource_type == SparkSQLDataSourceEnum.POSTGRESQL:
-            self.db_host = datasource_conn_info["db_host"]
-            self.db_port = datasource_conn_info["db_port"]
-            self.db = datasource_conn_info["db"]
-            self.db_user = datasource_conn_info["db_user"]
-            self.db_user_pwd = datasource_conn_info["db_user_pwd"]
-            if "jdbc" in datasource_conn_info and datasource_conn_info["jdbc"] is not None:
-                self.jdbc = datasource_conn_info["jdbc"]
-        else:
-            raise NotImplementedError("Unsupported datasource type: '{}'".format(self.datasource_type))
-        return self
-
     def use_postgresql_datasource(self, db_host="localhost", db_port="5432", db_user="postgres",
-                                   db_user_pwd="postgres", db = "stats_tiny"):
+                                  db_user_pwd="postgres", db="stats_tiny"):
         """
-        Set up a PostgreSQL data source
+        Set up a PostgreSQL data source.
 
         :param db_host: the host of postgresql, defaults to "localhost"
-        :type db_host: str, optional
         :param db_port: the network port of postgresql, defaults to "5432"
-        :type db_port: str, optional
-        :param db_user: the user name to log into postgresql, defaults to "postgres"
-        :type db_user: str, optional
+        :param db_user: the username to log into postgresql, defaults to "postgres"
         :param db_user_pwd: the password of the user, defaults to "postgres"
-        :type db_user_pwd: str, optional
         :param db: database name, defaults to "stats_tiny"
-        :type db: str, optional
         """
-        self.set_datasource(SparkSQLDataSourceEnum.POSTGRESQL, db_host = db_host, db_port = db_port, db_user = db_user,
-                            db_user_pwd = db_user_pwd, db = db)
+        self.datasource_type = SparkSQLDataSourceEnum.POSTGRESQL
+        self.db_host = db_host
+        self.db_port = db_port
+        self.db = db
+        self.db_user = db_user
+        self.db_user_pwd = db_user_pwd
