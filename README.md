@@ -46,7 +46,7 @@ could steer any database in a unified manner. By applying PilotScope, we obtain 
 ---
 **News**
 
-* 🎉 [2023-12-15] Our **[paper](https://)** on PilotScope has been accepted by VLDB 2024!
+* 🎉 [2023-12-15] Our **[paper](paper)** on PilotScope has been accepted by VLDB 2024!
 
 ---
 <!-- ## News -->
