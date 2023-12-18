@@ -57,6 +57,8 @@ could steer any database in a unified manner. By applying PilotScope, we obtain 
 PilotScope/
 ├── algorithm_examples                         # Algorithm examples
 ├── fig                                        # Saved some Figures
+├── paper                                 
+│   ├── PilotScope.pdf                       # Paper of PilotScope
 ├── pilotscope
 │   ├── Anchor                                 # Base push and pull anchors for implementing push and pull opearators       
 │   │   ├── AnchorHandler.py
