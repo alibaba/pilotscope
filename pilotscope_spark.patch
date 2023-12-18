@@ -1,0 +1,1340 @@
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..c2bec0f
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,2 @@
++build/**
++**/target/**
+\ No newline at end of file
+diff --git a/pom.xml b/pom.xml
+index 22c0a96..8f54936 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -378,6 +378,39 @@
+ 
+       For more details, see SPARK-3812 and MNG-2971.
+     -->
++          
++    <dependency>
++      <groupId>io.circe</groupId>
++      <artifactId>circe-core_2.12</artifactId>
++      <version>0.14.1</version>
++    </dependency>
++    <dependency>
++      <groupId>io.circe</groupId>
++      <artifactId>circe-generic_2.12</artifactId>
++      <version>0.14.1</version>
++    </dependency>
++    <dependency>
++      <groupId>io.circe</groupId>
++      <artifactId>circe-parser_2.12</artifactId>
++      <version>0.14.1</version>
++    </dependency>
++
++    <dependency>
++      <groupId>org.apache.httpcomponents</groupId>
++      <artifactId>httpclient</artifactId>
++      <version>4.5.14</version>
++    </dependency>
++    <dependency>
++      <groupId>com.softwaremill.sttp.client4</groupId>
++      <artifactId>core_2.12</artifactId>
++      <version>4.0.0-M1</version>
++    </dependency>
++    <dependency>
++      <groupId>org.scalatra</groupId>
++      <artifactId>scalatra_2.12</artifactId>
++      <version>2.8.4</version>
++    </dependency>
++
+     <dependency>
+       <groupId>org.spark-project.spark</groupId>
+       <artifactId>unused</artifactId>
+@@ -420,6 +453,11 @@
+   </dependencies>
+   <dependencyManagement>
+     <dependencies>
++      <dependency>
++        <groupId>org.scala-lang.modules</groupId>
++        <artifactId>scala-collection-compat_2.12</artifactId>
++        <version>2.11.0</version>
++      </dependency>
+       <dependency>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-tags_${scala.binary.version}</artifactId>
+@@ -2843,7 +2881,7 @@
+               <arg>-explaintypes</arg>
+               <arg>-target:jvm-1.8</arg>
+               <arg>-Xfatal-warnings</arg>
+-              <arg>-Ywarn-unused:imports</arg>
++              <!--<arg>-Ywarn-unused:imports</arg>-->
+               <arg>-P:silencer:globalFilters=.*deprecated.*</arg>
+             </args>
+             <jvmArgs>
+@@ -2858,7 +2896,8 @@
+               <javacArg>${java.version}</javacArg>
+               <javacArg>-target</javacArg>
+               <javacArg>${java.version}</javacArg>
+-              <javacArg>-Xlint:all,-serial,-path,-try</javacArg>
++              <javacArg>-Xlint:-sunapi,-serial,-path,-try</javacArg>
++              <javacArg>-XDenableSunApiLintControl</javacArg>
+             </javacArgs>
+             <compilerPlugins>
+               <compilerPlugin>
+@@ -3276,6 +3315,7 @@
+         <artifactId>maven-checkstyle-plugin</artifactId>
+         <version>3.1.2</version>
+         <configuration>
++          <skip>true</skip>
+           <failOnViolation>false</failOnViolation>
+           <includeTestSourceDirectory>true</includeTestSourceDirectory>
+           <sourceDirectories>
+diff --git a/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/optimizer/CostBasedJoinReorder.scala b/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/optimizer/CostBasedJoinReorder.scala
+index 659384a..479b489 100644
+--- a/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/optimizer/CostBasedJoinReorder.scala
++++ b/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/optimizer/CostBasedJoinReorder.scala
+@@ -18,6 +18,7 @@
+ package org.apache.spark.sql.catalyst.optimizer
+ 
+ import scala.collection.mutable
++import scala.math._
+ 
+ import org.apache.spark.internal.Logging
+ import org.apache.spark.sql.catalyst.expressions.{And, Attribute, AttributeSet, Expression, ExpressionSet, PredicateHelper}
+@@ -26,7 +27,11 @@ import org.apache.spark.sql.catalyst.plans.logical._
+ import org.apache.spark.sql.catalyst.rules.Rule
+ import org.apache.spark.sql.catalyst.trees.TreePattern.INNER_LIKE_JOIN
+ import org.apache.spark.sql.internal.SQLConf
+-
++import org.apache.spark.sql.catalyst.plans.logical.{Filter, Project, Join, LogicalPlan, LeafNode}
++import org.apache.spark.sql.errors.QueryExecutionErrors
++import org.apache.spark.sql.catalyst.expressions.{Attribute, AttributeReference, Expression, ExpressionSet, PredicateHelper}
++import org.apache.spark.sql.catalyst.util.PilotscopeTimer
++import org.apache.spark.sql.catalyst.util.PilotscopeUtilInternal
+ 
+ /**
+  * Cost-based join reorder.
+@@ -35,7 +40,96 @@ import org.apache.spark.sql.internal.SQLConf
+  */
+ object CostBasedJoinReorder extends Rule[LogicalPlan] with PredicateHelper {
+ 
++  type CustomRowCounts = mutable.Map[String, Option[BigInt]]
++
++  val subqueries = mutable.Buffer[JoinReorderDP.JoinPlanMap]()
++  val single_table_subqueries = mutable.Buffer[LogicalPlan]()
++  var input_plan: Option[LogicalPlan] = None 
++  var subqueryCustomRowCounts: Option[CustomRowCounts] = None
++
++  val timer = new PilotscopeTimer
++  var anchor_time_getsubquery = 0.0
++  var anchor_time_setcard = 0.0
++
++  def setCustomRowCounts(new_subqueryCustomRowCounts: Option[CustomRowCounts]): Unit = {
++    if (new_subqueryCustomRowCounts != None)
++      subqueryCustomRowCounts = Some(new_subqueryCustomRowCounts.get.clone())
++    else
++      subqueryCustomRowCounts = None
++  }
++
++  def preprocessSubqueryRelatedAnchors(conf: SQLConf): Option[PilotscopeUtilInternal.TransDataToPilot] = {
++      // todo: EXECUTION_TIME_PULL_ANCHOR
++      val fetch_subqueries = conf.pilotscope_getAnchorStatus("SUBQUERY_CARD_PULL_ANCHOR")
++      val set_card = conf.pilotscope_getAnchorStatus("CARD_PUSH_ANCHOR")
++      if (fetch_subqueries != None && fetch_subqueries.get == true
++        && set_card != None && set_card.get == true
++      )
++        throw new Exception("SUBQUERY_CARD_PULL_ANCHOR and CARD_PUSH_ANCHOR cannot be enabled in the same request.")
++      if (set_card != None && set_card.get == true) {
++          val subqueries = conf.pilotscope_getSetCardAnchorInfo("subquery").get
++          val card = conf.pilotscope_getSetCardAnchorInfo("card").get
++          if (card.size != subqueries.size)
++            throw new Exception("The numbers of subqueries and cardinalities are not identical.")
++          val custom_rowCounts = mutable.Map[String, Option[BigInt]]()
++          for (i <- 0 until subqueries.size) {
++            custom_rowCounts(subqueries(i)) = Some(BigInt(card(i)))
++          }
++          setCustomRowCounts(Some(custom_rowCounts))
++      }
++      // no response for CARD_PUSH_ANCHOR
++      None
++  }
++  
++  def postprocessSubqueryRelatedAnchors(conf: SQLConf): Option[PilotscopeUtilInternal.TransDataToPilot] = {
++      // done: SUBQUERY_CARD_PULL_ANCHOR
++      // todo: CARD_PUSH_ANCHOR
++      // todo: EXECUTION_TIME_PULL_ANCHOR
++      val fetch_subqueries = conf.pilotscope_getAnchorStatus("SUBQUERY_CARD_PULL_ANCHOR")
++      val set_card = conf.pilotscope_getAnchorStatus("CARD_PUSH_ANCHOR")
++      if (fetch_subqueries != None && fetch_subqueries.get == true
++        && set_card != None && set_card.get == true
++      )
++        throw new Exception("SUBQUERY_CARD_PULL_ANCHOR and CARD_PUSH_ANCHOR cannot be enabled in the same request.")
++      if (fetch_subqueries != None && fetch_subqueries.get == true && conf.pilotscope_getAnchorEnableReceiveData("SUBQUERY_CARD_PULL_ANCHOR").get == true) {
++        // post to the pilotscope http server
++        // val parser_time = conf.pilotscope_getTime("parser_time").get
++        // val http_time = System.currentTimeMillis / 1000.0
++        // if (parser_time < 0)
++        //   throw new Exception("`parser_time` cannot be negative value, you may not initialize your SparkSession correctly.")
++        val response_data = PilotscopeUtilInternal.buildResponseData(
++          conf, subqueries//, parser_time, http_time, List("SUBQUERY_CARD_PULL_ANCHOR"), List(anchor_time_getsubquery)
++        )
++        Some(response_data)
++      }
++      else {
++        None
++      }
++  }
++
+   def apply(plan: LogicalPlan): LogicalPlan = {
++    anchor_time_getsubquery = 0
++    anchor_time_setcard = 0
++
++    timer.check
++    subqueries.clear()
++    single_table_subqueries.clear()
++    timer.check
++    anchor_time_getsubquery += timer.get
++    anchor_time_setcard += timer.get
++
++    if (conf.pilotscopeEnabled) {
++      PilotscopeUtilInternal.processAnchorRequests(preprocessSubqueryRelatedAnchors, conf)
++      if (conf.pilotscopeDebugEnabled) {
++        input_plan = Some(plan.clone())
++      }
++    }
++    else {
++      // When pilotscope is disabled, force the custom rowCount to be None, 
++      // such that it will never affect the optimization.
++      subqueryCustomRowCounts = None
++    }
++
+     if (!conf.cboEnabled || !conf.joinReorderEnabled) {
+       plan
+     } else {
+@@ -43,11 +137,24 @@ object CostBasedJoinReorder extends Rule[LogicalPlan] with PredicateHelper {
+         // Start reordering with a joinable item, which is an InnerLike join with conditions.
+         // Avoid reordering if a join hint is present.
+         case j @ Join(_, _, _: InnerLike, Some(cond), JoinHint.NONE) =>
+-          reorder(j, j.output)
++          reorder(j, j.output, subqueryCustomRowCounts)
+         case p @ Project(projectList, Join(_, _, _: InnerLike, Some(cond), JoinHint.NONE))
+           if projectList.forall(_.isInstanceOf[Attribute]) =>
+-          reorder(p, p.output)
++          reorder(p, p.output, subqueryCustomRowCounts)
++      }
++
++      subqueryCustomRowCounts = None
++
++      if (conf.pilotscopeEnabled) {
++        PilotscopeUtilInternal.processAnchorRequests(postprocessSubqueryRelatedAnchors, conf)
+       }
++
++      subqueries.clear()
++      JoinReorderDP.foundPlansCache.clear()
++      timer.reset
++      anchor_time_getsubquery = 0
++      anchor_time_setcard = 0
++
+       // After reordering is finished, convert OrderedJoin back to Join.
+       result transform {
+         case OrderedJoin(left, right, jt, cond) => Join(left, right, jt, cond, JoinHint.NONE)
+@@ -55,14 +162,28 @@ object CostBasedJoinReorder extends Rule[LogicalPlan] with PredicateHelper {
+     }
+   }
+ 
+-  private def reorder(plan: LogicalPlan, output: Seq[Attribute]): LogicalPlan = {
++  private def reorder(plan: LogicalPlan, output: Seq[Attribute], 
++      subqueryCustomRowCounts: Option[CustomRowCounts] = None): LogicalPlan = {
+     val (items, conditions) = extractInnerJoins(plan)
++    single_table_subqueries ++= items
+     val result =
+       // Do reordering if the number of items is appropriate and join conditions exist.
+       // We also need to check if costs of all items can be evaluated.
+       if (items.size > 2 && items.size <= conf.joinReorderDPThreshold && conditions.nonEmpty &&
+           items.forall(_.stats.rowCount.isDefined)) {
+-        JoinReorderDP.search(conf, items, conditions, output)
++        val optim_plan = JoinReorderDP.search(conf, items, conditions, output, subqueryCustomRowCounts)
++        
++        if (conf.pilotscopeEnabled) {
++          timer.check
++          for (foundplan <- JoinReorderDP.foundPlansCache) {
++            subqueries += foundplan
++          }
++          timer.check
++          anchor_time_getsubquery += timer.get
++          anchor_time_setcard += timer.get
++        }
++        
++        optim_plan
+       } else {
+         plan
+       }
+@@ -72,13 +193,19 @@ object CostBasedJoinReorder extends Rule[LogicalPlan] with PredicateHelper {
+ 
+   /**
+    * Extracts items of consecutive inner joins and join conditions.
++   * Each item is a single-table subquery/subplan of the whole SQL query/plan, 
++   *    i.e., project or/and filter on a single table.
+    * This method works for bushy trees and left/right deep trees.
+    */
+-  private def extractInnerJoins(plan: LogicalPlan): (Seq[LogicalPlan], ExpressionSet) = {
++  def extractInnerJoins(plan: LogicalPlan): (Seq[LogicalPlan], ExpressionSet) = {
+     plan match {
+       case Join(left, right, _: InnerLike, Some(cond), JoinHint.NONE) =>
+         val (leftPlans, leftConditions) = extractInnerJoins(left)
++        //println("Left join conditions:")
++        //leftConditions.foreach(c => println(c.sql))
+         val (rightPlans, rightConditions) = extractInnerJoins(right)
++        //println("Right join conditions:")
++        //rightConditions.foreach(c => println(c.sql))
+         (leftPlans ++ rightPlans, leftConditions ++ rightConditions ++
+           splitConjunctivePredicates(cond))
+       case Project(projectList, j @ Join(_, _, _: InnerLike, Some(cond), JoinHint.NONE))
+@@ -142,12 +269,25 @@ case class OrderedJoin(
+  */
+ object JoinReorderDP extends PredicateHelper with Logging {
+ 
++  var foundPlansCache = mutable.Buffer[JoinPlanMap]()
++  val timer = new PilotscopeTimer
++
+   def search(
+       conf: SQLConf,
+       items: Seq[LogicalPlan],
+       conditions: ExpressionSet,
+-      output: Seq[Attribute]): LogicalPlan = {
+-
++      output: Seq[Attribute], 
++      subqueryCustomRowCounts: Option[CostBasedJoinReorder.CustomRowCounts] = None
++      ): LogicalPlan = {
++
++    //println("JoinReorderDP.search conditions: ")
++    //conditions.foreach(c => println(c.sql))
++    timer.check
++    foundPlansCache.clear()
++    timer.check
++    CostBasedJoinReorder.anchor_time_getsubquery += timer.get
++    CostBasedJoinReorder.anchor_time_setcard += timer.get
++    
+     val startTime = System.nanoTime()
+     // Level i maintains all found plans for i + 1 items.
+     // Create the initial plans: each plan is a single item with zero cost.
+@@ -171,7 +311,15 @@ object JoinReorderDP extends PredicateHelper with Logging {
+     val topOutputSet = AttributeSet(output)
+     while (foundPlans.size < items.length) {
+       // Build plans for the next level.
+-      foundPlans += searchLevel(foundPlans.toSeq, conf, conditions, topOutputSet, filters)
++      foundPlans += searchLevel(foundPlans.toSeq, conf, conditions, topOutputSet, filters, subqueryCustomRowCounts)
++    }
++
++    if (conf.pilotscopeEnabled) {
++      timer.check
++      foundPlansCache = foundPlans.clone()
++      timer.check
++      CostBasedJoinReorder.anchor_time_getsubquery += timer.get
++      CostBasedJoinReorder.anchor_time_setcard += timer.get
+     }
+ 
+     val durationInMs = (System.nanoTime() - startTime) / (1000 * 1000)
+@@ -205,7 +353,12 @@ object JoinReorderDP extends PredicateHelper with Logging {
+       conf: SQLConf,
+       conditions: ExpressionSet,
+       topOutput: AttributeSet,
+-      filters: Option[JoinGraphInfo]): JoinPlanMap = {
++      filters: Option[JoinGraphInfo], 
++      subqueryCustomRowCounts: Option[CostBasedJoinReorder.CustomRowCounts] = None
++      ): JoinPlanMap = {
++
++    val my_all_plans_enum = mutable.Buffer[Seq[JoinPlan]]()
++    val my_valid_join_plans_enum = mutable.Buffer[JoinPlan]()
+ 
+     val nextLevel = new JoinPlanMap
+     var k = 0
+@@ -225,17 +378,56 @@ object JoinReorderDP extends PredicateHelper with Logging {
+           existingLevels(lev - k).values.toSeq
+         }
+ 
++        if (conf.pilotscope_getColRefToTableMap.isEmpty)
++          throw new Exception("Cannot get the mapping from column references to the corresponding table name, " +
++            "please make sure you have configured the mapping by calling `PilotscopeUtilExternal.configColRefToTableMap`.")
++
+         otherSideCandidates.foreach { otherSidePlan =>
+-          buildJoin(oneSidePlan, otherSidePlan, conf, conditions, topOutput, filters) match {
++          buildJoin(
++              oneSidePlan, otherSidePlan, conf, conditions, topOutput, filters, 
++              {
++                if (subqueryCustomRowCounts != None) {
++                  timer.check
++                  val custom_rowCount = subqueryCustomRowCounts.get.getOrElse(PilotscopeUtilInternal.joinPlanToSQL(oneSidePlan, conf.pilotscope_getColRefToTableMap).get, None) 
++                  timer.check
++                  CostBasedJoinReorder.anchor_time_setcard += timer.get
++                  custom_rowCount
++                }
++                else 
++                  None
++              }, 
++              {
++                if (subqueryCustomRowCounts != None) {
++                  timer.check
++                  val custom_rowCount = subqueryCustomRowCounts.get.getOrElse(PilotscopeUtilInternal.joinPlanToSQL(otherSidePlan, conf.pilotscope_getColRefToTableMap).get, None) 
++                  timer.check
++                  CostBasedJoinReorder.anchor_time_setcard += timer.get
++                  custom_rowCount
++                }
++                else 
++                  None
++              }
++              
++            ) match {
+             case Some(newJoinPlan) =>
+               // Check if it's the first plan for the item set, or it's a better plan than
+               // the existing one due to lower cost.
++
++              if (conf.pilotscopeEnabled && conf.pilotscopeDebugEnabled) {
++                my_valid_join_plans_enum += newJoinPlan
++              }
++
+               val existingPlan = nextLevel.get(newJoinPlan.itemIds)
+               if (existingPlan.isEmpty || newJoinPlan.betterThan(existingPlan.get, conf)) {
+                 nextLevel.update(newJoinPlan.itemIds, newJoinPlan)
+               }
+             case None =>
+           }
++
++          if (conf.pilotscopeEnabled && conf.pilotscopeDebugEnabled) {
++            my_all_plans_enum += Seq[JoinPlan](oneSidePlan, otherSidePlan)
++          }
++          
+         }
+       }
+       k += 1
+@@ -243,6 +435,19 @@ object JoinReorderDP extends PredicateHelper with Logging {
+     nextLevel
+   }
+ 
++  /*
++  def computeCostSize(plan: JoinPlan, custom_rowCount: Option[BigInt]): BigInt = {
++    val planStats = plan.plan.stats
++    var sizeInBytes = planStats.sizeInBytes
++    if (planStats.rowCount.get > 0) {
++      val sizePerRow: BigInt = planStats.sizeInBytes / planStats.rowCount.get
++      if (custom_rowCount != None)
++        sizeInBytes = sizePerRow * custom_rowCount.get
++    } 
++    sizeInBytes
++  }
++  */
++
+   /**
+    * Builds a new JoinPlan if the following conditions hold:
+    * - the sets of items contained in left and right sides do not overlap.
+@@ -266,7 +471,10 @@ object JoinReorderDP extends PredicateHelper with Logging {
+       conf: SQLConf,
+       conditions: ExpressionSet,
+       topOutput: AttributeSet,
+-      filters: Option[JoinGraphInfo]): Option[JoinPlan] = {
++      filters: Option[JoinGraphInfo], 
++      onePlanCustomRowCount: Option[BigInt] = None, 
++      otherPlanCustomRowCount: Option[BigInt] = None
++      ): Option[JoinPlan] = {
+ 
+     if (oneJoinPlan.itemIds.intersect(otherJoinPlan.itemIds).nonEmpty) {
+       // Should not join two overlapping item sets.
+@@ -319,8 +527,8 @@ object JoinReorderDP extends PredicateHelper with Logging {
+     val itemIds = oneJoinPlan.itemIds.union(otherJoinPlan.itemIds)
+     // Now the root node of onePlan/otherPlan becomes an intermediate join (if it's a non-leaf
+     // item), so the cost of the new join should also include its own cost.
+-    val newPlanCost = oneJoinPlan.planCost + oneJoinPlan.rootCost(conf) +
+-      otherJoinPlan.planCost + otherJoinPlan.rootCost(conf)
++    val newPlanCost = oneJoinPlan.planCost + oneJoinPlan.rootCost(conf, onePlanCustomRowCount) +
++      otherJoinPlan.planCost + otherJoinPlan.rootCost(conf, otherPlanCustomRowCount)
+     Some(JoinPlan(itemIds, newPlan, collectedJoinConds, newPlanCost))
+   }
+ 
+@@ -331,6 +539,9 @@ object JoinReorderDP extends PredicateHelper with Logging {
+    * Partial join order in a specific level.
+    *
+    * @param itemIds Set of item ids participating in this partial plan.
++   *        "item" here usually means table/view.
++   *        For example, if the plan is a selection that only includes the table #0, itemIds looks like "Set(0)";
++   *                     if the plan is a join that includes tables #0 and #1, itemIds looks like "Set(0, 1)".
+    * @param plan The plan tree with the lowest cost for these items found so far.
+    * @param joinConds Join conditions included in the plan.
+    * @param planCost The cost of this plan tree is the sum of costs of all intermediate joins.
+@@ -342,12 +553,27 @@ object JoinReorderDP extends PredicateHelper with Logging {
+       planCost: Cost) {
+ 
+     /** Get the cost of the root node of this plan tree. */
+-    def rootCost(conf: SQLConf): Cost = {
++    def rootCost(conf: SQLConf, custom_rowCount: Option[BigInt] = None): Cost = {
+       if (itemIds.size > 1) {
+         val rootStats = plan.stats
+-        Cost(rootStats.rowCount.get, rootStats.sizeInBytes)
++        
++        var sizeInBytes = rootStats.sizeInBytes
++        if (rootStats.rowCount.get > 0) {
++          val sizePerRow: BigInt = rootStats.sizeInBytes / rootStats.rowCount.get
++          if (custom_rowCount != None)
++            sizeInBytes = sizePerRow * custom_rowCount.get
++        } 
++        
++        var rowCount = rootStats.rowCount.get
++        if (custom_rowCount != None)
++          rowCount = custom_rowCount.get
++
++        Cost(rowCount, sizeInBytes)
++      
+       } else {
+         // If the plan is a leaf item, it has zero cost.
++        // For example, if the plan is a selection/filter on one single table, 
++        //    then its planCost is zero.
+         Cost(0, 0)
+       }
+     }
+diff --git a/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/util/PilotscopeTimer.scala b/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/util/PilotscopeTimer.scala
+new file mode 100644
+index 0000000..b1b9729
+--- /dev/null
++++ b/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/util/PilotscopeTimer.scala
+@@ -0,0 +1,23 @@
++package org.apache.spark.sql.catalyst.util
++import scala.collection.mutable
++
++class PilotscopeTimer {
++    val checkpoints = mutable.ArrayBuffer[Long](-1, -1)
++    var which_checkpoint = 0
++
++    def check: Unit = {
++        checkpoints(which_checkpoint) = System.nanoTime()
++        which_checkpoint = (which_checkpoint + 1) % 2
++    }
++    def get: Double = {
++        val which_last_checkpoint = (which_checkpoint + 1) % 2
++        // return time in second
++        (checkpoints(which_last_checkpoint) - checkpoints(which_checkpoint)).toDouble / (1000 * 1000 * 1000)
++    }
++
++    def reset: Unit = {
++        checkpoints(0) = -1
++        checkpoints(1) = -1
++        which_checkpoint = 0
++    }
++}
+diff --git a/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/util/PilotscopeUtilInternal.scala b/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/util/PilotscopeUtilInternal.scala
+new file mode 100644
+index 0000000..f32f138
+--- /dev/null
++++ b/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/util/PilotscopeUtilInternal.scala
+@@ -0,0 +1,403 @@
++package org.apache.spark.sql.catalyst.util
++
++import scala.collection.mutable
++import scala.math._
++
++import org.apache.spark.sql.errors.QueryExecutionErrors
++import org.apache.spark.sql.internal.SQLConf
++import org.apache.spark.sql.catalyst.plans.logical._
++import org.apache.spark.sql.catalyst.expressions.{Attribute, AttributeReference, Expression}
++import org.apache.spark.sql.catalyst.optimizer.{CostBasedJoinReorder, JoinReorderDP}
++import io.circe._, io.circe.generic.semiauto._, io.circe.generic.JsonCodec, io.circe.parser._, io.circe.syntax._
++import sttp.client4.quick._
++
++import org.apache.http._
++import org.apache.http.client._
++import org.apache.http.client.methods.HttpPost
++import org.apache.http.impl.client.DefaultHttpClient
++import org.apache.http.entity.StringEntity
++import java.util.ArrayList
++
++object PilotscopeUtilInternal {
++    
++    case class ExecutionTimePullAnchor(
++        enable: Boolean,
++        name: String
++    )
++
++    case class SubqueryCardPullAnchor(
++        enable: Boolean,
++        name: String
++    )
++
++    case class CardPushAnchor(
++        enable: Boolean,
++        name: String, 
++        subquery: List[String], 
++        card: List[BigInt]
++    )
++
++    case class Anchor(
++        SUBQUERY_CARD_PULL_ANCHOR: Option[SubqueryCardPullAnchor], 
++        CARD_PUSH_ANCHOR: Option[CardPushAnchor], 
++        EXECUTION_TIME_PULL_ANCHOR: Option[ExecutionTimePullAnchor]
++    )
++
++    case class TransDataToPilot (
++      sql: Option[String], 
++      physical_plan: Option[String], 
++      logical_plan: Option[String], 
++      execution_time: Option[String],
++      tid: Option[String],
++      subquery: Option[List[String]], 
++      card: Option[List[BigInt]], 
++      subquery_num: Option[Int], 
++      card_num: Option[Int]
++
++    //   parser_time: Option[String], 
++    //   http_time: Option[String], 
++    //   anchor_names: Option[List[String]], 
++    //   anchor_times: Option[List[String]], 
++    //   anchor_num: Option[Int], 
++    //   anchortime_num: Option[Int]
++    )
++
++     def buildResponseData(
++            conf: SQLConf, 
++            subqueries: mutable.Buffer[JoinReorderDP.JoinPlanMap]
++            // parser_time: Double, 
++            // http_time: Double, 
++            // anchor_names: List[String], 
++            // anchor_times: List[Double]
++        ): PilotscopeUtilInternal.TransDataToPilot = {
++        
++        // flatten subqueries and get their cardnalities
++        val subqueries_list = mutable.ArrayBuffer[String]()
++        val card_list = mutable.ArrayBuffer[BigInt]()
++        for (i <- 0 until subqueries.size) {
++            for (j <- 0 until subqueries(i).values.size) {
++                val cur_join_plan: JoinReorderDP.JoinPlan = subqueries(i).values.toSeq(j)
++                subqueries_list += joinPlanToSQL(cur_join_plan, conf.pilotscope_getColRefToTableMap).get 
++                card_list += cur_join_plan.planCost.card
++            }
++        }
++
++        // TODO: format times 
++        // val anchor_times_formatted = anchor_times.map(_.toString)
++        // val parser_time_formatted = parser_time.toString()
++        // val http_time_formatted = http_time.toString()
++
++        val response_data = new PilotscopeUtilInternal.TransDataToPilot (
++          sql = None, 
++          physical_plan = None, 
++          logical_plan = None, 
++          execution_time = None,
++          tid = conf.pilotscope_getSessionInfo("tid"),
++          subquery = Some(subqueries_list.toList), 
++          card = Some(card_list.toList), 
++          subquery_num = Some(subqueries_list.size), 
++          card_num = Some(card_list.size)
++
++        //   parser_time = Some(parser_time_formatted),
++        //   http_time = Some(http_time_formatted),
++        //   anchor_names = Some(anchor_names), 
++        //   anchor_times = Some(anchor_times_formatted), 
++        //   anchor_num = Some(anchor_names.size), 
++        //   anchortime_num = Some(anchor_times.size)
++        )
++        
++        response_data
++    }
++
++        // Convert the internal response data into json, 
++    //    which will be sent back to PilotScope. 
++    def pilotTransDataToJson(internal_data: PilotscopeUtilInternal.TransDataToPilot): Option[String] = {
++        implicit val SubqueryCardPullAnchorEncoder: Encoder[SubqueryCardPullAnchor] = deriveEncoder[SubqueryCardPullAnchor]
++        implicit val CardPushAnchorEncoder: Encoder[CardPushAnchor] = deriveEncoder[CardPushAnchor]
++        implicit val ExecutionTimePullAnchorEncoder: Encoder[ExecutionTimePullAnchor] = deriveEncoder[ExecutionTimePullAnchor]
++        implicit val anchorEncoder: Encoder[Anchor] = deriveEncoder[Anchor]
++        implicit val mainEncoder: Encoder[PilotscopeUtilInternal.TransDataToPilot] = deriveEncoder[PilotscopeUtilInternal.TransDataToPilot]
++        Some(internal_data.asJson.toString())   
++    }
++
++    def respondToPilot(json: String, conf: SQLConf): Unit = {
++      val url = conf.pilotscope_getSessionInfo("url")
++      val port = conf.pilotscope_getSessionInfo("port")
++
++      /*
++      val response = quickRequest.post(uri"$url:$port")
++      .header("Content-Type", "application/json")
++      .body(json)
++      .send()
++      println(response.code)
++      */
++      if (url != None) {
++        val post = new HttpPost(s"http://${url.get}:${port.get}/")
++        post.setHeader("Content-Type", "application/json")
++        post.setEntity(new StringEntity(json, "UTF-8"))
++
++        val client = new DefaultHttpClient
++        val response = client.execute(post)
++        // println(response.getStatusLine())  
++      }
++      else {
++        println("No URL, no data sent to PilotScope.")
++      }
++    }
++
++    def processAnchorRequests(anchors_processing_func: (SQLConf) => Option[TransDataToPilot], conf: SQLConf, reply_data_if_any: Boolean = true): Unit = {
++        // anchors_processing_func: one function to process all target anchors and generate the response data for all of them
++        val response_data_to_pilot = anchors_processing_func(conf)
++        if (response_data_to_pilot != None && reply_data_if_any) {
++          // need to send back something to pilotscope
++          val response_json = pilotTransDataToJson(response_data_to_pilot.get)
++          //println("Response Json: ")
++          //println(response_json)
++          respondToPilot(response_json.get, conf)
++        }
++    }
++
++    // ########################################
++    // Internal processing for the subqueries
++    // ########################################
++
++    // The mapping from column reference string to the table name where the column is
++    type ColTableMap = mutable.Map[String, String]
++
++    def getTableNameForColRef(target_col_ref: String, col_table_map: ColTableMap): Option[String] = {
++        //var found_tablename = ""
++        if (col_table_map.getOrElse(target_col_ref, None) != None)
++            col_table_map.get(target_col_ref)
++        else
++            None
++    }
++
++    def columnReferenceToSQL(col_ref: String, col_table_map: ColTableMap): Option[String] = {
++        val tablename = getTableNameForColRef(col_ref, col_table_map)
++        val col_name = col_ref.split("#")(0)
++        if (tablename != None) {
++            Some(tablename.get+"."+col_name)
++        }
++        else {
++            None
++        }
++    }
++
++    def selectClause(plan: LogicalPlan, force_count_star: Boolean = true): Option[String] = {
++        if (force_count_star) {
++            Some("SELECT COUNT(*) ") 
++        }
++        else {
++            if (!plan.isInstanceOf[Project]) {
++                // no project, i.e., just selecting all rows and columns
++                Some("SELECT * ") 
++            }
++            else {
++                // TODO: unfinished
++                val project_col_refs: Seq[Attribute] = plan.asInstanceOf[Project].projectList.map(_.toAttribute)
++                var sql = "SELECT"
++                var i = 1
++                for (col_ref <- project_col_refs) {
++                    //sql += " " + columnReferenceToSQL(col_ref.toString(), sqlContext).get
++                    sql += " " + col_ref.asInstanceOf[AttributeReference].sql + {
++                        if (i < project_col_refs.size)
++                            ", "
++                        else
++                            " "
++                    }
++                }
++                Some(sql)
++            }
++        }
++    }
++
++    // Refer to CostBasedJoinReorder.scala for what "item" is.
++    def getTableNameAndAliasFromSingleTableSubquery(item: LogicalPlan, col_table_map: ColTableMap): (Option[String], Option[String]) = {
++        if (!item.isInstanceOf[Project] && !item.isInstanceOf[Filter]) {
++            throw QueryExecutionErrors.methodNotImplementedError("getTableNameFromSingleTableSubquery does not support other operators than Project and Filter.")
++            None
++        }
++        if (item.isInstanceOf[Project]) {
++            val project_col_refs: Seq[AttributeReference] = item.asInstanceOf[Project].projectList.map(_.toAttribute.asInstanceOf[AttributeReference])
++            //println(project_col_refs(0))
++            (
++                getTableNameForColRef(project_col_refs(0).toString(), col_table_map), 
++                if (project_col_refs(0).qualifier.nonEmpty)
++                    Some(project_col_refs(0).qualifier(0))
++                else 
++                    None
++            )
++        }
++        else { // Filter
++            val filter_col_refs: Seq[AttributeReference] = item.asInstanceOf[Filter].condition.references.toSeq.map(_.asInstanceOf[AttributeReference])
++            (
++                getTableNameForColRef(filter_col_refs(0).toString(), col_table_map), 
++                if (filter_col_refs(0).qualifier.nonEmpty)
++                    Some(filter_col_refs(0).qualifier(0))
++                else 
++                    None
++            )
++        }
++    }
++
++    def fromClause(subquery_items: Seq[LogicalPlan], col_table_map: ColTableMap): Option[String] = {
++        var sql = "FROM"
++        if (subquery_items.size == 0) {
++            throw QueryExecutionErrors.methodNotImplementedError("fromClause does not support '*'")
++            None
++        }
++        var i = 1
++        for (item <- subquery_items) {
++            val table_and_alias = getTableNameAndAliasFromSingleTableSubquery(item, col_table_map)
++            sql += " " + table_and_alias._1.get + {
++                if (table_and_alias._2 != None)
++                    " AS " + table_and_alias._2.get
++                else 
++                    ""
++            }
++            if (i < subquery_items.size) {
++                sql += ","
++            }
++            else {
++                sql += " "
++            }
++            i += 1
++        }
++        Some(sql)
++    }
++
++    def fromClause(subquery_itemIds: Set[Int], all_items: Seq[LogicalPlan], col_table_map: ColTableMap): Option[String] = {
++        var subquery_items = mutable.ArrayBuffer[LogicalPlan]()
++        for (itemId <- subquery_itemIds) {
++            subquery_items += all_items(itemId)
++        }
++        fromClause(subquery_items, col_table_map)
++    }
++
++    def fromClause(subquery: LogicalPlan, col_table_map: ColTableMap): Option[String] = {
++        val (subquery_items, conditions) = CostBasedJoinReorder.extractInnerJoins(subquery)
++        fromClause(subquery_items, col_table_map)
++    }
++
++    /*
++    def expressionToSQL(expr: Expression, sqlContext: SQLContext): Option[String] = {
++        if (expr.isInstanceOf[LeafExpression]) {
++            // Adding quotation marks to Literal, 
++            //  while keeping unchanged for the other types.
++            if (expr.isInstanceOf[Literal]) {
++                //Some('"' + expr.toString() + '"')
++                Some(expr.asInstanceOf[Literal].sql)
++            }
++            else if (expr.isInstanceOf[AttributeReference]) {
++                // replace Attribute (like "Id#17") with "Table.Column"
++                //columnReferenceToSQL(expr.toString(), sqlContext)
++                Some(expr.asInstanceOf[AttributeReference].sql)
++            }
++            else{
++                Some(expr.sql)
++            }
++        }
++        else {
++            if (expr.isInstanceOf[BinaryExpression]) {
++                assert(expr.isInstanceOf[BinaryOperator])
++                Some(
++                    expressionToString(expr.asInstanceOf[BinaryExpression].left, sqlContext).get + 
++                    " " + expr.asInstanceOf[BinaryOperator].sqlOperator + " " + 
++                    expressionToString(expr.asInstanceOf[BinaryExpression].right, sqlContext).get
++                )
++            }
++            else {
++                assert(expr.isInstanceOf[UnaryExpression])
++                Some(
++                    expr.sql
++                )
++            }
++        }
++    }
++    */
++
++    def expressionToSQL(expr: Expression): String = {
++        expr.sql
++    }
++
++    def extractAllFilterAndJoins(plan: LogicalPlan): (Seq[Filter], Seq[Join]) = {
++        if (plan.isInstanceOf[LeafNode]) {
++            if (plan.isInstanceOf[Filter])
++                (Seq[Filter](plan.asInstanceOf[Filter]), Seq[Join]())
++            else if (plan.isInstanceOf[Join])
++                (Seq[Filter](), Seq[Join](plan.asInstanceOf[Join]))
++            else
++                (Seq[Filter](), Seq[Join]())
++        }
++        else {
++            var filters = Seq[Filter]()
++            var joins = Seq[Join]()
++            if (plan.isInstanceOf[Filter])
++                filters = Seq[Filter](plan.asInstanceOf[Filter])
++            else if (plan.isInstanceOf[Join])
++                joins = Seq[Join](plan.asInstanceOf[Join])
++            var subtree_results = extractAllFilterAndJoins(plan.children(0))
++            filters = filters ++ subtree_results._1
++            joins = joins ++ subtree_results._2
++            if (plan.children.size > 1) {
++                subtree_results = extractAllFilterAndJoins(plan.children(1))
++                filters = filters ++ subtree_results._1
++                joins = joins ++ subtree_results._2
++            }
++            (filters, joins)
++        }
++    }
++
++    def whereClause(plan: LogicalPlan): Option[String] = {
++        var sql = "WHERE"
++        val filters_and_joins = extractAllFilterAndJoins(plan)
++        val filters = filters_and_joins._1
++        val joins = filters_and_joins._2
++        val conditions = mutable.ArrayBuffer[Expression]()
++        for (filter <- filters) {
++            conditions += filter.condition
++        } 
++        for (join <- joins) {
++            conditions += join.condition.get
++        }
++        var i = 1
++        for (cond <- conditions) {
++            sql += " " + expressionToSQL(cond) + {
++                if (i < conditions.size) {
++                    " AND "
++                }
++                else {
++                    " "
++                }
++            }
++            i += 1
++        }
++        if (conditions.nonEmpty)
++            Some(sql)
++        else
++            Some("")
++    }
++    
++    def joinPlanToSQL(joinPlan: JoinReorderDP.JoinPlan, col_table_map: ColTableMap): Option[String] = {
++        val plan_itemIds = joinPlan.itemIds
++        Some(
++            selectClause(joinPlan.plan).get + 
++            fromClause(joinPlan.plan, col_table_map).get +
++            whereClause(joinPlan.plan).get
++        )
++    }
++
++    def getSubqueries(): mutable.Buffer[JoinReorderDP.JoinPlanMap] = {
++        CostBasedJoinReorder.subqueries.clone()
++    }
++
++    def printSubqueries(subqueries: mutable.Buffer[JoinReorderDP.JoinPlanMap], col_table_map: ColTableMap): Unit = {
++        for (i <- 0 until subqueries.size) {
++            println("Level " + i.toString() + ": ")
++            for (j <- 0 until subqueries(i).values.size)
++                println("Subquery #" + j.toString() + ": " 
++                    + joinPlanToSQL(subqueries(i).values.toSeq(j), col_table_map).get
++                )
++        }
++    }    
++}
+diff --git a/sql/catalyst/src/main/scala/org/apache/spark/sql/internal/SQLConf.scala b/sql/catalyst/src/main/scala/org/apache/spark/sql/internal/SQLConf.scala
+index acec3b4..fed241a 100644
+--- a/sql/catalyst/src/main/scala/org/apache/spark/sql/internal/SQLConf.scala
++++ b/sql/catalyst/src/main/scala/org/apache/spark/sql/internal/SQLConf.scala
+@@ -2368,6 +2368,20 @@ object SQLConf {
+       .booleanConf
+       .createWithDefault(false)
+ 
++  val PILOTSCOPE_ENABLED =
++    buildConf("spark.sql.pilotscope.enabled")
++      .doc("Enables PilotScope.")
++      .version("0.0.1")
++      .booleanConf
++      .createWithDefault(false)
++
++val PILOTSCOPE_DEBUG_ENABLED =
++    buildConf("spark.sql.pilotscope.debug.enabled")
++      .doc("Enables debugging for PilotScope development.")
++      .version("0.0.1")
++      .booleanConf
++      .createWithDefault(false)
++
+   val PLAN_STATS_ENABLED =
+     buildConf("spark.sql.cbo.planStats.enabled")
+       .doc("When true, the logical plan will fetch row counts and column statistics from catalog.")
+@@ -3774,6 +3788,32 @@ object SQLConf {
+       .booleanConf
+       .createWithDefault(false)
+ 
++  import scala.collection.mutable
++  val PILOTSCOPE_COLUMN_REFERENCES_TO_TABLE_NAME = mutable.Map[String, String]()
++  val PILOTSCOPE_ANCHORS = mutable.Map[String, Boolean](
++    "SUBQUERY_CARD_PULL_ANCHOR" -> false, 
++    "CARD_PUSH_ANCHOR" -> false, 
++    "EXECUTION_TIME_PULL_ANCHOR" -> false
++  )
++  val PILOTSCOPE_SESSION_INFO = mutable.Map[String, String](
++    "port" -> "", 
++    "url" -> "", 
++    "enableTerminate" -> "", 
++    "tid" -> ""
++  )
++  val PILOTSCOPE_TIMES = mutable.Map[String, Double](
++    "parser_time" -> -1
++  )
++  val PILOTSCOPE_SET_CARD_ANCHOR_INFO = mutable.Map[String, mutable.ArrayBuffer[String]](
++    "subquery" -> mutable.ArrayBuffer[String](), 
++    "card" -> mutable.ArrayBuffer[String]()
++  )
++  val PILOTSCOPE_REPLY_DATA_FOR_ANCHORS = mutable.Map[String, Boolean](
++    "SUBQUERY_CARD_PULL_ANCHOR" -> false, 
++    "CARD_PUSH_ANCHOR" -> false, 
++    "EXECUTION_TIME_PULL_ANCHOR" -> false
++  )
++
+   /**
+    * Holds information about keys that have been deprecated.
+    *
+@@ -4158,6 +4198,68 @@ class SQLConf extends Serializable with Logging {
+   def broadcastHashJoinOutputPartitioningExpandLimit: Int =
+     getConf(BROADCAST_HASH_JOIN_OUTPUT_PARTITIONING_EXPAND_LIMIT)
+ 
++  // For PilotScope 
++  import scala.collection.mutable
++  
++  def pilotscope_getColRefToTableMap: mutable.Map[String, String] = PILOTSCOPE_COLUMN_REFERENCES_TO_TABLE_NAME.clone()
++  def pilotscope_setColRefToTableMap(new_map: mutable.Map[String, String]): Unit = {
++    PILOTSCOPE_COLUMN_REFERENCES_TO_TABLE_NAME.clear()
++    for ((k, v) <- new_map)
++      PILOTSCOPE_COLUMN_REFERENCES_TO_TABLE_NAME(k) = v
++  }
++  
++  def pilotscope_getAnchorStatus(name: String): Option[Boolean] = PILOTSCOPE_ANCHORS.get(name)
++  def pilotscope_setAnchorStatus(name: String, status: Boolean): Unit = {
++    if (PILOTSCOPE_ANCHORS.get(name) == None) {
++      logDebug(s"SQLConf.pilotscope_setAnchorStatus: the anchor to be set is not found: $name")
++    }
++    else {
++      PILOTSCOPE_ANCHORS(name) = status
++    }
++  }
++
++  def pilotscope_getAnchorEnableReceiveData(name: String): Option[Boolean] = PILOTSCOPE_REPLY_DATA_FOR_ANCHORS.get(name)
++  def pilotscope_setAnchorEnableReceiveData(name: String, status: Boolean): Unit = {
++    if (PILOTSCOPE_REPLY_DATA_FOR_ANCHORS.get(name) == None) {
++      logDebug(s"SQLConf.pilotscope_setAnchorEnableReceiveData: the anchor to be set is not found: $name")
++    }
++    else {
++      PILOTSCOPE_REPLY_DATA_FOR_ANCHORS(name) = status
++    }
++  }
++
++  def pilotscope_getSessionInfo(item_name: String): Option[String] = PILOTSCOPE_SESSION_INFO.get(item_name)
++  def pilotscope_setSessionInfo(item_name: String, info: String): Unit = {
++    if (PILOTSCOPE_SESSION_INFO.get(item_name) == None) {
++      logDebug(s"SQLConf.pilotscope_setSessionInfo: the item to be set is not found: $item_name")
++    }
++    else {
++      PILOTSCOPE_SESSION_INFO(item_name) = info
++    }
++  }
++
++  def pilotscope_getTime(item_name: String): Option[Double] = PILOTSCOPE_TIMES.get(item_name)
++  def pilotscope_setTime(item_name: String, time: Double): Unit = {
++    if (PILOTSCOPE_TIMES.get(item_name) == None) {
++      logDebug(s"SQLConf.pilotscope_setTime: the item to be set is not found: $item_name")
++    }
++    else {
++      PILOTSCOPE_TIMES(item_name) = time
++    }
++  }
++
++  def pilotscope_getSetCardAnchorInfo(item_name: String): Option[mutable.ArrayBuffer[String]] = PILOTSCOPE_SET_CARD_ANCHOR_INFO.get(item_name)
++  def pilotscope_setSetCardAnchorInfo(item_name: String, values: mutable.ArrayBuffer[String]): Unit = {
++    if (PILOTSCOPE_SET_CARD_ANCHOR_INFO.get(item_name) == None) {
++      logDebug(s"SQLConf.pilotscope_setSetCardAnchorInfo: the item to be set is not found: $item_name")
++    }
++    else {
++      PILOTSCOPE_SET_CARD_ANCHOR_INFO(item_name).clear()
++      for (v <- values)
++        PILOTSCOPE_SET_CARD_ANCHOR_INFO(item_name) += v
++    }
++  }
++
+   /**
+    * Returns the [[Resolver]] for the current configuration, which can be used to determine if two
+    * identifiers are equal.
+@@ -4305,6 +4407,10 @@ class SQLConf extends Serializable with Logging {
+ 
+   def cboEnabled: Boolean = getConf(SQLConf.CBO_ENABLED)
+ 
++  def pilotscopeEnabled: Boolean = getConf(SQLConf.PILOTSCOPE_ENABLED)
++
++  def pilotscopeDebugEnabled: Boolean = getConf(SQLConf.PILOTSCOPE_DEBUG_ENABLED)
++
+   def planStatsEnabled: Boolean = getConf(SQLConf.PLAN_STATS_ENABLED)
+ 
+   def autoSizeUpdateEnabled: Boolean = getConf(SQLConf.AUTO_SIZE_UPDATE_ENABLED)
+diff --git a/sql/core/src/main/scala/org/apache/spark/sql/SparkSession.scala b/sql/core/src/main/scala/org/apache/spark/sql/SparkSession.scala
+index 734b8e5..ba5d001 100644
+--- a/sql/core/src/main/scala/org/apache/spark/sql/SparkSession.scala
++++ b/sql/core/src/main/scala/org/apache/spark/sql/SparkSession.scala
+@@ -52,6 +52,7 @@ import org.apache.spark.sql.streaming._
+ import org.apache.spark.sql.types.{DataType, StructType}
+ import org.apache.spark.sql.util.ExecutionListenerManager
+ import org.apache.spark.util.{CallSite, Utils}
++//import org.apache.spark.sql.util.PilotscopeUtilExternal
+ 
+ /**
+  * The entry point to programming Spark with the Dataset and DataFrame API.
+@@ -615,9 +616,62 @@ class SparkSession private(
+    * @since 2.0.0
+    */
+   def sql(sqlText: String): DataFrame = withActive {
++    // Modified entry for SQL execution with pilotscope
++    import org.apache.spark.sql.util.PilotscopeUtilExternal.{
++      configColRefToTableMap, parsePilotSQL, 
++      setAnchorStatus, setSessionInfo, setCardInfo, 
++      resetAnchorStatus, resetSessionInfo, resetCardInfo, 
++      pilotscopeOnlyRequestsExecutionTime
++    }
++    import org.apache.spark.sql.catalyst.util.PilotscopeTimer
++    import org.apache.spark.sql.catalyst.util.PilotscopeUtilInternal
++    import org.apache.spark.sql.catalyst.optimizer.JoinReorderDP
++    import scala.collection.mutable
++    import scala.math._
++
++    //import org.apache.spark.sql.util.TransDataFromPilot
++
++    //val timer = new PilotscopeTimer
++    //timer.check
++    val (pilot_trans_data, actual_sql) = parsePilotSQL(sqlText)
++    //timer.check
++    //val parser_time = timer.get
++
++    var executed_sql = ""
++    if (pilot_trans_data == None) {
++      // no pilotscope commands
++      executed_sql = sqlText
++    }
++    else {
++      // necessary preparation for executing pilotscope commands later
++      val conf = SQLConf.get
++      configColRefToTableMap(sqlContext, conf)
++      // conf.pilotscope_setTime("parser_time", parser_time)
++      // reset anchors and session info to avoid the impact of previous pilotscope request 
++      resetAnchorStatus(conf)
++      resetSessionInfo(conf)
++      resetCardInfo(conf)
++      // set the current status and info
++      setAnchorStatus(pilot_trans_data.get, conf)
++      setSessionInfo(pilot_trans_data.get, conf)
++      setCardInfo(pilot_trans_data.get, conf)
++      executed_sql = actual_sql.get
++
++      if (pilotscopeOnlyRequestsExecutionTime(pilot_trans_data.get)) {
++        val http_time = System.currentTimeMillis / 1000.0
++        val proc_execution_time_anchor = (conf: SQLConf) => 
++          Some(
++            PilotscopeUtilInternal.buildResponseData(
++              conf, mutable.Buffer[JoinReorderDP.JoinPlanMap]()
++              //parser_time, http_time, List[String](), List[Double]()
++          ))
++        PilotscopeUtilInternal.processAnchorRequests(proc_execution_time_anchor, conf, pilot_trans_data.get.enableReceiveData.get)
++      }
++    }
++
+     val tracker = new QueryPlanningTracker
+     val plan = tracker.measurePhase(QueryPlanningTracker.PARSING) {
+-      sessionState.sqlParser.parsePlan(sqlText)
++      sessionState.sqlParser.parsePlan(executed_sql)
+     }
+     Dataset.ofRows(self, plan, tracker)
+   }
+diff --git a/sql/core/src/main/scala/org/apache/spark/sql/util/PilotscopeUtil.scala b/sql/core/src/main/scala/org/apache/spark/sql/util/PilotscopeUtil.scala
+new file mode 100644
+index 0000000..4631732
+--- /dev/null
++++ b/sql/core/src/main/scala/org/apache/spark/sql/util/PilotscopeUtil.scala
+@@ -0,0 +1,189 @@
++package org.apache.spark.sql.util
++
++import scala.collection.mutable
++import scala.collection.mutable.ArrayBuffer
++
++import org.apache.spark.sql.{DataFrame, SparkSession}
++import org.apache.spark.sql.SQLContext
++import org.apache.spark.sql.catalyst.expressions.Attribute
++import org.apache.spark.sql.internal.SQLConf
++import org.apache.spark.sql.catalyst.util.PilotscopeUtilInternal.{
++    ExecutionTimePullAnchor, SubqueryCardPullAnchor, CardPushAnchor, Anchor, ColTableMap
++}
++import io.circe._, io.circe.generic.semiauto._, io.circe.generic.JsonCodec, io.circe.parser._, io.circe.syntax._
++import org.apache.spark.sql.catalyst.optimizer.JoinReorderDP
++
++
++case class TransDataFromPilot (
++    anchor: Option[Anchor], 
++    port: Option[Int],
++    url: Option[String], 
++    enableTerminate: Option[Boolean], 
++    enableReceiveData: Option[Boolean], 
++    tid: Option[String]
++)
++
++object PilotscopeUtilExternal {
++    def savePlans(sqlExecutionResult: DataFrame, filePath: String, sparkSession: SparkSession): Unit = {
++        import sparkSession.implicits._ // injects 'toDS' method to Seq
++        (sparkSession.read.json(Seq(sqlExecutionResult.queryExecution.logical.toJSON).toDS)
++            .write.format("json").save(filePath + ".logical"))
++        (sparkSession.read.json(Seq(sqlExecutionResult.queryExecution.analyzed.toJSON).toDS)
++            .write.format("json").save(filePath + ".analyzed"))
++        (sparkSession.read.json(Seq(sqlExecutionResult.queryExecution.sparkPlan.toJSON).toDS)
++            .write.format("json").save(filePath + ".sparkPlan"))
++        (sparkSession.read.json(Seq(sqlExecutionResult.queryExecution.executedPlan.toJSON).toDS)
++            .write.format("json").save(filePath + ".executedPlan"))
++    }
++
++    /* 
++        Get the column references (like "Id#17") for the given table (which is a dataframe).
++        The returning Seq looks like 'List(Id#17, PostTypeId#18, CreationDate#19)' 
++    */
++    def getTableReferences(tablename: String, sqlContext: SQLContext): Seq[Attribute] = {
++        val df_table = sqlContext.table(tablename)
++        try {
++            val columns = df_table.logicalPlan.children(0).children(0).output //Set.toSeq
++            columns
++        }
++        catch {
++            case _: Throwable => df_table.queryExecution.logical.output
++        }
++        finally {
++            Seq[Attribute]()
++        }
++    }
++    
++    // Get the column references (like "Id#17") for all tables in the current session
++    def getAllTableReferences(sqlContext: SQLContext): mutable.Map[String, Seq[Attribute]] = {
++        val all_refs = mutable.Map[String, Seq[Attribute]]()
++        for (tablename <- sqlContext.tableNames())
++            all_refs(tablename) = getTableReferences(tablename, sqlContext)
++        all_refs
++    }
++
++    // Convert the "table -> column references" mapping to "column reference -> table" 
++    def getColRefToTableMap(sqlContext: SQLContext): ColTableMap = {
++        val table_cols_map = getAllTableReferences(sqlContext)
++        val col_table_map = mutable.Map[String, String]()
++        for ((tablename, col_refs) <- table_cols_map) {
++            for (col_ref <- col_refs) {
++                col_table_map(col_ref.toString()) = tablename
++            }
++        }
++        col_table_map
++    }
++
++    def configColRefToTableMap(sqlContext: SQLContext, sqlConf: SQLConf): Unit = {
++        sqlConf.pilotscope_setColRefToTableMap(getColRefToTableMap(sqlContext))
++    }
++
++    // ####################################################
++    // Parsing the SQL query and Json data from PilotScope
++    // ####################################################
++    def pilotTransDataFromJson(json: String): TransDataFromPilot = {
++        implicit val SubqueryCardPullAnchorDecoder: Decoder[SubqueryCardPullAnchor] = deriveDecoder[SubqueryCardPullAnchor]
++        implicit val CardPushAnchorDecoder: Decoder[CardPushAnchor] = deriveDecoder[CardPushAnchor]
++        implicit val ExecutionTimePullAnchorDecoder: Decoder[ExecutionTimePullAnchor] = deriveDecoder[ExecutionTimePullAnchor]
++        implicit val anchorDecoder: Decoder[Anchor] = deriveDecoder[Anchor]
++        implicit val mainDecoder: Decoder[TransDataFromPilot] = deriveDecoder[TransDataFromPilot]
++        
++        val decoded = decode[TransDataFromPilot](json)
++        decoded match {
++            case Right(pilot_trans_data) => pilot_trans_data
++            case _ => {throw new Exception("Cannot parse the input json string.")}
++        }    
++    }
++
++    // Parse the input SQL from PilotScope to internal class
++    def parsePilotSQL(sql: String): (Option[TransDataFromPilot], Option[String]) = {
++        var comments = ""
++        val comments_start_flag = "/*pilotscope"
++        val comments_end_flag = "pilotscope*/"
++        if (sql.contains(comments_start_flag)) {
++            val comments_start = sql.indexOf(comments_start_flag) + comments_start_flag.size
++            val comments_end = sql.indexOf(comments_end_flag)
++            comments = sql.substring(comments_start, comments_end)
++            val actual_sql = sql.substring(comments_end+comments_end_flag.size)
++            (Some(pilotTransDataFromJson(comments)), Some(actual_sql))
++        }
++        else {
++            (None, Some(sql))
++        }
++    }
++
++    def pilotscopeOnlyRequestsExecutionTime(pilot_trans_data: TransDataFromPilot): Boolean = {
++        pilot_trans_data.anchor.get.SUBQUERY_CARD_PULL_ANCHOR == None && pilot_trans_data.anchor.get.CARD_PUSH_ANCHOR == None && pilot_trans_data.anchor.get.EXECUTION_TIME_PULL_ANCHOR != None
++    }
++
++    // set the anchor status in SQLConf
++    def setAnchorStatus(pilot_trans_data: TransDataFromPilot, conf: SQLConf): Unit = {
++        if (
++            pilot_trans_data.anchor.get.SUBQUERY_CARD_PULL_ANCHOR != None
++            &&
++            pilot_trans_data.anchor.get.SUBQUERY_CARD_PULL_ANCHOR.get.enable
++        ) {
++            conf.pilotscope_setAnchorStatus("SUBQUERY_CARD_PULL_ANCHOR", true)
++            conf.pilotscope_setAnchorEnableReceiveData("SUBQUERY_CARD_PULL_ANCHOR", pilot_trans_data.enableReceiveData.get)
++        }
++        if (
++            pilot_trans_data.anchor.get.CARD_PUSH_ANCHOR != None
++            &&
++            pilot_trans_data.anchor.get.CARD_PUSH_ANCHOR.get.enable
++        ) {
++            conf.pilotscope_setAnchorStatus("CARD_PUSH_ANCHOR", true)
++            conf.pilotscope_setAnchorEnableReceiveData("CARD_PUSH_ANCHOR", pilot_trans_data.enableReceiveData.get)
++        }
++        if (
++            pilot_trans_data.anchor.get.EXECUTION_TIME_PULL_ANCHOR != None
++            &&
++            pilot_trans_data.anchor.get.EXECUTION_TIME_PULL_ANCHOR.get.enable
++        ) {
++            conf.pilotscope_setAnchorStatus("EXECUTION_TIME_PULL_ANCHOR", true)
++            conf.pilotscope_setAnchorEnableReceiveData("EXECUTION_TIME_PULL_ANCHOR", pilot_trans_data.enableReceiveData.get)            
++        }
++    }
++
++    // set the http info in SQLConf
++    def setSessionInfo(pilot_trans_data: TransDataFromPilot, conf: SQLConf): Unit = {
++        conf.pilotscope_setSessionInfo("tid", pilot_trans_data.tid.get)
++        if (pilot_trans_data.port != None)
++            conf.pilotscope_setSessionInfo("port", pilot_trans_data.port.get.toString())
++        if (pilot_trans_data.url != None)
++            conf.pilotscope_setSessionInfo("url", pilot_trans_data.url.get.toString())
++        if (pilot_trans_data.enableTerminate != None)
++            conf.pilotscope_setSessionInfo("enableTerminate", pilot_trans_data.enableTerminate.get.toString())
++    }
++
++    // reset the anchor status in SQLConf 
++    def resetAnchorStatus(conf: SQLConf): Unit = {
++        conf.pilotscope_setAnchorStatus("SUBQUERY_CARD_PULL_ANCHOR", false)
++        conf.pilotscope_setAnchorStatus("CARD_PUSH_ANCHOR", false)
++        conf.pilotscope_setAnchorStatus("EXECUTION_TIME_PULL_ANCHOR", false)  
++        conf.pilotscope_setAnchorEnableReceiveData("SUBQUERY_CARD_PULL_ANCHOR", false)
++        conf.pilotscope_setAnchorEnableReceiveData("CARD_PUSH_ANCHOR", false)
++        conf.pilotscope_setAnchorEnableReceiveData("EXECUTION_TIME_PULL_ANCHOR", false)                         
++    }
++
++    // reset the http info in SQLConf
++    def resetSessionInfo(conf: SQLConf): Unit = {
++        conf.pilotscope_setSessionInfo("tid", "")
++        conf.pilotscope_setSessionInfo("port", "")
++        conf.pilotscope_setSessionInfo("url", "")
++        conf.pilotscope_setSessionInfo("enableTerminate", "")
++    }
++
++    def setCardInfo(pilot_trans_data: TransDataFromPilot, conf: SQLConf): Unit = {
++        if (pilot_trans_data.anchor.get.CARD_PUSH_ANCHOR != None){
++            val card_replace_anchor = pilot_trans_data.anchor.get.CARD_PUSH_ANCHOR.get
++            conf.pilotscope_setSetCardAnchorInfo("subquery", mutable.ArrayBuffer[String](card_replace_anchor.subquery: _*))
++            conf.pilotscope_setSetCardAnchorInfo("card", mutable.ArrayBuffer[String](card_replace_anchor.card.map(_.toString): _*))
++        }
++    }
++
++    def resetCardInfo(conf: SQLConf): Unit = {
++        conf.pilotscope_setSetCardAnchorInfo("subquery", mutable.ArrayBuffer[String]())
++        conf.pilotscope_setSetCardAnchorInfo("card", mutable.ArrayBuffer[String]())
++    }
++}
++
