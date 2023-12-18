@@ -40,7 +40,7 @@ could steer any database in a unified manner. By applying PilotScope, we obtain 
   highly encourage this! 😊😊😊)**
 
 | [Code Structure](#code-structure) | [Installation](#installation) | [Feature Overview](#feature-overview) |
- [Documentation](#documentation) | [License](#license) | [Publication](#publications)
+ [Documentation](#documentation) | [License](#license) | [Reference](#reference)
 | [Contributing](#contributing) |
 
 ---
@@ -214,7 +214,7 @@ in [documentation](https://woodybryant.github.io/PilotScopeDoc.io/).
 
 PilotScope is released under Apache License 2.0.
 
-## References
+## Reference
 
 If you find our work useful for your research or development, please kindly cite the following
 
