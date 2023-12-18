@@ -32,7 +32,7 @@ could steer any database in a unified manner. By applying PilotScope, we obtain 
 * The ML researchers could easily benchmark and iterate their AI4DB algorithms in practical scenarios. **(Much Faster to
   Iterate! ⬆️⬆️⬆️)**
 
-* The ML and DB developers are liberated from learning the details in other side. They could play their own strengthes
+* The ML and DB developers are liberated from learning the details in other side. They could play their own strengths
   to write the codes in their own sides. **(More Freedom to Develop! 🏄‍♀️🏄‍♀️🏄‍♀️)**
 
 
@@ -115,7 +115,7 @@ the [documentation](https://woodybryant.github.io/PilotScopeDoc.io/).
 ## Feature Overview
 
 The components of PilotScope Core in ML side can be divided into two categories: Database Components and Deployment
-Components. The Database Components are used to facilitate data exchange and control over database, while the Deployment
+Components. The Database Components are used to facilitate data exchange and control over the database, while the Deployment
 Components are used to facilitate the automatic application of custom AI algorithms to each incoming SQL query.
 
 A high-level overview of the PilotScope Core components is shown in the following figure.
@@ -215,8 +215,13 @@ PilotScope is released under Apache License 2.0.
 ## References
 
 If you find our work useful for your research or development, please kindly cite the following
-```
-```
+
+	@article{zhu2023pilotscope,
+  		title={PilotScope: Steering Databases with Machine Learning Drivers},
+  		author={Rong Zhu and Lianggui Weng and Wenqing Wei and Di Wu and Jiazhen Peng and Yifan Wang and Bolin Ding and Defu Lian Bolong Zheng and Jingren Zhou},
+  		journal = {Proceedings of the VLDB Endowment},
+  		year={2024}}
+
 
 ## Contributing
 
