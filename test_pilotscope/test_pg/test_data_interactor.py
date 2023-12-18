@@ -212,6 +212,7 @@ class TestDataInteractor(unittest.TestCase):
             self.data_interactor.execute("select 1")
         except PilotScopeMutualExclusionException as e:
             pass
+        self.db_controller.recover_config()
 
     def test_anchor_mutual_exclusion(self):
         print("\nTest Anchor Mutual Exclusion")
