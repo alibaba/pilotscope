@@ -1,24 +1,18 @@
-import os
+import json
 import logging
-from typing_extensions import deprecated
+from typing import Union, Dict, Tuple
 
-from pilotscope.Common.Index import Index
-from pilotscope.Common.Util import pilotscope_exit
-from pilotscope.DBController.BaseDBController import BaseDBController
-from pilotscope.Exception.Exception import DBStatementTimeoutException
-from pilotscope.PilotConfig import PilotConfig, SparkConfig
-from pilotscope.PilotEnum import PilotEnum
-from pilotscope.PilotEnum import DataFetchMethodEnum, DatabaseEnum, TrainSwitchMode
-from pilotscope.Exception.Exception import PilotScopeNotSupportedOperationException
+import numpy as np
+import pandas
+from pyspark.sql import DataFrame
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
-from pyspark.sql import DataFrame
-from typing import Union, Dict, Tuple
-import pandas
-import json
-import re
-import threading
-import numpy as np
+
+from pilotscope.Common.Index import Index
+from pilotscope.DBController.BaseDBController import BaseDBController
+from pilotscope.Exception.Exception import PilotScopeNotSupportedOperationException
+from pilotscope.PilotConfig import SparkConfig
+from pilotscope.PilotEnum import PilotEnum, SparkSQLDataSourceEnum
 
 logging.getLogger('pyspark').setLevel(logging.ERROR)
 logging.getLogger("py4j").setLevel(logging.ERROR)
@@ -34,20 +28,11 @@ class SparkSQLTypeEnum(PilotEnum):
     Float = FloatType
 
 
-class SparkSQLDataSourceEnum(PilotEnum):
-    CSV = "csv"
-    JSON = "json"
-    PARQUET = "parquet"
-    HIVE = "hive"
-    POSTGRESQL = "postgresql"
-
-
 class SparkIOWriteModeEnum(PilotEnum):
     OVERWRITE = "overwrite"
     APPEND = "append"
     ERROR_IF_EXISTS = "errorifexists"
     IGNORE = "ignore"
-
 
 
 def sparkSessionFromConfig(spark_config: SparkConfig):
@@ -112,7 +97,8 @@ class SparkTable:
         if analyze:
             self.analyzeStats(engine)
         if persist:
-            self.persist(engine) # persist self.df, now self.df is the table after inserting, so overwriting the whole table is right
+            self.persist(
+                engine)  # persist self.df, now self.df is the table after inserting, so overwriting the whole table is right
 
     def nrows(self):
         return self.df.count()
@@ -146,7 +132,8 @@ class SparkIO:
             self.reader = engine.session.read \
                 .format("jdbc") \
                 .option("driver", "org.postgresql.Driver") \
-                .option("url", "jdbc:postgresql://{}:{}/{}".format(self.conn_info['host'], self.conn_info["port"], self.conn_info['db'])) \
+                .option("url", "jdbc:postgresql://{}:{}/{}".format(self.conn_info['host'], self.conn_info["port"],
+                                                                   self.conn_info['db'])) \
                 .option("user", self.conn_info['user']) \
                 .option("password", self.conn_info['pwd'])
 
@@ -173,12 +160,13 @@ class SparkIO:
                 table_name = table_or_rows.table_name
         if self.datasource_type == SparkSQLDataSourceEnum.POSTGRESQL:
             df.cache()
-            rows = df.count() # do not delete this read operation of df, which make it possible to overwrite tables.
+            rows = df.count()  # do not delete this read operation of df, which make it possible to overwrite tables.
             write = df.write \
                 .mode(mode.value) \
                 .format("jdbc") \
                 .option("driver", "org.postgresql.Driver") \
-                .option("url", "jdbc:postgresql://{}:{}/{}".format(self.conn_info['host'], self.conn_info["port"], self.conn_info['db'])) \
+                .option("url", "jdbc:postgresql://{}:{}/{}".format(self.conn_info['host'], self.conn_info["port"],
+                                                                   self.conn_info['db'])) \
                 .option("user", self.conn_info['user']) \
                 .option("password", self.conn_info['pwd']) \
                 .option("dbtable", table_name)
@@ -192,7 +180,7 @@ class SparkIO:
 
     def get_all_table_names_in_datasource(self) -> np.ndarray:
         return self.read(table_name="information_schema.tables") \
-            .filter("table_schema == 'public'")\
+            .filter("table_schema == 'public'") \
             .filter("table_type == 'BASE TABLE'").toPandas()["table_name"].values
 
 
@@ -204,7 +192,8 @@ class SparkEngine:
 
     def connect(self):
         self.session = sparkSessionFromConfig(self.config)
-        self.io = SparkIO(self.config.datasource_type, self, host=self.config.db_host, port = self.config.db_port, db=self.config.db,
+        self.io = SparkIO(self.config.datasource_type, self, host=self.config.db_host, port=self.config.db_port,
+                          db=self.config.db,
                           user=self.config.db_user, pwd=self.config.db_user_pwd)
         return self.session
 
@@ -244,23 +233,6 @@ class SparkSQLController(BaseDBController):
 
     def _create_engine(self):
         return SparkEngine(self.config)
-
-    def _to_db_data_type(self, column_2_value):
-        column_2_type = {}
-        for col, data in column_2_value.items():
-            data_type = SparkSQLTypeEnum.String
-            if type(data) == int:
-                data_type = SparkSQLTypeEnum.Integer
-            elif type(data) == float:
-                data_type = SparkSQLTypeEnum.Float
-            elif type(data) == str:
-                data_type = SparkSQLTypeEnum.String
-            elif type(data) == dict:
-                data_type = SparkSQLTypeEnum.String
-            elif type(data) == list:
-                data_type = SparkSQLTypeEnum.String
-            column_2_type[col] = data_type.value
-        return column_2_type
 
     def load_all_tables_from_datasource(self):
         all_user_created_table_names = self.engine.get_all_table_names_in_datasource()
@@ -435,7 +407,6 @@ class SparkSQLController(BaseDBController):
     def explain_execution_plan(self, sql, comment=""):
         raise NotImplementedError
 
-
     def status(self):
         raise PilotScopeNotSupportedOperationException
 
@@ -462,3 +433,20 @@ class SparkSQLController(BaseDBController):
 
     def get_index_byte(self, index: Index):
         raise PilotScopeNotSupportedOperationException
+
+    def _to_db_data_type(self, column_2_value):
+        column_2_type = {}
+        for col, data in column_2_value.items():
+            data_type = SparkSQLTypeEnum.String
+            if type(data) == int:
+                data_type = SparkSQLTypeEnum.Integer
+            elif type(data) == float:
+                data_type = SparkSQLTypeEnum.Float
+            elif type(data) == str:
+                data_type = SparkSQLTypeEnum.String
+            elif type(data) == dict:
+                data_type = SparkSQLTypeEnum.String
+            elif type(data) == list:
+                data_type = SparkSQLTypeEnum.String
+            column_2_type[col] = data_type.value
+        return column_2_type

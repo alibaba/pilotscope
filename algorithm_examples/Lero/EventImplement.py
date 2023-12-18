@@ -51,7 +51,7 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
         self.sqls = load_training_sql(self.config.db)[0:100]
 
     def iterative_data_collection(self, db_controller: BaseDBController, train_data_manager: DataManager):
-        print("start to collect data fro pretraining")
+        print("start to collect data for pretraining")
         self.load_sql()
 
         column_2_value_list = []

@@ -9,7 +9,7 @@ class MyTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.config = SparkConfig(
             app_name="testDataInteractor",
-            master_url="local[*]2"
+            master_url="local[*]"
         )
         self.config.use_postgresql_datasource(
             db_host='localhost',

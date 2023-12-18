@@ -15,7 +15,7 @@ from algorithm_examples.Index.IndexPresetScheduler import get_index_preset_sched
 class IndexTest(unittest.TestCase):
     def setUp(self):
         self.config: PilotConfig = PostgreSQLConfig()
-        self.config.db = "stats_tiny"
+        self.config.db = "imdb_tiny"
         self.algo = "extend"
 
     def test_index(self):
@@ -25,10 +25,11 @@ class IndexTest(unittest.TestCase):
             sqls = load_test_sql(self.config.db)
             # sqls = []
             for i, sql in enumerate(sqls):
-                print("current is the {}-th sql, and it is {}".format(i, sql))
-                TimeStatistic.start('Index')
+                if i % 10 == 0:
+                    print("current is the {}-th sql, and it is {}".format(i, sql))
+                TimeStatistic.start('Extend')
                 scheduler.execute(sql)
-                TimeStatistic.end('Index')
+                TimeStatistic.end('Extend')
             name_2_value = TimeStatistic.get_sum_data()
             Drawer.draw_bar(name_2_value, get_time_statistic_img_path(self.algo, self.config.db), is_rotation=False)
         finally:

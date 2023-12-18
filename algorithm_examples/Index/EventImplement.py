@@ -46,6 +46,7 @@ class IndexPeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
 
     def custom_model_update(self, pilot_model: PilotModel, db_controller: BaseDBController,
                             data_manager: DataManager):
+        print("start to update model and set index by Extend algorithm")
         db_controller.drop_all_indexes()
         sqls = self._load_sql()
         workload = to_workload(sqls)
@@ -55,6 +56,7 @@ class IndexPeriodicModelUpdateEvent(PeriodicModelUpdateEvent):
         # only for adapt the origin ML code with minimal change. Actually, the user need not provide a DbConnector.
         connector = DbConnector(PilotDataInteractor(self.config, enable_simulate_index=True))
         algo = ExtendAlgorithm(connector, parameters=parameters)
+        print("start to search best indexes")
         indexes = algo.calculate_best_indexes(workload)
         for index in indexes:
             columns = [c.name for c in index.columns]

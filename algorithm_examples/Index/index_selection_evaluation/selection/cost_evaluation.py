@@ -1,15 +1,11 @@
 import logging
 
-from sqlalchemy.exc import OperationalError
-
-from pilotscope.DBInteractor.PilotDataInteractor import PilotDataInteractor
-from pilotscope.PilotConfig import PilotConfig
-from pilotscope.PilotTransData import PilotTransData
-from pilotscope.Common.Index import Index as pilotIndex
-from algorithm_examples.utils import to_pilot_index
-from selection.index import Index
 from selection.what_if_index_creation import WhatIfIndexCreation
 from selection.workload import Query
+from sqlalchemy.exc import OperationalError
+
+from algorithm_examples.utils import to_pilot_index
+from pilotscope.PilotTransData import PilotTransData
 
 
 class CostEvaluation:
@@ -84,8 +80,7 @@ class CostEvaluation:
             else:
                 raise e
 
-        print("pilot total cost is {}".format(pilot_total_cost))
-        # assert total_cost == pilot_total_cost
+        print("estimated total cost is {}".format(pilot_total_cost))
 
         total_cost = pilot_total_cost
         return total_cost

@@ -9,6 +9,7 @@ from pilotscope.Exception.Exception import DatabaseDeepControlException
 from pilotscope.PilotConfig import PilotConfig
 from pilotscope.PilotEnum import DatabaseEnum
 
+
 class BaseDBController(ABC):
     def __init__(self, config: PilotConfig, echo=True):
         """ 
@@ -68,9 +69,8 @@ class BaseDBController(ABC):
         This function closes the current connection, recreates the pool, and establishes a new connection
         to the database.
         """
-        self.connection_thread.conn.invalidate()
-        # self.connection_thread.conn.close()
-        # self.engine.pool = self.engine.pool.recreate()
+        if self.connection_thread.conn is not None:
+            self.connection_thread.conn.invalidate()
         self.connection_thread.conn = self.engine.connect()
 
     def _disconnect(self):
@@ -135,8 +135,6 @@ class BaseDBController(ABC):
         For PostgreSQL, you can find all valid hints in https://www.postgresql.org/docs/13/runtime-config.html.
 
         For Spark, you can find all valid hints (called conf in Spark) in https://spark.apache.org/docs/latest/configuration.html#runtime-sql-configuration
-
-        Note that you need to distinguish which parameter is static (push_knob) and which is run-time (push_hint).
 
         :param key: The key associated with the hint.
         :param value: The value of the hint to be set.

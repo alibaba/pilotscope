@@ -51,6 +51,7 @@ class ExtendAlgorithm(SelectionAlgorithm):
         )
         self.initial_cost = current_cost
         # Breaking when no cost improvement
+        count = 0
         while True:
             single_attribute_index_candidates = self._get_candidates_within_budget(
                 index_combination_size, single_attribute_index_candidates
@@ -83,11 +84,16 @@ class ExtendAlgorithm(SelectionAlgorithm):
             best["benefit_to_size_ratio"] = 0
             current_cost = best["cost"]
 
+            if count > 2:
+                print("terminate the loop from PilotScope for quick test")
+                break
+            count += 1
+
         return index_combination
 
     def _attach_to_indexes(self, index_combination, attribute, best, current_cost):
         assert (
-            attribute.is_single_column() is True
+                attribute.is_single_column() is True
         ), "Attach to indexes called with multi column index"
 
         for position, index in enumerate(index_combination):
@@ -112,13 +118,13 @@ class ExtendAlgorithm(SelectionAlgorithm):
         new_candidates = []
         for candidate in candidates:
             if (candidate.estimated_size is None) or (
-                candidate.estimated_size + index_combination_size <= self.budget
+                    candidate.estimated_size + index_combination_size <= self.budget
             ):
                 new_candidates.append(candidate)
         return new_candidates
 
     def _evaluate_combination(
-        self, index_combination, best, current_cost, old_index_size=0
+            self, index_combination, best, current_cost, old_index_size=0
     ):
         cost = self.cost_evaluation.calculate_cost(
             self.workload, index_combination, store_size=True
@@ -129,8 +135,8 @@ class ExtendAlgorithm(SelectionAlgorithm):
         new_index = index_combination[-1]
         new_index_size_difference = new_index.estimated_size - old_index_size
         # assert new_index_size_difference != 0, "Index size difference should not be 0!"
-        if(new_index_size_difference == 0):
-            new_index_size_difference = 1 # set it to a reasonable small value
+        if (new_index_size_difference == 0):
+            new_index_size_difference = 1  # set it to a reasonable small value
         ratio = benefit / new_index_size_difference
 
         total_size = sum(index.estimated_size for index in index_combination)

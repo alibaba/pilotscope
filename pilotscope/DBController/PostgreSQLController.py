@@ -307,12 +307,8 @@ class PostgreSQLController(BaseDBController):
 
         self._surun("{} start -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.pgdata))
         if not self.is_running():
-            self.recover_config()
-            self._surun("{} start -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.pgdata))
-            if not self.is_running():
-                raise DatabaseStartException
-            else:
-                raise DatabaseCrashException
+            raise DatabaseCrashException
+
         for instance in type(self)._instances:
             instance._connect_if_loss()
 

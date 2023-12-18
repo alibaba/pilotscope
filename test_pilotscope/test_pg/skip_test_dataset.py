@@ -42,7 +42,6 @@ class TestDataset(unittest.TestCase):
         ds.load_to_db(self.config)
 
     def test_load_to_stats(self):
-        return
         ds = StatsDataset(DatabaseEnum.POSTGRESQL, created_db_name="test_stats", data_dir=None)
         ds.load_to_db(self.config)
         # the config will be modified in load_to_db, so we need to get controller after that
@@ -68,7 +67,6 @@ class TestDataset(unittest.TestCase):
             db_controller.drop_table_if_exist(table)
 
     def test_load_to_stats_remote(self):
-        return
         self.config = PostgreSQLConfig(pilotscope_core_host="127.0.0.1", db_host="127.0.0.1", db_port="5432",
                                        db_user="postgres", db_user_pwd="postgres")
         self.config.enable_deep_control_remote(example_pg_bin, example_pgdata, "root", "root")

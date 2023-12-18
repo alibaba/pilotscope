@@ -360,7 +360,8 @@ class SysmlExecutor(ExecutorInterface):
             metrics = np.array([v for _, v in sorted(res.items())])
             return perf, metrics
         except DatabaseCrashException as e:
-            raise e
+            self.db_controller.recover_config()
+            self.db_controller.restart()
         except Exception as e:
             import traceback
             traceback.print_exc()
