@@ -14,7 +14,7 @@ class TestPostgreSQLDBController(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.config = PostgreSQLConfig()
-        cls.config.enable_deep_control_local(example_pg_bin, example_pgdata)
+        cls.config.enable_deep_control_local(example_pg_bin, example_pgdata, "postgres", "")
         cls.config.db = "stats_tiny"
 
         cls.table = "badges"

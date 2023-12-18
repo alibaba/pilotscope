@@ -293,7 +293,7 @@ class PostgreSQLController(BaseDBController):
             instance._disconnect()  # to set DBController's self.connection_thread.conn is None
             instance.engine.dispose(close=True)
             # del instance.engine
-        self._surun("{} stop -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.pgdata))
+        self._surun("{} stop -P {} -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.db_port, self.config.pgdata))
 
     def start(self):
         """
@@ -305,7 +305,7 @@ class PostgreSQLController(BaseDBController):
 
         self._check_enable_deep_control()
 
-        self._surun("{} start -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.pgdata))
+        self._surun("{} start -P {} -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.db_port, self.config.pgdata))
         if not self.is_running():
             raise DatabaseCrashException
 
@@ -320,8 +320,8 @@ class PostgreSQLController(BaseDBController):
         """
         self._check_enable_deep_control()
 
-        check_db_running_cmd = "su {} -c '{} status -D {}'".format(self.config.db_user, self.config.pg_ctl,
-                                                                   self.config.pgdata)
+        check_db_running_cmd = "echo {} | su {} -c '{} status -P {} -D {}'".format(self.config.db_host_pwd, self.config.db_host_user, 
+                                                                                   self.config.pg_ctl, self.config.db_port, self.config.pgdata)
         if self.config._is_local:
             with os.popen(check_db_running_cmd) as res:
                 status = res.read()
@@ -401,7 +401,7 @@ class PostgreSQLController(BaseDBController):
 
     # switch user and run
     def _surun(self, cmd):
-        su_and_cmd = "su {} -c '{}'".format(self.config.db_user, cmd)
+        su_and_cmd = "echo {} | su {} -c '{}'".format(self.config.db_host_pwd, self.config.db_host_user, cmd)
         if self.config._is_local:
             return os.system(su_and_cmd)
         else:

@@ -16,7 +16,7 @@ class TestDataInteractor(unittest.TestCase):
         super().__init__(methodName)
         self.config = PostgreSQLConfig()
         self.config.db = "stats_tiny"
-        self.config.enable_deep_control_local(example_pg_bin, example_pgdata)
+        self.config.enable_deep_control_local(example_pg_bin, example_pgdata, "postgres", "")
         self.data_interactor = PilotDataInteractor(self.config)
         self.db_controller = DBControllerFactory.get_db_controller(self.config)
 
@@ -26,40 +26,47 @@ class TestDataInteractor(unittest.TestCase):
         self.index_column = "date"
 
     def test_pull_execution_time(self):
+        print("\nTest Pull Execution Time")
         self.data_interactor.pull_execution_time()
         result = self.data_interactor.execute(self.sql)
         self.assertFalse(result.execution_time is None)
 
     def test_pull_physical_plan(self):
+        print("\nTest Pull Physical Plan")
         self.data_interactor.pull_physical_plan()
         result: PilotTransData = self.data_interactor.execute(self.sql)
         self.assertFalse(result.physical_plan is None)
 
     def test_pull_subquery_card(self):
+        print("\nTest Pull Subquery")
         self.data_interactor.pull_subquery_card()
         result: PilotTransData = self.data_interactor.execute(self.sql)
         self.assertFalse(result.subquery_2_card is None or len(result.subquery_2_card) == 0)
         print(result)
 
     def test_pull_estimated_cost(self):
+        print("\nTest Pull Estimated Cost")
         self.data_interactor.pull_estimated_cost()
         result: PilotTransData = self.data_interactor.execute(self.sql)
         self.assertFalse(result.estimated_cost is None)
         print(result)
 
     def test_pull_buffer_cache(self):
+        print("\nTest Pull Buffer Cache")
         self.data_interactor.pull_buffercache()
         data: PilotTransData = self.data_interactor.execute(self.sql)  # pull_physical_plan should execute first
         print(data.buffercache)
         self.assertTrue(data.buffercache is not None)
 
     def test_pull_record(self):
+        print("\nTest Pull Record")
         self.data_interactor.pull_record()
         data: PilotTransData = self.data_interactor.execute(self.sql)  # pull_physical_plan should execute first
         print(data.records)
         self.assertTrue(data.records is not None)
 
     def test_push_knob(self):
+        print("\nTest Push Knob")
         self.data_interactor.push_knob({"max_connections": "101"})
         self.data_interactor.pull_record()
         data = self.data_interactor.execute("show max_connections;")
@@ -67,6 +74,7 @@ class TestDataInteractor(unittest.TestCase):
         self.assertEqual(data.records.values[0][0], '101')  # even reset, knob don't change
 
     def test_push_hint(self):
+        print("\nTest Push Hint")
         self.data_interactor.push_hint({"enable_nestloop": "off"})
         self.data_interactor.pull_record()
         data = self.data_interactor.execute("show enable_nestloop;", is_reset=True)
@@ -79,6 +87,7 @@ class TestDataInteractor(unittest.TestCase):
         self.assertEqual(data.records.values[0][0], "on")
 
     def test_push_index(self):
+        print("\nTest Push Index")
         table = self.table
         index = Index(columns=[self.index_column], table=table, index_name="{}_{}".format(table, self.index_column))
         self.db_controller.drop_index(index)
@@ -92,6 +101,7 @@ class TestDataInteractor(unittest.TestCase):
         self.assertTrue(self.db_controller.get_index_number(table) == origin_index_size)
 
     def test_push_simulated_index(self):
+        print("\nTest Push Simulated Index")
         table = self.table
         index = Index(columns=[self.index_column], table=table, index_name="{}_{}".format(table, self.index_column))
 
@@ -109,6 +119,7 @@ class TestDataInteractor(unittest.TestCase):
         self.assertTrue(simulated_index_size == 0)
 
     def test_push_index_by_cost(self):
+        print("\nTest Push Index by Cost")
         sql = "select date from badges where date=1406838696"
         index_name = "{}_{}".format(self.table, self.index_column)
         index_before = self.data_interactor.db_controller.get_all_indexes()
@@ -129,6 +140,7 @@ class TestDataInteractor(unittest.TestCase):
         self.assertTrue(origin_cost - index_cost > 0)
 
     def test_push_pg_hint_comment(self):
+        print("\nTest Push PG Hint Comment")
         self.data_interactor.pull_subquery_card()
         self.data_interactor.pull_estimated_cost()
         self.data_interactor.pull_physical_plan()
@@ -153,6 +165,7 @@ class TestDataInteractor(unittest.TestCase):
         print(result.physical_plan)
 
     def test_push_pull_any_combination(self):
+        print("\nTest Push any Combination")
         # all_operators = [x for x in dir(self.data_interactor) if (x.startswith("push_") or x.startswith("pull_"))]
         all_operators = ['pull_buffercache', 'pull_estimated_cost', 'pull_execution_time', 'pull_physical_plan',
                          'pull_record', 'pull_subquery_card', 'push_card', 'push_hint', 'push_index', 'push_knob']
@@ -200,6 +213,7 @@ class TestDataInteractor(unittest.TestCase):
             pass
 
     def test_anchor_mutual_exclusion(self):
+        print("\nTest Anchor Mutual Exclusion")
         try:
             self.data_interactor.pull_subquery_card()
             self.data_interactor.push_card({})
