@@ -7,9 +7,6 @@ from pilotscope.PilotEnum import DatabaseEnum
 from pilotscope.PilotTransData import PilotTransData
 from pilotscope.DBController import PostgreSQLController
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
-import sys
-
-sys.path.append("../..")
 from algorithm_examples.utils import load_test_sql
 from sqlglot import errors, parse_one
 
@@ -43,11 +40,11 @@ class MyTestCase(unittest.TestCase):
                     self.fail(e)
             print(f"SQ Num: {len(subquery_2_card)}")
 
-    # def test_job(self):
-    #     self.config.db = "imdb_tiny"
-    #     self.data_interactor = PilotDataInteractor(self.config)
-    #     sqls = load_test_sql("imdb")
-    #     self._check_workload(sqls)
+    def test_job(self):
+        self.config.db = "imdb_tiny"
+        self.data_interactor = PilotDataInteractor(self.config)
+        sqls = load_test_sql("imdb")
+        self._check_workload(sqls)
 
     def test_stats_ceb(self):
         self.config.db = "stats_tiny"
