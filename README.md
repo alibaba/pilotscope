@@ -39,7 +39,7 @@ could steer any database in a unified manner. By applying PilotScope, we obtain 
 * All contributors could extend PilotScope to support more AI4DB algorithms, more databases and more functions. **(We
   highly encourage this! 😊😊😊)**
 
-| [Code Structure](#code-structure) | [Quick Start](#quick-start) | [Core Components](#core-components)
+| [Code Structure](#code-structure) | [Installation](#installation) | [Feature Overview](#feature-overview)
  [Documentation](#documentation) | [License](#license) | [Publication](#publications)
 | [Contributing](#contributing) |
 
