@@ -7,19 +7,21 @@
 ![](https://img.shields.io/badge/language-Python-blue.svg)
 ![](https://img.shields.io/badge/language-C-blue.svg)
 ![](https://img.shields.io/badge/language-Scala-blue.svg)
-![](https://img.shields.io/badge/license-Apache_2.0-000000.svg) ![](https://img.shields.io/badge/contributions-Welcome-brightgreen.svg)
+![](https://img.shields.io/badge/license-Apache_2.0-000000.svg) 
+![](https://img.shields.io/badge/contributions-Welcome-brightgreen.svg)
 
-![](https://img.shields.io/badge/docs-Usage_Guideline-purple.svg)
-![](https://img.shields.io/badge/docs-Develop_Guideline-purple.svg)
-![](https://img.shields.io/badge/docs-API_Reference-purple.svg)
 
-![](https://img.shields.io/badge/AI4DB_driver-Knob_Tuning-4E29FF.svg)
-![](https://img.shields.io/badge/AI4DB_driver-Index_Recommendation-4E29FF.svg)
-![](https://img.shields.io/badge/AI4DB_driver-Cardinality_Estimation-4E29FF.svg)
-![](https://img.shields.io/badge/AI4DB_driver-E2E_Query_Optimizer-4E29FF.svg)
+[![](https://img.shields.io/badge/docs-Usage_Guideline-purple.svg)](https://woodybryant.github.io/PilotScopeDoc.io/)
+[![](https://img.shields.io/badge/docs-Develop_Guideline-purple.svg)](https://woodybryant.github.io/PilotScopeDoc.io/references/core_modules.html)
+[![](https://img.shields.io/badge/docs-API_Reference-purple.svg)](https://woodybryant.github.io/PilotScopeDoc.io/references/api.html)
 
-![](https://img.shields.io/badge/database-PostgreSQL_13.1-FFD21E.svg)
-![](https://img.shields.io/badge/database-Spark_3.3.2-FFD21E.svg)
+[![](https://img.shields.io/badge/AI4DB_driver-Knob_Tuning-4E29FF.svg)](https://woodybryant.github.io/PilotScopeDoc.io/references/example.html#knob-tuning-task-example)
+[![](https://img.shields.io/badge/AI4DB_driver-Index_Recommendation-4E29FF.svg)](https://woodybryant.github.io/PilotScopeDoc.io/references/example.html#index-recommendation-task-example)
+[![](https://img.shields.io/badge/AI4DB_driver-Cardinality_Estimation-4E29FF.svg)](https://woodybryant.github.io/PilotScopeDoc.io/references/example.html#cardinality-estimation-task-example)
+[![](https://img.shields.io/badge/AI4DB_driver-E2E_Query_Optimizer-4E29FF.svg)](https://woodybryant.github.io/PilotScopeDoc.io/references/example.html#query-optimizer-task-example)
+
+[![](https://img.shields.io/badge/database-PostgreSQL_13.1-FFD21E.svg)](https://www.postgresql.org/)
+[![](https://img.shields.io/badge/database-Spark_3.3.2-FFD21E.svg)](https://spark.apache.org/)
 
 **PilotScope** is a middleware to bridge the gaps of deploying AI4DB (Artificial Intelligence for Databases) algorithms
 into actual database systems. It aims at hindering the underlying details of different databases so that an AI4DB driver
