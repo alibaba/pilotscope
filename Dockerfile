@@ -1,23 +1,23 @@
 # Use Ubuntu 18.04 as the base image
 FROM ubuntu:18.04
 
-ARG github_user_name
-ARG github_password
 ARG enable_spark
 ARG enable_postgresql
 ENV enable_spark=${enable_spark}
 ENV enable_postgresql=${enable_postgresql}
 
 # Set environment variables for PostgreSQL
-ENV PG_PATH /usr/local/pgsql/13.1/
+ENV PG_PATH /usr/local/pgsql/13.1
 ENV PG_DATA /var/lib/pgsql/13.1/data
-ENV CONDA_DIR /miniconda3/
+ENV CONDA_DIR /miniconda3
 ENV LD_LIBRARY_PATH $PG_PATH/lib:$LD_LIBRARY_PATH
 ENV JAVA_HOME /usr/local/jdk1.8.0_202
 ENV PATH $JAVA_HOME/bin:$PG_PATH/bin:$CONDA_DIR/bin:$PATH
 
 # Set non-interactive installation
 ENV DEBIAN_FRONTEND=noninteractive
+
+SHELL ["/bin/bash", "-c"]
 
 # Install dependencies
 RUN apt-get update && apt-get install -y sudo wget git bzip2 vim openssh-server gcc build-essential libreadline-dev zlib1g-dev bison flex gdb libssl-dev libbz2-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev xz-utils libffi-dev liblzma-dev
@@ -43,13 +43,10 @@ RUN mkdir -p ${CONDA_DIR} && \
 RUN conda create --name pilotscope python=3.8
 
 # Install libraries
-RUN /bin/bash -c "source ${CONDA_DIR}bin/activate pilotscope && \
+RUN source ${CONDA_DIR}/bin/activate pilotscope && \
     cd ./PilotScopeCore && \
-    pip install -e . -i https://mirrors.aliyun.com/pypi/simple/  "
-
-# RUN /bin/bash -c "source ${CONDA_DIR}bin/activate pilotscope && \
-#     cd ./PilotScopeCore && \
-#     pip install -e '.[dev]' -i https://mirrors.aliyun.com/pypi/simple/ "
+    pip install -e . -i https://mirrors.aliyun.com/pypi/simple/   && \
+    pip install -e '.[dev]' -i https://mirrors.aliyun.com/pypi/simple/
 
 ####### Install PostgreSQL #######
 RUN if [ "$enable_postgresql" = "true" ]; then \
@@ -103,6 +100,7 @@ RUN if [ "$enable_spark" = "true" ]; then \
         bash apply_patch.sh /pilotscope_spark.patch;  \
     fi
 
+
 RUN if [ "$enable_spark" = "true" ]; then \
         # Install JDK
         wget https://github.com/WoodyBryant/JDK/releases/download/v2/jdk-8u202-linux-x64.tar.gz && \
@@ -116,11 +114,10 @@ RUN if [ "$enable_spark" = "true" ]; then \
         ./build/mvn -DskipTests clean package;\
     fi
 
-SHELL ["/bin/bash", "-c"]
 RUN if [ "$enable_spark" = "true" ]; then \
         # Install PySpark
         cd ./PilotScopeSpark/spark-3.3.2/python && \
-        source ${CONDA_DIR}bin/activate pilotscope && \
+        source ${CONDA_DIR}/bin/activate pilotscope && \
         python setup.py install \
     ; else \
         echo "Spark installation skipped"; \
