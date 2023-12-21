@@ -31,7 +31,7 @@ class TestDataset(unittest.TestCase):
         super().__init__(methodName)
         self.config: PostgreSQLConfig = PostgreSQLConfig(pilotscope_core_host="localhost", db_host="localhost",
                                                          db_port="5432", db_user="postgres", db_user_pwd="postgres")
-        self.config.enable_deep_control_local(example_pg_bin, example_pgdata, db_host_user="postgres", db_host_pwd="")
+        self.config.enable_deep_control_local(example_pg_bin, example_pgdata)
 
     def test_load_stats_tiny(self):
         ds = StatsTinyDataset(DatabaseEnum.POSTGRESQL, created_db_name="stats_tiny")

@@ -41,3 +41,8 @@ class PilotScopeMutualExclusionException(Exception):
 class PilotScopeNotSupportedOperationException(Exception):
     def __init__(self, message=""):
         super().__init__(message)
+
+
+class PilotScopeExecCommandException(Exception):
+    def __init__(self, cmd):
+        super().__init__("There are some errors when executing command {}".format(cmd))

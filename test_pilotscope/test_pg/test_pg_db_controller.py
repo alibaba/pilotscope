@@ -14,7 +14,7 @@ class TestPostgreSQLDBController(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.config = PostgreSQLConfig()
-        cls.config.enable_deep_control_local(example_pg_bin, example_pgdata, "postgres", "")
+        cls.config.enable_deep_control_local(example_pg_bin, example_pgdata)
         cls.config.db = "stats_tiny"
 
         cls.table = "badges"
@@ -176,6 +176,10 @@ class TestPostgreSQLDBController(unittest.TestCase):
         print(res)
         for x in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:
             self.assertTrue(x in res, res)
+
+    def test_exec_command_exception(self):
+        self.db_controller._surun("")
+
 
     @classmethod
     def tearDownClass(cls):

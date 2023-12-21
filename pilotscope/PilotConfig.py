@@ -80,7 +80,7 @@ class PostgreSQLConfig(PilotConfig):
         self.db_host_pwd = None
         self.db_host_port = None
 
-    def enable_deep_control_local(self, pg_bin_path: str, pg_data_path: str, db_host_user: str, db_host_pwd: str):
+    def enable_deep_control_local(self, pg_bin_path: str, pg_data_path: str):
         """
         Enable deep control for PostgreSQL, such as  starting and stopping database, changing config file, etc.
         If you do not need these functions, it is not necessary to set these values.
@@ -93,8 +93,6 @@ class PostgreSQLConfig(PilotConfig):
         :param db_host_pwd: the password to log into the database host
         """
 
-        self.db_host_user = db_host_user
-        self.db_host_pwd = db_host_pwd
         self._enable_deep_control = True
         self.pg_bin_path = pg_bin_path
         self.pgdata = pg_data_path

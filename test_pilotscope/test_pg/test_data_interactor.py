@@ -16,7 +16,7 @@ class TestDataInteractor(unittest.TestCase):
         super().__init__(methodName)
         self.config = PostgreSQLConfig()
         self.config.db = "stats_tiny"
-        self.config.enable_deep_control_local(example_pg_bin, example_pgdata, "postgres", "")
+        self.config.enable_deep_control_local(example_pg_bin, example_pgdata)
         self.data_interactor = PilotDataInteractor(self.config)
         self.db_controller = DBControllerFactory.get_db_controller(self.config)
 

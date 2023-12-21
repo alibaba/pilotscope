@@ -1,5 +1,6 @@
 import os
 import re
+import subprocess
 
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
@@ -7,11 +8,12 @@ from sqlalchemy.exc import OperationalError
 from pilotscope.Common.Index import Index
 from pilotscope.Common.SSHConnector import SSHConnector
 from pilotscope.DBController.BaseDBController import BaseDBController
-from pilotscope.Exception.Exception import DBStatementTimeoutException, DatabaseCrashException, DatabaseStartException, \
-    PilotScopeInternalError
+from pilotscope.Exception.Exception import DBStatementTimeoutException, DatabaseCrashException, \
+    PilotScopeInternalError, PilotScopeExecCommandException
 from pilotscope.PilotConfig import PostgreSQLConfig
 
 
+# noinspection PyProtectedMember
 class PostgreSQLController(BaseDBController):
     _instances = set()
 
@@ -293,7 +295,8 @@ class PostgreSQLController(BaseDBController):
             instance._disconnect()  # to set DBController's self.connection_thread.conn is None
             instance.engine.dispose(close=True)
             # del instance.engine
-        self._surun("{} stop -P {} -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.db_port, self.config.pgdata))
+        self._surun(
+            "{} stop -P {} -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.db_port, self.config.pgdata))
 
     def start(self):
         """
@@ -305,7 +308,8 @@ class PostgreSQLController(BaseDBController):
 
         self._check_enable_deep_control()
 
-        self._surun("{} start -P {} -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.db_port, self.config.pgdata))
+        self._surun(
+            "{} start -P {} -D {} 2>&1 > /dev/null".format(self.config.pg_ctl, self.config.db_port, self.config.pgdata))
         if not self.is_running():
             raise DatabaseCrashException
 
@@ -320,11 +324,12 @@ class PostgreSQLController(BaseDBController):
         """
         self._check_enable_deep_control()
 
-        check_db_running_cmd = "echo {} | su {} -c '{} status -P {} -D {}'".format(self.config.db_host_pwd, self.config.db_host_user, 
-                                                                                   self.config.pg_ctl, self.config.db_port, self.config.pgdata)
+        check_db_running_cmd = "{} status -P {} -D {}".format(self.config.pg_ctl, self.config.db_port,
+                                                              self.config.pgdata)
+
         if self.config._is_local:
-            with os.popen(check_db_running_cmd) as res:
-                status = res.read()
+            res_out, res_err = self._surun(check_db_running_cmd)
+            status = "{},{}".format(res_out, res_err)
         else:
             ssh_conn = SSHConnector(self.config.db_host, self.config.db_host_user, self.config.db_host_pwd,
                                     self.config.db_host_port)
@@ -401,15 +406,24 @@ class PostgreSQLController(BaseDBController):
 
     # switch user and run
     def _surun(self, cmd):
-        su_and_cmd = "echo {} | su {} -c '{}'".format(self.config.db_host_pwd, self.config.db_host_user, cmd)
         if self.config._is_local:
-            return os.system(su_and_cmd)
+            result = subprocess.run(cmd, shell=True, text=True,
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            std_out = result.stdout
+            std_err = result.stderr
         else:
             ssh_conn = SSHConnector(self.config.db_host, self.config.db_host_user, self.config.db_host_pwd,
                                     self.config.db_host_port)
             ssh_conn.connect()
-            ssh_conn.remote_exec_cmd(su_and_cmd)
+            out, err = ssh_conn.remote_exec_cmd(cmd)
+            std_out = str(out)
+            std_err = str(err)
             ssh_conn.close()
+
+        if std_err is not None and std_err != "":
+            print(std_err)
+            raise PilotScopeExecCommandException(cmd)
+        return std_out, std_err
 
 
 class SimulateIndexVisitor:
