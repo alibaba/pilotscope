@@ -416,8 +416,8 @@ class PostgreSQLController(BaseDBController):
                                     self.config.db_host_port)
             ssh_conn.connect()
             out, err = ssh_conn.remote_exec_cmd(cmd)
-            std_out = str(out)
-            std_err = str(err)
+            std_out = "" if len(out) == 0 else str(out)
+            std_err = "" if len(err) == 0 else str(err)
             ssh_conn.close()
 
         if std_err is not None and std_err != "":

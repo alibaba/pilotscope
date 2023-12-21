@@ -12,13 +12,14 @@ from pilotscope.PilotTransData import PilotTransData
 
 class TestDataInteractor(unittest.TestCase):
 
-    def __init__(self, methodName="runTest"):
+    def __init__(self, methodName="runTest", skip_init=False):
         super().__init__(methodName)
-        self.config = PostgreSQLConfig()
-        self.config.db = "stats_tiny"
-        self.config.enable_deep_control_local(example_pg_bin, example_pgdata)
-        self.data_interactor = PilotDataInteractor(self.config)
-        self.db_controller = DBControllerFactory.get_db_controller(self.config)
+        if not skip_init:
+            self.config = PostgreSQLConfig()
+            self.config.db = "stats_tiny"
+            self.config.enable_deep_control_local(example_pg_bin, example_pgdata)
+            self.data_interactor = PilotDataInteractor(self.config)
+            self.db_controller = DBControllerFactory.get_db_controller(self.config)
 
         self.sql = "select count(*) from posts as p, postlinks as pl, posthistory as ph where p.id = pl.postid and pl.postid = ph.postid and p.creationdate>=1279570117 and ph.creationdate>=1279585800 and p.score < 50;"
 
