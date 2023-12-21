@@ -42,6 +42,8 @@ RUN mkdir -p ${CONDA_DIR} && \
 
 RUN conda create --name pilotscope python=3.8
 
+RUN conda init
+
 # Install libraries
 RUN source ${CONDA_DIR}/bin/activate pilotscope && \
     cd ./PilotScopeCore && \
