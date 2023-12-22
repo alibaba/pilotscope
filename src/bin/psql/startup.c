@@ -435,6 +435,7 @@ error:
 	{
 		pg_logging_config(PG_LOG_FLAG_TERSE);
 		connection_warnings(true);
+		printf(_("PilotScope\n"));
 		if (!pset.quiet)
 			printf(_("Type \"help\" for help.\n\n"));
 		initializeInput(options.no_readline ? 0 : 1);
@@ -821,6 +822,7 @@ static void
 showVersion(void)
 {
 	puts("psql (PostgreSQL) " PG_VERSION);
+	puts("PilotScope");
 }
 
 
