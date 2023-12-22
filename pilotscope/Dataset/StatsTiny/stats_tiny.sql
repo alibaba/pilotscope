@@ -31,7 +31,7 @@ CREATE TABLE public.badges (
 );
 
 
-ALTER TABLE public.badges OWNER TO postgres;
+-- ALTER TABLE public.badges OWNER TO postgres;
 
 --
 -- Name: badges_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -46,7 +46,7 @@ CREATE SEQUENCE public.badges_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.badges_id_seq OWNER TO postgres;
+-- ALTER TABLE public.badges_id_seq OWNER TO postgres;
 
 --
 -- Name: badges_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -68,7 +68,7 @@ CREATE TABLE public.comments (
 );
 
 
-ALTER TABLE public.comments OWNER TO postgres;
+-- ALTER TABLE public.comments OWNER TO postgres;
 
 --
 -- Name: comments_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -83,7 +83,7 @@ CREATE SEQUENCE public.comments_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.comments_id_seq OWNER TO postgres;
+-- ALTER TABLE public.comments_id_seq OWNER TO postgres;
 
 --
 -- Name: comments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -105,7 +105,7 @@ CREATE TABLE public.posthistory (
 );
 
 
-ALTER TABLE public.posthistory OWNER TO postgres;
+-- ALTER TABLE public.posthistory OWNER TO postgres;
 
 --
 -- Name: posthistory_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -120,7 +120,7 @@ CREATE SEQUENCE public.posthistory_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.posthistory_id_seq OWNER TO postgres;
+-- ALTER TABLE public.posthistory_id_seq OWNER TO postgres;
 
 --
 -- Name: posthistory_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -142,7 +142,7 @@ CREATE TABLE public.postlinks (
 );
 
 
-ALTER TABLE public.postlinks OWNER TO postgres;
+-- ALTER TABLE public.postlinks OWNER TO postgres;
 
 --
 -- Name: postlinks_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -157,7 +157,7 @@ CREATE SEQUENCE public.postlinks_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.postlinks_id_seq OWNER TO postgres;
+-- ALTER TABLE public.postlinks_id_seq OWNER TO postgres;
 
 --
 -- Name: postlinks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -184,7 +184,7 @@ CREATE TABLE public.posts (
 );
 
 
-ALTER TABLE public.posts OWNER TO postgres;
+-- ALTER TABLE public.posts OWNER TO postgres;
 
 --
 -- Name: posts_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -199,7 +199,7 @@ CREATE SEQUENCE public.posts_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.posts_id_seq OWNER TO postgres;
+-- ALTER TABLE public.posts_id_seq OWNER TO postgres;
 
 --
 -- Name: posts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -219,7 +219,7 @@ CREATE TABLE public.tags (
 );
 
 
-ALTER TABLE public.tags OWNER TO postgres;
+-- ALTER TABLE public.tags OWNER TO postgres;
 
 --
 -- Name: tags_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -234,7 +234,7 @@ CREATE SEQUENCE public.tags_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.tags_id_seq OWNER TO postgres;
+-- ALTER TABLE public.tags_id_seq OWNER TO postgres;
 
 --
 -- Name: tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -257,7 +257,7 @@ CREATE TABLE public.users (
 );
 
 
-ALTER TABLE public.users OWNER TO postgres;
+-- ALTER TABLE public.users OWNER TO postgres;
 
 --
 -- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -272,7 +272,7 @@ CREATE SEQUENCE public.users_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.users_id_seq OWNER TO postgres;
+-- ALTER TABLE public.users_id_seq OWNER TO postgres;
 
 --
 -- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -295,7 +295,7 @@ CREATE TABLE public.votes (
 );
 
 
-ALTER TABLE public.votes OWNER TO postgres;
+-- ALTER TABLE public.votes OWNER TO postgres;
 
 --
 -- Name: votes_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -310,7 +310,7 @@ CREATE SEQUENCE public.votes_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.votes_id_seq OWNER TO postgres;
+-- ALTER TABLE public.votes_id_seq OWNER TO postgres;
 
 --
 -- Name: votes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres

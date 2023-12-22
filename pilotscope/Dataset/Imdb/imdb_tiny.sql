@@ -37,7 +37,7 @@ CREATE TABLE public.aka_name (
 );
 
 
-ALTER TABLE public.aka_name OWNER TO postgres;
+-- ALTER TABLE public.aka_name OWNER TO postgres;
 
 --
 -- Name: aka_title; Type: TABLE; Schema: public; Owner: postgres
@@ -59,7 +59,7 @@ CREATE TABLE public.aka_title (
 );
 
 
-ALTER TABLE public.aka_title OWNER TO postgres;
+-- ALTER TABLE public.aka_title OWNER TO postgres;
 
 --
 -- Name: cast_info; Type: TABLE; Schema: public; Owner: postgres
@@ -76,7 +76,7 @@ CREATE TABLE public.cast_info (
 );
 
 
-ALTER TABLE public.cast_info OWNER TO postgres;
+-- ALTER TABLE public.cast_info OWNER TO postgres;
 
 --
 -- Name: char_name; Type: TABLE; Schema: public; Owner: postgres
@@ -93,7 +93,7 @@ CREATE TABLE public.char_name (
 );
 
 
-ALTER TABLE public.char_name OWNER TO postgres;
+-- ALTER TABLE public.char_name OWNER TO postgres;
 
 --
 -- Name: comp_cast_type; Type: TABLE; Schema: public; Owner: postgres
@@ -105,7 +105,7 @@ CREATE TABLE public.comp_cast_type (
 );
 
 
-ALTER TABLE public.comp_cast_type OWNER TO postgres;
+-- ALTER TABLE public.comp_cast_type OWNER TO postgres;
 
 --
 -- Name: company_name; Type: TABLE; Schema: public; Owner: postgres
@@ -122,7 +122,7 @@ CREATE TABLE public.company_name (
 );
 
 
-ALTER TABLE public.company_name OWNER TO postgres;
+-- ALTER TABLE public.company_name OWNER TO postgres;
 
 --
 -- Name: company_type; Type: TABLE; Schema: public; Owner: postgres
@@ -134,7 +134,7 @@ CREATE TABLE public.company_type (
 );
 
 
-ALTER TABLE public.company_type OWNER TO postgres;
+-- ALTER TABLE public.company_type OWNER TO postgres;
 
 --
 -- Name: complete_cast; Type: TABLE; Schema: public; Owner: postgres
@@ -148,7 +148,7 @@ CREATE TABLE public.complete_cast (
 );
 
 
-ALTER TABLE public.complete_cast OWNER TO postgres;
+-- ALTER TABLE public.complete_cast OWNER TO postgres;
 
 --
 -- Name: info_type; Type: TABLE; Schema: public; Owner: postgres
@@ -160,7 +160,7 @@ CREATE TABLE public.info_type (
 );
 
 
-ALTER TABLE public.info_type OWNER TO postgres;
+-- ALTER TABLE public.info_type OWNER TO postgres;
 
 --
 -- Name: keyword; Type: TABLE; Schema: public; Owner: postgres
@@ -173,7 +173,7 @@ CREATE TABLE public.keyword (
 );
 
 
-ALTER TABLE public.keyword OWNER TO postgres;
+-- ALTER TABLE public.keyword OWNER TO postgres;
 
 --
 -- Name: kind_type; Type: TABLE; Schema: public; Owner: postgres
@@ -185,7 +185,7 @@ CREATE TABLE public.kind_type (
 );
 
 
-ALTER TABLE public.kind_type OWNER TO postgres;
+-- ALTER TABLE public.kind_type OWNER TO postgres;
 
 --
 -- Name: link_type; Type: TABLE; Schema: public; Owner: postgres
@@ -197,7 +197,7 @@ CREATE TABLE public.link_type (
 );
 
 
-ALTER TABLE public.link_type OWNER TO postgres;
+-- ALTER TABLE public.link_type OWNER TO postgres;
 
 --
 -- Name: movie_companies; Type: TABLE; Schema: public; Owner: postgres
@@ -212,7 +212,7 @@ CREATE TABLE public.movie_companies (
 );
 
 
-ALTER TABLE public.movie_companies OWNER TO postgres;
+-- ALTER TABLE public.movie_companies OWNER TO postgres;
 
 --
 -- Name: movie_info; Type: TABLE; Schema: public; Owner: postgres
@@ -227,7 +227,7 @@ CREATE TABLE public.movie_info (
 );
 
 
-ALTER TABLE public.movie_info OWNER TO postgres;
+-- ALTER TABLE public.movie_info OWNER TO postgres;
 
 --
 -- Name: movie_info_idx; Type: TABLE; Schema: public; Owner: postgres
@@ -242,7 +242,7 @@ CREATE TABLE public.movie_info_idx (
 );
 
 
-ALTER TABLE public.movie_info_idx OWNER TO postgres;
+-- ALTER TABLE public.movie_info_idx OWNER TO postgres;
 
 --
 -- Name: movie_keyword; Type: TABLE; Schema: public; Owner: postgres
@@ -255,7 +255,7 @@ CREATE TABLE public.movie_keyword (
 );
 
 
-ALTER TABLE public.movie_keyword OWNER TO postgres;
+-- ALTER TABLE public.movie_keyword OWNER TO postgres;
 
 --
 -- Name: movie_link; Type: TABLE; Schema: public; Owner: postgres
@@ -269,7 +269,7 @@ CREATE TABLE public.movie_link (
 );
 
 
-ALTER TABLE public.movie_link OWNER TO postgres;
+-- ALTER TABLE public.movie_link OWNER TO postgres;
 
 --
 -- Name: name; Type: TABLE; Schema: public; Owner: postgres
@@ -288,7 +288,7 @@ CREATE TABLE public.name (
 );
 
 
-ALTER TABLE public.name OWNER TO postgres;
+-- ALTER TABLE public.name OWNER TO postgres;
 
 --
 -- Name: person_info; Type: TABLE; Schema: public; Owner: postgres
@@ -303,7 +303,7 @@ CREATE TABLE public.person_info (
 );
 
 
-ALTER TABLE public.person_info OWNER TO postgres;
+-- ALTER TABLE public.person_info OWNER TO postgres;
 
 --
 -- Name: role_type; Type: TABLE; Schema: public; Owner: postgres
@@ -315,7 +315,7 @@ CREATE TABLE public.role_type (
 );
 
 
-ALTER TABLE public.role_type OWNER TO postgres;
+-- ALTER TABLE public.role_type OWNER TO postgres;
 
 --
 -- Name: title; Type: TABLE; Schema: public; Owner: postgres
@@ -337,7 +337,7 @@ CREATE TABLE public.title (
 );
 
 
-ALTER TABLE public.title OWNER TO postgres;
+-- ALTER TABLE public.title OWNER TO postgres;
 
 --
 -- Data for Name: aka_name; Type: TABLE DATA; Schema: public; Owner: postgres
