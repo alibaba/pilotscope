@@ -26,7 +26,8 @@ RUN apt-get update && apt-get install -y sudo wget git bzip2 vim openssh-server 
 # Create a pilotscope user
 RUN  echo 'root:root' | chpasswd && \
     useradd -m -s /bin/bash pilotscope && \
-    echo "pilotscope:pilotscope" | chpasswd
+    echo "pilotscope:pilotscope" | chpasswd && \
+    usermod -aG sudo pilotscope
 
 RUN git config --global http.postBuffer 524288000
 
@@ -34,8 +35,7 @@ RUN git config --global http.postBuffer 524288000
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 USER pilotscope
-RUN mkdir ${USER_HOME}/pilotscope
-WORKDIR ${USER_HOME}/pilotscope
+WORKDIR ${USER_HOME}
 
 ####### Install PilotScope Core #######
 RUN git -c http.sslVerify=false clone --depth 1 --branch master https://github.com/alibaba/pilotscope.git PilotScopeCore
@@ -57,69 +57,69 @@ RUN source ${CONDA_DIR}/bin/activate pilotscope && \
 
 ####### Install PostgreSQL #######
 RUN if [ "$enable_postgresql" = "true" ]; then \
-        git -c http.sslVerify=false clone --depth 1 --branch pilotscope-postgresql https://github.com/alibaba/pilotscope.git PilotScopePostgreSQL && \
-        cd ./PilotScopePostgreSQL && \
-        ./configure --prefix=$PG_PATH --enable-depend --enable-cassert --enable-debug CFLAGS="-ggdb -O0" && \
-        make && make install && \
-        sh install_extension.sh && \
-        make && make install ; \
+    git -c http.sslVerify=false clone --depth 1 --branch pilotscope-postgresql https://github.com/alibaba/pilotscope.git PilotScopePostgreSQL && \
+    cd ./PilotScopePostgreSQL && \
+    ./configure --prefix=$PG_PATH --enable-depend --enable-cassert --enable-debug CFLAGS="-ggdb -O0" && \
+    make && make install && \
+    sh install_extension.sh && \
+    make && make install ; \
     fi
 
 RUN if [ "$enable_postgresql" = "true" ]; then \
-        # Initialize the database
-        ${PG_PATH}/bin/initdb -D $PG_DATA && \
-        # Configure PostgreSQL to allow connections
-        echo "listen_addresses = '*'" >> $PG_DATA/postgresql.conf && \
-        echo "host all all all md5" >> $PG_DATA/pg_hba.conf && \
-        echo "shared_preload_libraries = 'pg_hint_plan'" >> $PG_DATA/postgresql.conf && \
-        ${PG_PATH}/bin/pg_ctl start -D $PG_DATA && \
-        ${PG_PATH}/bin/psql -d template1 -c "create database pilotscope;" && \
-        ${PG_PATH}/bin/psql -c "ALTER USER pilotscope PASSWORD 'pilotscope';" \
+    # Initialize the database
+    ${PG_PATH}/bin/initdb -D $PG_DATA && \
+    # Configure PostgreSQL to allow connections
+    echo "listen_addresses = '*'" >> $PG_DATA/postgresql.conf && \
+    echo "host all all all md5" >> $PG_DATA/pg_hba.conf && \
+    echo "shared_preload_libraries = 'pg_hint_plan'" >> $PG_DATA/postgresql.conf && \
+    ${PG_PATH}/bin/pg_ctl start -D $PG_DATA && \
+    ${PG_PATH}/bin/psql -d template1 -c "create database pilotscope;" && \
+    ${PG_PATH}/bin/psql -c "ALTER USER pilotscope PASSWORD 'pilotscope';" \
     ; else \
-        echo "PostgreSQL installation skipped"; \
+    echo "PostgreSQL installation skipped"; \
     fi
 
 ######## Install Spark #######
 
 RUN if [ "$enable_spark" = "true" ]; then \
-        # Download and install PilotScope patch for Spark
-        git -c http.sslVerify=false clone --depth 1 --branch pilotscope-spark https://github.com/alibaba/pilotscope.git PilotScopeSpark && \
-        cd ./PilotScopeSpark && \
-        # Download Spark
-        wget https://archive.apache.org/dist/spark/spark-3.3.2/spark-3.3.2.tgz && \
-        tar -xzvf spark-3.3.2.tgz && \
-        rm spark-3.3.2.tgz; \
+    # Download and install PilotScope patch for Spark
+    git -c http.sslVerify=false clone --depth 1 --branch pilotscope-spark https://github.com/alibaba/pilotscope.git PilotScopeSpark && \
+    cd ./PilotScopeSpark && \
+    # Download Spark
+    wget https://archive.apache.org/dist/spark/spark-3.3.2/spark-3.3.2.tgz && \
+    tar -xzvf spark-3.3.2.tgz && \
+    rm spark-3.3.2.tgz; \
     fi
 
 RUN if [ "$enable_spark" = "true" ]; then \
-        # Apply patch
-        cd ./PilotScopeSpark && \
-        git config --global user.email "pilotscope@example.com" && \
-        git config --global user.name "pilotscope" && \
-        bash apply_patch.sh /pilotscope_spark.patch;  \
+    # Apply patch
+    cd ./PilotScopeSpark && \
+    git config --global user.email "pilotscope@example.com" && \
+    git config --global user.name "pilotscope" && \
+    bash apply_patch.sh /pilotscope_spark.patch;  \
     fi
 
 
 RUN if [ "$enable_spark" = "true" ]; then \
-        # Install JDK
-        wget https://github.com/WoodyBryant/JDK/releases/download/v2/jdk-8u202-linux-x64.tar.gz && \
-        tar -xzf jdk-8u202-linux-x64.tar.gz -C ${USER_HOME} && \
-        rm jdk-8u202-linux-x64.tar.gz; \
+    # Install JDK
+    wget https://github.com/WoodyBryant/JDK/releases/download/v2/jdk-8u202-linux-x64.tar.gz && \
+    tar -xzf jdk-8u202-linux-x64.tar.gz -C ${USER_HOME} && \
+    rm jdk-8u202-linux-x64.tar.gz; \
     fi
 
 RUN if [ "$enable_spark" = "true" ]; then \
-        # Compile Spark
-        cd ./PilotScopeSpark/spark-3.3.2 && \
-        ./build/mvn -DskipTests clean package;\
+    # Compile Spark
+    cd ./PilotScopeSpark/spark-3.3.2 && \
+    ./build/mvn -DskipTests clean package;\
     fi
 
 RUN if [ "$enable_spark" = "true" ]; then \
-        # Install PySpark
-        cd ./PilotScopeSpark/spark-3.3.2/python && \
-        source ${CONDA_DIR}/bin/activate pilotscope && \
-        python setup.py install \
+    # Install PySpark
+    cd ./PilotScopeSpark/spark-3.3.2/python && \
+    source ${CONDA_DIR}/bin/activate pilotscope && \
+    python setup.py install \
     ; else \
-        echo "Spark installation skipped"; \
+    echo "Spark installation skipped"; \
     fi
 
 CMD ["/bin/bash"]
