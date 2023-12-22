@@ -7,11 +7,12 @@ ENV enable_spark=${enable_spark}
 ENV enable_postgresql=${enable_postgresql}
 
 # Set environment variables for PostgreSQL
-ENV PG_PATH /usr/local/pgsql/13.1
-ENV PG_DATA /var/lib/pgsql/13.1/data
-ENV CONDA_DIR /miniconda3
+ARG USER_HOME=/home/pilotscope
+ENV PG_PATH ${USER_HOME}/pgsql/
+ENV PG_DATA ${USER_HOME}/pg_data
+ENV CONDA_DIR ${USER_HOME}/miniconda3
 ENV LD_LIBRARY_PATH $PG_PATH/lib:$LD_LIBRARY_PATH
-ENV JAVA_HOME /usr/local/jdk1.8.0_202
+ENV JAVA_HOME ${USER_HOME}/jdk1.8.0_202
 ENV PATH $JAVA_HOME/bin:$PG_PATH/bin:$CONDA_DIR/bin:$PATH
 
 # Set non-interactive installation
@@ -22,15 +23,19 @@ SHELL ["/bin/bash", "-c"]
 # Install dependencies
 RUN apt-get update && apt-get install -y sudo wget git bzip2 vim openssh-server gcc build-essential libreadline-dev zlib1g-dev bison flex gdb libssl-dev libbz2-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev xz-utils libffi-dev liblzma-dev
 
-
-RUN mkdir /pilotscope
-WORKDIR /pilotscope
+# Create a pilotscope user
+RUN  echo 'root:root' | chpasswd && \
+    useradd -m -s /bin/bash pilotscope && \
+    echo "pilotscope:pilotscope" | chpasswd
 
 RUN git config --global http.postBuffer 524288000
 
 # Set ssh
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
+USER pilotscope
+RUN mkdir ${USER_HOME}/pilotscope
+WORKDIR ${USER_HOME}/pilotscope
 
 ####### Install PilotScope Core #######
 RUN git -c http.sslVerify=false clone --depth 1 --branch master https://github.com/alibaba/pilotscope.git PilotScopeCore
@@ -61,28 +66,20 @@ RUN if [ "$enable_postgresql" = "true" ]; then \
     fi
 
 RUN if [ "$enable_postgresql" = "true" ]; then \
-        # Create a non-root user
-        echo 'root:root' | chpasswd && \
-        useradd -m -s /bin/bash postgres && echo "postgres:postgres" | chpasswd && \
-        # Change owner of PG_PATH to `postgres` user and allow access
-        chown -R postgres:postgres /var && \
-        chown -R postgres:postgres $PG_PATH && \
-        chmod -R 777 $PG_PATH && \
         # Initialize the database
-        su postgres -c "${PG_PATH}/bin/initdb -D $PG_DATA" && \
+        ${PG_PATH}/bin/initdb -D $PG_DATA && \
         # Configure PostgreSQL to allow connections
         echo "listen_addresses = '*'" >> $PG_DATA/postgresql.conf && \
         echo "host all all all md5" >> $PG_DATA/pg_hba.conf && \
         echo "shared_preload_libraries = 'pg_hint_plan'" >> $PG_DATA/postgresql.conf && \
-        # Start the PostgreSQL service and set the password for the `postgres` user
-        su postgres -c "${PG_PATH}/bin/pg_ctl -D $PG_DATA start" && \
-        su postgres -c "${PG_PATH}/bin/psql -c \"ALTER USER postgres PASSWORD 'postgres';\"" \
+        ${PG_PATH}/bin/pg_ctl start -D $PG_DATA && \
+        ${PG_PATH}/bin/psql -d template1 -c "create database pilotscope;" && \
+        ${PG_PATH}/bin/psql -c "ALTER USER pilotscope PASSWORD 'pilotscope';" \
     ; else \
         echo "PostgreSQL installation skipped"; \
     fi
 
 ######## Install Spark #######
-USER root
 
 RUN if [ "$enable_spark" = "true" ]; then \
         # Download and install PilotScope patch for Spark
@@ -106,7 +103,7 @@ RUN if [ "$enable_spark" = "true" ]; then \
 RUN if [ "$enable_spark" = "true" ]; then \
         # Install JDK
         wget https://github.com/WoodyBryant/JDK/releases/download/v2/jdk-8u202-linux-x64.tar.gz && \
-        tar -xzf jdk-8u202-linux-x64.tar.gz -C  /usr/local/ && \
+        tar -xzf jdk-8u202-linux-x64.tar.gz -C ${USER_HOME} && \
         rm jdk-8u202-linux-x64.tar.gz; \
     fi
 
