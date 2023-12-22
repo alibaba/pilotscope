@@ -10,6 +10,5 @@ def get_time_statistic_img_path(algo_name, workload_name):
     return "{}_{}".format(algo_name, workload_name)
 
 
-example_pg_bin = "/usr/local/pgsql/13.1/bin/"
-example_pgdata = "/var/lib/pgsql/13.1/data/"
-
+example_pg_bin = "/home/pilotscope/pgsql/bin"
+example_pgdata = "/home/pilotscope/pg_data"

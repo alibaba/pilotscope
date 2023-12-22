@@ -30,8 +30,8 @@ class TestDataset(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
         self.config: PostgreSQLConfig = PostgreSQLConfig(pilotscope_core_host="localhost", db_host="localhost",
-                                                         db_port="5432", db_user="postgres", db_user_pwd="postgres")
-        self.config.enable_deep_control_local(example_pg_bin, example_pgdata)
+                                                         db_port="5432", db_user="pilotscope", db_user_pwd="pilotscope")
+        self.config.enable_deep_control_local(example_pg_bin, example_pgdata, db_host_user="pilotscope", db_host_pwd="")
 
     def test_load_stats_tiny(self):
         ds = StatsTinyDataset(DatabaseEnum.POSTGRESQL, created_db_name="stats_tiny")
@@ -68,8 +68,8 @@ class TestDataset(unittest.TestCase):
 
     def test_load_to_stats_remote(self):
         self.config = PostgreSQLConfig(pilotscope_core_host="127.0.0.1", db_host="127.0.0.1", db_port="5432",
-                                       db_user="postgres", db_user_pwd="postgres")
-        self.config.enable_deep_control_remote(example_pg_bin, example_pgdata, "root", "root")
+                                       db_user="pilotscope", db_user_pwd="pilotscope")
+        self.config.enable_deep_control_remote(example_pg_bin, example_pgdata, "pilotscope", "pilotscope")
         ds = StatsTinyDataset(DatabaseEnum.POSTGRESQL, created_db_name="stats_tiny_remote")
         ds.load_to_db(self.config)
         db_controller: BaseDBController = DBControllerFactory.get_db_controller(self.config)

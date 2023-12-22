@@ -55,8 +55,8 @@ class PilotConfig:
 
 
 class PostgreSQLConfig(PilotConfig):
-    def __init__(self, pilotscope_core_host="localhost", db_host="localhost", db_port="5432", db_user="postgres",
-                 db_user_pwd="postgres", db="stats_tiny") -> None:
+    def __init__(self, pilotscope_core_host="localhost", db_host="localhost", db_port="5432", db_user="pilotscope",
+                 db_user_pwd="pilotscope", db="stats_tiny") -> None:
         """
         :param pilotscope_core_host: the host address of PilotScope in ML side.
         :param db_host: the host address of database

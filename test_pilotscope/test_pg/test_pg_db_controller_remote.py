@@ -14,8 +14,8 @@ class TestPostgreSQLDBController(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.config = PostgreSQLConfig(pilotscope_core_host="127.0.0.1", db_host="127.0.0.1", db_port="5432",
-                                       db_user="postgres", db_user_pwd="postgres")
-        cls.config.enable_deep_control_remote(example_pg_bin, example_pgdata, "postgres", "postgres")
+                                       db_user="pilotscope", db_user_pwd="pilotscope")
+        cls.config.enable_deep_control_remote(example_pg_bin, example_pgdata, "pilotscope", "pilotscope")
         cls.config.db = "stats_tiny"
 
         cls.table = "badges"
@@ -181,6 +181,13 @@ class TestPostgreSQLDBController(unittest.TestCase):
     def test_exec_command_exception(self):
         self.db_controller._surun("")
 
+    def test_shutdown(self):
+        self.db_controller.shutdown()
+        is_running = self.db_controller.is_running()
+        self.assertFalse(is_running)
+        self.db_controller.start()
+        is_running = self.db_controller.is_running()
+        self.assertTrue(is_running)
 
     @classmethod
     def tearDownClass(cls):
