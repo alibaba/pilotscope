@@ -22,7 +22,7 @@ class TestDataInteractor(unittest.TestCase):
             self.db_controller = DBControllerFactory.get_db_controller(self.config)
 
         self.sql = "select count(*) from posts as p, postlinks as pl, posthistory as ph where p.id = pl.postid and pl.postid = ph.postid and p.creationdate>=1279570117 and ph.creationdate>=1279585800 and p.score < 50;"
-
+        self.pg_hint_sql = "select count(*) from badges as b, comments as c, users as u, votes as v where b.userid = c.userid and c.userid = u.id and u.id = v.userid and b.date >= 1279574948 and c.score = 0 and u.creationdate <= 1410173533 and u.creationdate >= 1279581345 and u.reputation <= 305 and u.views <= 77 and v.bountyamount >= 0 and v.votetypeid = 2;"
         self.table = "badges"
         self.index_column = "date"
 
@@ -146,13 +146,13 @@ class TestDataInteractor(unittest.TestCase):
         self.data_interactor.pull_subquery_card()
         self.data_interactor.pull_estimated_cost()
         self.data_interactor.pull_physical_plan()
-        self.origin_result = self.data_interactor.execute(self.sql)
+        self.origin_result = self.data_interactor.execute(self.pg_hint_sql)
 
         larger_card = {k: v * 10000 for k, v in self.origin_result.subquery_2_card.items()}
         self.data_interactor.push_card(larger_card)
         self.data_interactor.pull_physical_plan()
         self.data_interactor.pull_estimated_cost()
-        result = self.data_interactor.execute(self.sql)
+        result = self.data_interactor.execute(self.pg_hint_sql)
         print("cost is ", result.estimated_cost, ". before push_card, cost is", self.origin_result.estimated_cost)
         self.assertTrue(result.estimated_cost > self.origin_result.estimated_cost * 10)
         print(result.physical_plan)
@@ -161,7 +161,7 @@ class TestDataInteractor(unittest.TestCase):
         self.data_interactor.push_pg_hint_comment("/*+SeqScan(b) SeqScan(u) SeqScan(c) SeqScan(v)*/")
         self.data_interactor.pull_physical_plan()
         self.data_interactor.pull_estimated_cost()
-        result = self.data_interactor.execute(self.sql)
+        result = self.data_interactor.execute(self.pg_hint_sql)
         print("after set pg_hint_plan, cost is ", result.estimated_cost)
         self.assertTrue("Index Scan" not in str(result.physical_plan))
         print(result.physical_plan)
