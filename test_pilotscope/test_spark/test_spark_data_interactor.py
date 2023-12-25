@@ -14,8 +14,8 @@ class MyTestCase(unittest.TestCase):
         self.config.use_postgresql_datasource(
             db_host='localhost',
             db_port="5432",
-            db_user='postgres',
-            db_user_pwd='postgres',
+            db_user='pilotscope',
+            db_user_pwd='pilotscope',
             db='stats_tiny',
         )
         self.config.set_spark_session_config({
