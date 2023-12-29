@@ -15,7 +15,7 @@ class StatsDataset(BaseDataset):
     data_location_dict = {DatabaseEnum.POSTGRESQL: [
         "https://github.com/weiwch/ai4db_datasets/releases/download/stats/postgres_stats.tar.gz"],
                           DatabaseEnum.SPARK: None}
-    data_sha256 = "f557545c3fcf449eab02f2f3b91b13dffd814254c32536e3f96bc20e0b6991bb"
+    data_sha256 = "4079854d51034e5aedcaaea6a23ef967ecd0f0cce559781cb825334760a6152a"
     sub_dir = "Stats"
     train_sql_file = "stats_train.txt"
     test_sql_file = "stats_test.txt"

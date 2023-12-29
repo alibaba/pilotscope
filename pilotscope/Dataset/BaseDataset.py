@@ -61,7 +61,7 @@ class BaseDataset(ABC):
             fnames.append(self._download_save(url))
         self._merge_files(fnames, merged_dir_and_fname)
         assert(os.path.isfile(merged_dir_and_fname))
-        if self._hash_data(merged_fname) == self.data_sha256:
+        if self._hash_data(merged_dir_and_fname) == self.data_sha256:
             return merged_fname
         else:
             print("Hash of existed file is not same, redownload!")
@@ -69,7 +69,7 @@ class BaseDataset(ABC):
 
     def _download_save(self, url):
         dir_and_filename = os.path.join(self.data_dir, url.split("/")[-1])
-        print("Downloading: ", end="")
+        print("Downloading: {}".format(dir_and_filename))
         wget.download(url, self.data_dir)
         return dir_and_filename
 

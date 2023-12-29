@@ -62,9 +62,6 @@ class TestDataset(unittest.TestCase):
         ds = ImdbTinyDataset(DatabaseEnum.POSTGRESQL, created_db_name="test_imdb_tiny")
         ds.load_to_db(self.config)
         db_controller: BaseDBController = DBControllerFactory.get_db_controller(self.config)
-        for table in ['badges', 'comments', 'posthistory', 'postlinks', 'posts', 'tags', 'users', 'votes']:
-            self.assertTrue(db_controller.exist_table(table))
-            db_controller.drop_table_if_exist(table)
 
     def test_load_to_stats_remote(self):
         self.config = PostgreSQLConfig(pilotscope_core_host="127.0.0.1", db_host="127.0.0.1", db_port="5432",

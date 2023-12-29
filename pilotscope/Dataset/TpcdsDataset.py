@@ -9,9 +9,10 @@ from pilotscope.PilotEnum import DatabaseEnum
 class TpcdsDataset(BaseDataset):
     """
     """
-    data_location_dict = {DatabaseEnum.POSTGRESQL: [],
-                          DatabaseEnum.SPARK: None}
-    data_sha256 = ""
+    data_location_dict = {DatabaseEnum.POSTGRESQL: [
+        "https://github.com/weiwch/ai4db_datasets/releases/download/tpch/postgres_tpch.tar.gz"],
+        DatabaseEnum.SPARK: None}
+    data_sha256 = "bd42b29a73fe854023f99733c394e490cd14fcf891669c9abd33178b3283f072"
     sub_dir = "Tpcds"
     train_sql_file = "tpcds_train_sql.txt"
     test_sql_file = "tpcds_test_sql.txt"
@@ -25,5 +26,3 @@ class TpcdsDataset(BaseDataset):
     def test_sql_fast(self):
         return self._get_sql(os.path.join(self.now_path, "tpcds_fast_sql.txt"))
 
-    def load_to_db(self, db_controller: BaseDBController):
-        raise NotImplementedError

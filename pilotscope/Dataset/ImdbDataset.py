@@ -16,7 +16,7 @@ class ImdbDataset(BaseDataset):
     data_location_dict = {DatabaseEnum.POSTGRESQL: [
         "https://github.com/weiwch/ai4db_datasets/releases/download/imdb/postgres_imdb.tar.gz"],
         DatabaseEnum.SPARK: None}
-    data_sha256 = "0dd9c5d77d9bfddec010d4a3ed3e38c1ccccc6d7c7beae29404e3fbad2736f88"
+    data_sha256 = "03ff2e51e479fddae0fd4a0a40a51fad78536bde5bba3bdc9f49563be96f9b12"
     sub_dir = "Imdb"
     train_sql_file = "job_train_ascii.txt"
     test_sql_file = "job_test.txt"
