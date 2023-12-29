@@ -10,8 +10,9 @@ from pyspark.sql.types import *
 
 from pilotscope.Common.Index import Index
 from pilotscope.DBController.BaseDBController import BaseDBController
+from pilotscope.DBController.PostgreSQLController import PostgreSQLController
 from pilotscope.Exception.Exception import PilotScopeNotSupportedOperationException
-from pilotscope.PilotConfig import SparkConfig
+from pilotscope.PilotConfig import SparkConfig, PostgreSQLConfig
 from pilotscope.PilotEnum import PilotEnum, SparkSQLDataSourceEnum
 
 logging.getLogger('pyspark').setLevel(logging.ERROR)
@@ -129,6 +130,10 @@ class SparkIO:
         if datasource_type != SparkSQLDataSourceEnum.POSTGRESQL:
             raise RuntimeError("SparkIO has not been tested on any other data source types than 'postgresql'.")
         if datasource_type == SparkSQLDataSourceEnum.POSTGRESQL:
+            pg_config = PostgreSQLConfig("", self.conn_info["host"], self.conn_info["port"], self.conn_info["user"],\
+                                         self.conn_info["pwd"], self.conn_info["db"])
+            pg_controller = PostgreSQLController(pg_config, False) # to create database if self.conn_info["db"] do not exist in data source
+            del pg_controller
             self.reader = engine.session.read \
                 .format("jdbc") \
                 .option("driver", "org.postgresql.Driver") \

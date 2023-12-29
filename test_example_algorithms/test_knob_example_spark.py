@@ -21,9 +21,9 @@ class KnobTest(unittest.TestCase):
         self.config.use_postgresql_datasource(
             db_host='localhost',
             db_port="5432",
+            db_user='pilotscope',
+            db_user_pwd='pilotscope',
             db='stats_tiny',
-            db_user='postgres',
-            db_user_pwd='postgres'
         )
         self.config.sql_execution_timeout = 120
         self.config.once_request_timeout = 120
