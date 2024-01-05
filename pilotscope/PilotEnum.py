@@ -35,3 +35,29 @@ class TrainSwitchMode(PilotEnum):
 
 class SparkSQLDataSourceEnum(PilotEnum):
     POSTGRESQL = "postgresql"
+
+class ScanJoinMethodEnum(PilotEnum):
+    # Scan method of pg_hint_plan, find detailed description in https://github.com/ossc-db/pg_hint_plan/blob/master/docs/hint_list.md
+    SEQ = "SeqScan"
+    TID = "TidScan"
+    INDEX = "IndexScan"
+    INDEXONLY = "IndexOnlyScan"
+    BITMAP = "BitmapScan"
+    NOSEQ = "NoSeqScan"
+    NOTID = "NoTidScan"
+    NOINDEX = "NoIndexScan"
+    NOINDEXONLY = "NoIndexOnlyScan"
+    NOBITMAP = "NoBitmapScan"
+    PARALLEL = "Parallel"
+    ROW = "Row"
+    # Join method of pg_hint_plan
+    NESTLOOP = "NestLoop"
+    HASHJOIN = "HashJoin"
+    MERGEJOIN = "MergeJoin"
+    MEMOIZE = "Memoize"
+    NONESTLOOP = "NoNestLoop"
+    NOHASHJOIN = "NoHashJoin"
+    NOMERGEJOIN = "NoMergeJoin"
+    NOMEMOIZE = "NoMemoize"
+    # Join order
+    JOINORDER = "Leading"

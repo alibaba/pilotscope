@@ -16,7 +16,7 @@ from pilotscope.Factory.AnchorHandlerFactory import AnchorHandlerFactory
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.Factory.InteractorReceiverFactory import InteractorReceiverFactory
 from pilotscope.PilotConfig import PilotConfig
-from pilotscope.PilotEnum import FetchMethod, DatabaseEnum
+from pilotscope.PilotEnum import FetchMethod, DatabaseEnum, ScanJoinMethodEnum
 from pilotscope.PilotTransData import PilotTransData
 
 
@@ -112,6 +112,26 @@ class PilotDataInteractor:
                                                                              AnchorEnum.COMMENT_PUSH_ANCHOR)
         anchor.comment_str = pg_hint_comment
         self._anchor_to_handlers[AnchorEnum.COMMENT_PUSH_ANCHOR] = anchor
+    
+    def push_scan_join_method(self, operation_type: ScanJoinMethodEnum, *args):
+        if self.config.db_type != DatabaseEnum.POSTGRESQL:
+            raise NotImplementedError("PG Hint only is implemented for PostgresSQL database")
+        if AnchorEnum.SCAN_JOIN_METHOD_PUSH_ANCHOR in self._anchor_to_handlers:
+            self._anchor_to_handlers[AnchorEnum.SCAN_JOIN_METHOD_PUSH_ANCHOR].methods.append((operation_type, args))
+        else:
+            anchor: ScanJoinMethodPushHandler = AnchorHandlerFactory.get_anchor_handler(self.config,
+                                                                                        AnchorEnum.SCAN_JOIN_METHOD_PUSH_ANCHOR)
+            anchor.methods = [(operation_type, args)]
+            self._anchor_to_handlers[AnchorEnum.SCAN_JOIN_METHOD_PUSH_ANCHOR] = anchor
+
+    def push_scan_method(self, scan_type: ScanJoinMethodEnum, *args):
+        self.push_scan_join_method(scan_type, *args)
+
+    def push_join_method(self, join_type: ScanJoinMethodEnum, *args):
+        self.push_scan_join_method(join_type, *args)
+
+    def push_join_order(self, join_order_str):
+        self.push_scan_join_method(ScanJoinMethodEnum.JOINORDER, join_order_str)
 
     def _push_subplan_cost(self, subplan_2_cost: dict):
         """
@@ -274,8 +294,7 @@ class PilotDataInteractor:
 
             # create pilot comment
             comment_creator = PilotCommentCreator(enable_receive_pilot_data=enable_receive_pilot_data,
-                                                  extra_comment=self._anchor_to_handlers[
-                                                      AnchorEnum.COMMENT_PUSH_ANCHOR].comment_str if AnchorEnum.COMMENT_PUSH_ANCHOR in self._anchor_to_handlers else None)
+                                                  extra_comment = self._get_extra_comment_from_anchor(self._anchor_to_handlers))
             comment_creator.add_params(self._data_fetcher.get_extra_infos_for_trans())
             comment_creator.enable_terminate(
                 False if AnchorEnum.RECORD_PULL_ANCHOR in self._anchor_to_handlers else True)
@@ -355,6 +374,15 @@ class PilotDataInteractor:
             filter_anchor_2_handlers.pop(AnchorEnum.EXECUTION_TIME_PULL_ANCHOR)
         return len(filter_anchor_2_handlers) > 0
 
+    def _get_extra_comment_from_anchor(self, anchor_to_handlers):
+        if AnchorEnum.COMMENT_PUSH_ANCHOR in anchor_to_handlers:
+            return anchor_to_handlers[AnchorEnum.COMMENT_PUSH_ANCHOR].comment_str
+        if AnchorEnum.SCAN_JOIN_METHOD_PUSH_ANCHOR in anchor_to_handlers:
+            extra_comment = "/*+ "
+            for op_type, parameter in anchor_to_handlers[AnchorEnum.SCAN_JOIN_METHOD_PUSH_ANCHOR].methods:
+                extra_comment += "{}({}) ".format(op_type.value, " ".join(parameter))
+            return extra_comment + "*/"
+
     def _is_execute_comment_sql(self, anchor_2_handlers):
         """
         Checks if there is a need to execute comment SQL based on filtered anchors.
@@ -416,8 +444,7 @@ class PilotDataInteractor:
         for handle in handles:
             if isinstance(handle, BasePullHandler) and handle.fetch_method == FetchMethod.OUTER:
                 comment_creator = PilotCommentCreator(anchor_params=replace_anchor_params, enable_terminate_flag=False,
-                                                      extra_comment=self._anchor_to_handlers[
-                                                          AnchorEnum.COMMENT_PUSH_ANCHOR].comment_str if AnchorEnum.COMMENT_PUSH_ANCHOR in self._anchor_to_handlers else None)
+                                                      extra_comment=self._get_extra_comment_from_anchor(self._anchor_to_handlers))
                 comment = comment_creator.create_comment()
                 handle.fetch_from_outer(self.db_controller, sql, comment, anchor_data, data)
 

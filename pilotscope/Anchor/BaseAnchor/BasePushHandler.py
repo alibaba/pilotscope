@@ -1,11 +1,10 @@
-from typing import List
+from typing import List, Union, Tuple
 
 from pilotscope.Anchor.AnchorEnum import AnchorEnum
 from pilotscope.Anchor.BaseAnchor.BaseAnchorHandler import BaseAnchorHandler
 from pilotscope.Common.Index import Index
 from pilotscope.DBController.BaseDBController import BaseDBController
-from pilotscope.PilotEnum import PushHandlerTriggerLevelEnum
-
+from pilotscope.PilotEnum import PushHandlerTriggerLevelEnum, ScanJoinMethodEnum
 
 class BasePushHandler(BaseAnchorHandler):
     """
@@ -167,6 +166,34 @@ class CommentPushHandler(BasePushHandler):
         """
         pass
 
+class ScanJoinMethodPushHandler(BasePushHandler):
+
+    def __init__(self, config, methods: Union[Tuple[ScanJoinMethodEnum, str], List[Tuple[ScanJoinMethodEnum, str]]] = None) -> None:
+        super().__init__(config)
+        self.anchor_name = AnchorEnum.SCAN_JOIN_METHOD_PUSH_ANCHOR.name
+        if isinstance(methods, tuple):
+            self.methods = [methods]
+        elif isinstance(methods, list):
+            self.methods = methods
+        elif methods is None:
+            self.methods = []
+
+    def _update_injected_data(self, sql):
+        self.methods = self.acquire_injected_data(sql)
+
+    def _add_trans_params(self, params: dict):
+        # the empty function is meaningful for removing all params from superclass.
+        pass
+
+    def acquire_injected_data(self, sql):
+        """
+        The users should implement the function to return their data from ML algorithms.
+        The pilotscope will set these data into database automatically when execute the current SQL query.
+
+        :param sql: current SQL query
+        :return: A tuple or a list of tuple of ScanJoinMethodEnum and its parameter.
+        """
+        pass
 
 class KnobPushHandler(BasePushHandler):
 

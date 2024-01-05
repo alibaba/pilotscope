@@ -1,5 +1,6 @@
 import unittest
 import random
+import json
 
 from algorithm_examples.ExampleConfig import example_pg_bin, example_pgdata
 from pilotscope.Common.Index import Index
@@ -8,7 +9,8 @@ from pilotscope.Exception.Exception import PilotScopeMutualExclusionException
 from pilotscope.Factory.DBControllerFectory import DBControllerFactory
 from pilotscope.PilotConfig import PostgreSQLConfig
 from pilotscope.PilotTransData import PilotTransData
-
+from pilotscope.Common.Util import get_pg_hints
+from pilotscope.PilotEnum import ScanJoinMethodEnum
 
 class TestDataInteractor(unittest.TestCase):
 
@@ -146,16 +148,17 @@ class TestDataInteractor(unittest.TestCase):
         self.data_interactor.pull_subquery_card()
         self.data_interactor.pull_estimated_cost()
         self.data_interactor.pull_physical_plan()
-        self.origin_result = self.data_interactor.execute(self.pg_hint_sql)
+        origin_result = self.data_interactor.execute(self.pg_hint_sql)
+        print(json.dumps(origin_result.physical_plan))
 
-        larger_card = {k: v * 10000 for k, v in self.origin_result.subquery_2_card.items()}
+        larger_card = {k: v * 10000 for k, v in origin_result.subquery_2_card.items()}
         self.data_interactor.push_card(larger_card)
         self.data_interactor.pull_physical_plan()
         self.data_interactor.pull_estimated_cost()
         result = self.data_interactor.execute(self.pg_hint_sql)
-        print("cost is ", result.estimated_cost, ". before push_card, cost is", self.origin_result.estimated_cost)
-        self.assertTrue(result.estimated_cost > self.origin_result.estimated_cost * 10)
-        print(result.physical_plan)
+        print("cost is ", result.estimated_cost, ". before push_card, cost is", origin_result.estimated_cost)
+        self.assertTrue(result.estimated_cost > origin_result.estimated_cost * 10)
+        print(json.dumps(result.physical_plan))
 
         self.data_interactor.push_card(larger_card)
         self.data_interactor.push_pg_hint_comment("/*+SeqScan(b) SeqScan(u) SeqScan(c) SeqScan(v)*/")
@@ -164,7 +167,54 @@ class TestDataInteractor(unittest.TestCase):
         result = self.data_interactor.execute(self.pg_hint_sql)
         print("after set pg_hint_plan, cost is ", result.estimated_cost)
         self.assertTrue("Index Scan" not in str(result.physical_plan))
-        print(result.physical_plan)
+        print(json.dumps(result.physical_plan))
+    
+    def test_push_join_order(self):
+        self.data_interactor.pull_physical_plan()
+        origin_result = self.data_interactor.execute(self.pg_hint_sql)
+        # print(json.dumps(origin_result.physical_plan))
+        print(get_pg_hints(origin_result.physical_plan))
+
+        self.data_interactor.push_join_order("((v  u)  c)  b")
+        self.data_interactor.pull_physical_plan()
+        result = self.data_interactor.execute(self.pg_hint_sql)
+        print(json.dumps(result.physical_plan))
+        plan_to_hint = get_pg_hints(result.physical_plan)
+        print(plan_to_hint)
+        self.assertTrue("Leading((((v  u)  b)  c))" in plan_to_hint)
+    
+    def test_push_join_type(self):
+        self.data_interactor.push_join_method(ScanJoinMethodEnum.NESTLOOP, "b", "c")
+        self.data_interactor.pull_physical_plan()
+        result = self.data_interactor.execute(self.pg_hint_sql)
+        # print(get_pg_hints(result.physical_plan))
+        self.assertTrue("NestLoop" in get_pg_hints(result.physical_plan))
+        # TODO check if successfully push
+
+        self.data_interactor.push_join_method(ScanJoinMethodEnum.MERGEJOIN, "b", "c")
+        self.data_interactor.pull_physical_plan()
+        result = self.data_interactor.execute(self.pg_hint_sql)
+        # print(get_pg_hints(result.physical_plan))
+        self.assertTrue("MergeJoin" in get_pg_hints(result.physical_plan))
+
+        self.data_interactor.push_join_method(ScanJoinMethodEnum.HASHJOIN, "b", "c")
+        self.data_interactor.push_scan_method(ScanJoinMethodEnum.SEQ, "b")
+        self.data_interactor.push_scan_method(ScanJoinMethodEnum.SEQ, "c")
+        self.data_interactor.pull_physical_plan()
+        result = self.data_interactor.execute(self.pg_hint_sql)
+        # print(get_pg_hints(result.physical_plan))
+        self.assertTrue("HashJoin" in get_pg_hints(result.physical_plan))
+
+    def test_push_scan_method(self):
+        self.data_interactor.push_scan_method(ScanJoinMethodEnum.SEQ, "b")
+        self.data_interactor.pull_physical_plan()
+        result = self.data_interactor.execute(self.pg_hint_sql)
+        self.assertTrue("SeqScan(b)" in get_pg_hints(result.physical_plan))
+
+        self.data_interactor.push_scan_method(ScanJoinMethodEnum.INDEX, "b", "idx_badges_userid")
+        self.data_interactor.pull_physical_plan()
+        result = self.data_interactor.execute(self.pg_hint_sql)
+        self.assertTrue("IndexScan(b idx_badges_userid)" in get_pg_hints(result.physical_plan))
 
     def test_push_pull_any_combination(self):
         print("\nTest Push any Combination")

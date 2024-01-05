@@ -27,6 +27,8 @@ class AnchorHandlerFactory:
             return IndexPushHandler(config)
         elif anchor == AnchorEnum.KNOB_PUSH_ANCHOR:
             return KnobPushHandler(config)
+        elif anchor == AnchorEnum.SCAN_JOIN_METHOD_PUSH_ANCHOR:
+            return ScanJoinMethodPushHandler(config)
         # fetch
         elif anchor == AnchorEnum.RECORD_PULL_ANCHOR:
             from pilotscope.Anchor.Spark.PullAnchor import SparkRecordPullAnchorHandler
@@ -64,6 +66,8 @@ class AnchorHandlerFactory:
             return KnobPushHandler(config)
         elif anchor == AnchorEnum.COMMENT_PUSH_ANCHOR:
             return CommentPushHandler(config)
+        elif anchor == AnchorEnum.SCAN_JOIN_METHOD_PUSH_ANCHOR:
+            return ScanJoinMethodPushHandler(config)
         # fetch
         elif anchor == AnchorEnum.RECORD_PULL_ANCHOR:
             from pilotscope.Anchor.PostgreSQL.PullAnhor import PostgreSQLRecordPullHandler

@@ -30,7 +30,6 @@ class BaseDataset(ABC):
            self.data_dir = os.path.join(appdirs.user_data_dir(),"pilotscope_data/")
         else:
             self.data_dir = data_dir
-        os.makedirs(self.data_dir, exist_ok=True)
         self.now_path = os.path.join(os.path.dirname(__file__), self.sub_dir)
         self.created_db_name = created_db_name
 
