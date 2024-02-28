@@ -48,7 +48,7 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
         self.pilot_data_interactor = PilotDataInteractor(self.config)
 
     def load_sql(self):
-        self.sqls = load_training_sql(self.config.db)[0:100]
+        self.sqls = load_training_sql(self.config.db)
 
     def iterative_data_collection(self, db_controller: BaseDBController, train_data_manager: DataManager):
         print("start to collect data for pretraining")
@@ -73,7 +73,8 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
                 self.pilot_data_interactor.pull_execution_time()
                 data: PilotTransData = self.pilot_data_interactor.execute(sql)
                 if data is None:
-                    continue
+                    print(f"Warning: timeout in collecting data. {i}-th sql skiped. Try to enlarge 'timeout' in config to collect.")
+                    break
                 plan = data.physical_plan
                 cards_picker.replace(plan)
                 column_2_value["sql"] = sql

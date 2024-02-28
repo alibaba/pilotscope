@@ -89,7 +89,8 @@ class MscnModel():
         with open(_input_feature_dim_path(path), "rb") as f:
             self._input_feature_dim = joblib.load(f)
         self._net = SetConv(*self._input_feature_dim)
-        self._net.load_state_dict(torch.load_model(_nn_path(path)))
+        self._net.load_state_dict(torch.load(_nn_path(path)))
+        self._net = self._net.float()
         self._net.eval()
         with open(_feature_generator_path(path), "rb") as f:
             self._feature_generator = joblib.load(f)
@@ -111,6 +112,7 @@ class MscnModel():
         
         self._input_feature_dim = (*self._feature_generator.feature_dim, hid_units)
         self._net = SetConv(*self._input_feature_dim)
+        self._net = self._net.float()
         optimizer = torch.optim.Adam(self._net.parameters(), lr=0.001)
         
         if CUDA:

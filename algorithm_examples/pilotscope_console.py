@@ -1,4 +1,5 @@
 import sys
+sys.path.append("../")
 import logging
 import readline
 from functools import wraps
@@ -8,6 +9,7 @@ from pilotscope.DBController.SparkSQLController import SparkSQLDataSourceEnum
 from pilotscope.Factory.SchedulerFactory import SchedulerFactory
 from pilotscope.PilotConfig import PilotConfig, PostgreSQLConfig, SparkConfig
 from pilotscope.PilotEnum import DatabaseEnum
+from algorithm_examples.ExampleConfig import example_pg_bin, example_pgdata
 
 readline.parse_and_bind("tab: complete")
 import traceback
@@ -74,8 +76,8 @@ def get_spark_default_scheduler(config):
     datasource_conn_info = {
         'host': 'localhost',
         'db': config.db,
-        'user': 'postgres',
-        'pwd': 'postgres'
+        'user': 'pilotscope',
+        'pwd': 'pilotscope'
     }
     config.use_postgresql_datasource(
         db_host=datasource_conn_info["host"],
@@ -96,6 +98,7 @@ class PilotConsole:
 
     def __init__(self) -> None:
         self.config = PostgreSQLConfig()
+        self.config.enable_deep_control_local(example_pg_bin, example_pgdata)
         self.taskname2func = {
             "mscn": get_mscn_preset_scheduler,
             "knob_tune": get_knob_preset_scheduler,
@@ -119,14 +122,14 @@ class PilotConsole:
             return
         print(f"Change database to '{database_name}'")
 
-    def set_config(self, set_func_name, *args):
+    def set_config(self, item_name, value):
         """
         set self.config. Before choosing a task, you can set config.
-        `set_func_name` is the name of function in `PostgreSQLConfig` or `SparkConfig`, and `args` are its parameters.
+        `item_name` is the name of item in `PostgreSQLConfig` or `SparkConfig`, and `value` are value to set to.
         """
-        getattr(self.config, set_func_name)(*args)
+        setattr(self.config, item_name, value)
         # print(self.config.print())
-        print(f"Call {set_func_name}{args} successfully.")
+        print(f"set {item_name} to {value} successfully.")
 
     def use(self, task_name, *args):
         """
@@ -149,7 +152,7 @@ class PilotConsole:
     def run(self, *args):
         """
         Use `run <sql statement>` to execute a sql, e.g. `run select * from badges limit 10;`.
-        It only can be use after choosing a task, i.e. executing `use <task name>` 
+        It only can be used after choosing a task, i.e. executing `use <task name>` 
         """
         sql = " ".join(args)
         data = None

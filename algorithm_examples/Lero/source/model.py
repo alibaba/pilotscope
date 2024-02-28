@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from feature import SampleEntity
 from tcnn.module import ConvTree, ActivationTreeWrap, LayerNormTree, DynamicPoolingTree
 from tcnn.util import prepare_trees
-
+from tqdm import tqdm
 CUDA = torch.cuda.is_available()
 GPU_LIST = [0, 1, 2, 3, 4, 5, 6, 7]
 
@@ -133,7 +133,7 @@ class LeroModel():
         with open(_input_feature_dim_path(path), "wb") as f:
             joblib.dump(self._input_feature_dim, f)
 
-    def fit(self, X, Y, pre_training=False):
+    def fit(self, X, Y, pre_training=False, num_epochs = 100):
         if isinstance(Y, list):
             Y = np.array(Y)
             Y = Y.reshape(-1, 1)
@@ -173,9 +173,9 @@ class LeroModel():
         loss_fn = torch.nn.MSELoss()
         losses = []
         start_time = time()
-        for epoch in range(100):
+        for epoch in range(num_epochs):
             loss_accum = 0
-            for x, y in dataset:
+            for x, y in tqdm(dataset):
                 if CUDA:
                     y = y.cuda(device)
 
@@ -225,7 +225,7 @@ class LeroModelPairWise(LeroModel):
     def __init__(self, feature_generator) -> None:
         super().__init__(feature_generator)
 
-    def fit(self, X1, X2, Y1, Y2, pre_training=False):
+    def fit(self, X1, X2, Y1, Y2, pre_training=False, num_epochs = 5):
         assert len(X1) == len(X2) and len(Y1) == len(Y2) and len(X1) == len(Y1)
         if isinstance(Y1, list):
             Y1 = np.array(Y1)
@@ -272,9 +272,9 @@ class LeroModelPairWise(LeroModel):
         losses = []
         sigmoid = nn.Sigmoid()
         start_time = time()
-        for epoch in range(30):
+        for epoch in range(num_epochs):
             loss_accum = 0
-            for x1, x2, label in dataset:
+            for x1, x2, label in tqdm(dataset):
 
                 tree_x1, tree_x2 = None, None
                 if CUDA:

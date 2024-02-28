@@ -25,7 +25,8 @@ def get_lero_preset_scheduler(config, enable_collection, enable_training) -> Pil
     pretraining_data_table = "lero_pretraining_collect_data"
 
     data_manager = DataManager(config)
-    data_manager.remove_table_and_tracker(pretraining_data_table)
+    if enable_collection: # if enable_collection, drop old data and collect new data. otherwise use old data to train.
+        data_manager.remove_table_and_tracker(pretraining_data_table)
 
     lero_pilot_model: PilotModel = LeroPilotModel(model_name)
     lero_pilot_model.load_model()

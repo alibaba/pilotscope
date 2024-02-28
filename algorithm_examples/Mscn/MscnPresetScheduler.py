@@ -22,7 +22,7 @@ def get_mscn_preset_scheduler(config, enable_collection, enable_training) -> Pil
 
     # core
     test_data_save_table = "{}_data_table".format(model_name)
-    pretrain_data_save_table = "{}_pretrain_data_table2".format(model_name)
+    pretrain_data_save_table = "{}_pretrain_data_table".format(model_name)
     scheduler: PilotScheduler = SchedulerFactory.create_scheduler(config)
     scheduler.register_custom_handlers([mscn_handler])
     scheduler.register_required_data(test_data_save_table, pull_execution_time=True)

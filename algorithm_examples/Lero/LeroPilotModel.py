@@ -26,5 +26,6 @@ class LeroPilotModel(PilotModel):
             lero_model = LeroModelPairWise(None)
             lero_model.load(self.model_path)
         except FileNotFoundError:
+            print("Can not load model. Lero model file not find, so init by random.")
             lero_model = LeroModelPairWise(None)
         self.model = lero_model

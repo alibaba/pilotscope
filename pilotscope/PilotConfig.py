@@ -147,7 +147,7 @@ class SparkConfig(PilotConfig):
         :param master_url: the master URL of Spark cluster
         """
 
-        super().__init__(db_type=DatabaseEnum.SPARK, db=None)
+        super().__init__(db_type=DatabaseEnum.SPARK, db="stats_tiny")
         # spark
         self.app_name = app_name
         self.master_url = master_url
