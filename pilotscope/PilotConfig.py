@@ -130,7 +130,7 @@ class PostgreSQLConfig(PilotConfig):
         """
         if pg_bin_path is None or pg_data_path is None or db_host_user is None or db_host_pwd is None or db_host_ssh_port is None:
             with open(os.path.join(os.path.dirname(__file__), "pilotscope_conf.json"), "r") as f:
-                d = json.load(f)["PostgreSQLConfig_enable_deep_control_local"]
+                d = json.load(f)["PostgreSQLConfig_enable_deep_control_remote"]
             if pg_bin_path is None:
                 pg_bin_path = d["pg_bin_path"]
             if pg_data_path is None:

@@ -159,6 +159,7 @@ class TestDataInteractor(unittest.TestCase):
         print("cost is ", result.estimated_cost, ". before push_card, cost is", origin_result.estimated_cost)
         self.assertTrue(result.estimated_cost > origin_result.estimated_cost * 10)
         print(json.dumps(result.physical_plan))
+        print(get_pg_hints(result.physical_plan))
 
         self.data_interactor.push_card(larger_card)
         self.data_interactor.push_pg_hint_comment("/*+SeqScan(b) SeqScan(u) SeqScan(c) SeqScan(v)*/")
@@ -166,6 +167,7 @@ class TestDataInteractor(unittest.TestCase):
         self.data_interactor.pull_estimated_cost()
         result = self.data_interactor.execute(self.pg_hint_sql)
         print("after set pg_hint_plan, cost is ", result.estimated_cost)
+        print(get_pg_hints(result.physical_plan))
         self.assertTrue("Index Scan" not in str(result.physical_plan))
         print(json.dumps(result.physical_plan))
     
