@@ -14,11 +14,17 @@ from algorithm_examples.Lero.LeroParadigmCardAnchorHandler import LeroCardPushHa
 from algorithm_examples.Lero.LeroPilotModel import LeroPilotModel
 
 
-def get_lero_preset_scheduler(config, enable_collection, enable_training) -> PilotScheduler:
+def get_lero_preset_scheduler(config, enable_collection, enable_training, num_collection = -1, num_training = -1, num_epoch = 100) -> PilotScheduler:
     if type(enable_collection) == str:
         enable_collection = eval(enable_collection)
     if type(enable_training) == str:
         enable_training = eval(enable_training)
+    if type(num_collection) == str:
+        num_collection = int(num_collection)
+    if type(num_training) == str:
+        num_training = int(num_training)
+    if type(num_epoch) == str:
+        num_epoch = int(num_epoch)
 
     model_name = "lero_pair"
     test_data_table = "{}_test_data_table".format(model_name)
@@ -39,7 +45,8 @@ def get_lero_preset_scheduler(config, enable_collection, enable_training) -> Pil
 
     # allow to pretrain model
     pretraining_event = LeroPretrainingModelEvent(config, lero_pilot_model, pretraining_data_table,
-                                                  enable_collection=enable_collection, enable_training=enable_training)
+                                                  enable_collection=enable_collection, enable_training=enable_training, num_collection = num_collection,\
+                                                  num_training = num_training, num_epoch = num_epoch)
     scheduler.register_events([pretraining_event])
 
     # start

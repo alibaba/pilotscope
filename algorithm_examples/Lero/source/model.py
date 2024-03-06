@@ -225,7 +225,7 @@ class LeroModelPairWise(LeroModel):
     def __init__(self, feature_generator) -> None:
         super().__init__(feature_generator)
 
-    def fit(self, X1, X2, Y1, Y2, pre_training=False, num_epochs = 5):
+    def fit(self, X1, X2, Y1, Y2, pre_training=False, num_epochs = 100):
         assert len(X1) == len(X2) and len(Y1) == len(Y2) and len(X1) == len(Y1)
         if isinstance(Y1, list):
             Y1 = np.array(Y1)
@@ -309,6 +309,6 @@ class LeroModelPairWise(LeroModel):
             loss_accum /= len(dataset)
             losses.append(loss_accum)
 
-            print("Epoch", epoch, "training loss:", loss_accum)
+            print("Epoch", epoch, "/", num_epochs, "training loss:", loss_accum)
         print("training time:", time() - start_time, "batch size:", batch_size)
         

@@ -42,10 +42,13 @@ def extract_plan_pairs(data: DataFrame):
 class LeroPretrainingModelEvent(PretrainingModelEvent):
 
     def __init__(self, config: PilotConfig, bind_pilot_model: PilotModel, data_saving_table, enable_collection=True,
-                 enable_training=True):
+                 enable_training=True, num_collection = -1, num_training = -1, num_epoch = 100):
         super().__init__(config, bind_pilot_model, data_saving_table, enable_collection, enable_training)
         self.sqls = []
         self.pilot_data_interactor = PilotDataInteractor(self.config)
+        self.num_collection = num_collection
+        self.num_training = num_training
+        self.num_epoch = num_epoch
 
     def load_sql(self):
         self.sqls = load_training_sql(self.config.db)
@@ -55,9 +58,12 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
         self.load_sql()
 
         column_2_value_list = []
-
-        for i, sql in enumerate(self.sqls):
-            print("current  is {}-th sql, and total sqls is {}".format(i, len(self.sqls)))
+        if self.num_collection > 0:
+            train_sqls = self.sqls[:self.num_collection]
+        else:
+            train_sqls = self.sqls
+        for i, sql in enumerate(train_sqls):
+            print("current is {}-th sql, and total sqls is {}".format(i, len(train_sqls)))
             self.pilot_data_interactor.pull_subquery_card()
             data: PilotTransData = self.pilot_data_interactor.execute(sql)
             if data is None:
@@ -88,8 +94,11 @@ class LeroPretrainingModelEvent(PretrainingModelEvent):
     def custom_model_training(self, bind_pilot_model, db_controller: BaseDBController,
                               data_manager: DataManager):
         data: DataFrame = data_manager.read_all(self.data_saving_table)
+        if self.num_training > 0:
+            data = data[:self.num_training]
+        print(f"Train lero on {data.shape[0]} plans")
         plans1, plans2 = extract_plan_pairs(data)
-        lero_model = training_pairwise_pilot_score(bind_pilot_model, plans1, plans2)
+        lero_model = training_pairwise_pilot_score(bind_pilot_model, plans1, plans2, self.num_epoch)
         return lero_model
 
 

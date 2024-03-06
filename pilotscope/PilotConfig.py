@@ -1,5 +1,5 @@
 import os
-
+import json
 from pilotscope.Common.SSHConnector import SSHConnector
 from pilotscope.PilotEnum import DataFetchMethodEnum, DatabaseEnum, TrainSwitchMode, SparkSQLDataSourceEnum
 import logging
@@ -55,8 +55,8 @@ class PilotConfig:
 
 
 class PostgreSQLConfig(PilotConfig):
-    def __init__(self, pilotscope_core_host="localhost", db_host="localhost", db_port="5432", db_user="pilotscope",
-                 db_user_pwd="pilotscope", db="stats_tiny") -> None:
+    def __init__(self, pilotscope_core_host = None, db_host = None, db_port = None, db_user= None,
+                 db_user_pwd = None, db = None, sql_execution_timeout = None,once_request_timeout = None) -> None:
         """
         :param pilotscope_core_host: the host address of PilotScope in ML side.
         :param db_host: the host address of database
@@ -64,12 +64,17 @@ class PostgreSQLConfig(PilotConfig):
         :param db_user: the username to log into the database
         :param db_user_pwd: the password to log into the database
         """
-        super().__init__(db_type=DatabaseEnum.POSTGRESQL, db=db, pilotscope_core_host=pilotscope_core_host)
+        super().__init__(db_type=DatabaseEnum.POSTGRESQL, db = db, pilotscope_core_host = pilotscope_core_host,\
+                         sql_execution_timeout = sql_execution_timeout, once_request_timeout = once_request_timeout)
         self.db_host = db_host
         self.db_port = db_port
         self.db_user = db_user
         self.db_user_pwd = db_user_pwd
-
+        with open(os.path.join(os.path.dirname(__file__), "pilotscope_conf.json"), "r") as f:
+            d = json.load(f)["PostgreSQLConfig"]
+        for k, v in d.items():
+            if getattr(self, k) is None:
+                setattr(self, k, v)
         # for deep control
         self.pg_bin_path = None
         self.pgdata = None
@@ -80,7 +85,7 @@ class PostgreSQLConfig(PilotConfig):
         self.db_host_pwd = None
         self.db_host_port = None
 
-    def enable_deep_control_local(self, pg_bin_path: str, pg_data_path: str):
+    def enable_deep_control_local(self, pg_bin_path: str = None, pg_data_path: str = None):
         """
         Enable deep control for PostgreSQL, such as  starting and stopping database, changing config file, etc.
         If you do not need these functions, it is not necessary to set these values.
@@ -92,7 +97,13 @@ class PostgreSQLConfig(PilotConfig):
         :param db_host_user: the username to log into the database host
         :param db_host_pwd: the password to log into the database host
         """
-
+        if pg_bin_path is None or pg_data_path is None:
+            with open(os.path.join(os.path.dirname(__file__), "pilotscope_conf.json"), "r") as f:
+                d = json.load(f)["PostgreSQLConfig_enable_deep_control_local"]
+                if pg_bin_path is None:
+                    pg_bin_path = d["pg_bin_path"]
+                if pg_data_path is None:
+                    pg_data_path = d["pg_data_path"]
         self._enable_deep_control = True
         self.pg_bin_path = pg_bin_path
         self.pgdata = pg_data_path
@@ -104,7 +115,7 @@ class PostgreSQLConfig(PilotConfig):
                 w.write(f.read())
         self.pg_ctl = os.path.join(pg_bin_path, "pg_ctl")
 
-    def enable_deep_control_remote(self, pg_bin_path, pg_data_path, db_host_user, db_host_pwd, db_host_ssh_port=22):
+    def enable_deep_control_remote(self, pg_bin_path = None, pg_data_path = None, db_host_user = None, db_host_pwd = None, db_host_ssh_port = None):
         """
         Enable deep control for PostgreSQL, such as starting and stopping database, changing config file, etc.
         If you do not need these functions, it is not necessary to set these values.
@@ -117,7 +128,19 @@ class PostgreSQLConfig(PilotConfig):
         :param db_host_pwd: the password to log into the database host
         :param db_host_ssh_port: the port of ssh service on the database host
         """
-
+        if pg_bin_path is None or pg_data_path is None or db_host_user is None or db_host_pwd is None or db_host_ssh_port is None:
+            with open(os.path.join(os.path.dirname(__file__), "pilotscope_conf.json"), "r") as f:
+                d = json.load(f)["PostgreSQLConfig_enable_deep_control_local"]
+            if pg_bin_path is None:
+                pg_bin_path = d["pg_bin_path"]
+            if pg_data_path is None:
+                pg_data_path = d["pg_data_path"]
+            if db_host_user is None:
+                db_host_user = d["db_host_user"]
+            if db_host_pwd is None:
+                db_host_pwd is d["db_host_pwd"]
+            if db_host_ssh_port is None:
+                db_host_ssh_port = d["db_host_ssh_port"]
         self._is_local = False
         self._enable_deep_control = True
 
@@ -141,16 +164,22 @@ class PostgreSQLConfig(PilotConfig):
 
 
 class SparkConfig(PilotConfig):
-    def __init__(self, app_name="testApp", master_url="local[*]") -> None:
+    def __init__(self, pilotscope_core_host = None, app_name = None, master_url = None, db = None, sql_execution_timeout = None, once_request_timeout = None) -> None:
         """
         :param app_name: the name of the application of Spark
         :param master_url: the master URL of Spark cluster
         """
 
-        super().__init__(db_type=DatabaseEnum.SPARK, db="stats_tiny")
+        super().__init__(db_type=DatabaseEnum.SPARK, db = db, pilotscope_core_host = pilotscope_core_host,\
+                         sql_execution_timeout = sql_execution_timeout, once_request_timeout = once_request_timeout)
         # spark
         self.app_name = app_name
         self.master_url = master_url
+        with open(os.path.join(os.path.dirname(__file__), "pilotscope_conf.json"), "r") as f:
+            d = json.load(f)["SparkConfig"]
+        for k, v in d.items():
+            if getattr(self, k) is None:
+                setattr(self, k, v)
         if self.master_url != "local[*]":
             raise NotImplementedError(
                 "PilotScope only support master_url=local[*]. The more functionalities is developing")
@@ -201,3 +230,7 @@ class SparkConfig(PilotConfig):
         self.db = db
         self.db_user = db_user
         self.db_user_pwd = db_user_pwd
+
+if __name__=="__main__":
+    conf = SparkConfig()
+    conf.print()

@@ -107,7 +107,7 @@ def training_pairwise(tuning_model_path, model_name, training_data_file, pretrai
     lero_model.save(model_name)
 
 
-def training_pairwise_pilot_score(lero_model, X1, X2):
+def training_pairwise_pilot_score(lero_model, X1, X2, num_epoch):
     tuning_model = lero_model is not None and lero_model._feature_generator is not None
     if tuning_model:
         feature_generator = lero_model._feature_generator
@@ -122,7 +122,7 @@ def training_pairwise_pilot_score(lero_model, X1, X2):
     X2, Y2 = feature_generator.transform(X2)
     print("Training data set size = " + str(len(X1)))
 
-    lero_model.fit(X1, X2, Y1, Y2, tuning_model)
+    lero_model.fit(X1, X2, Y1, Y2, tuning_model, num_epoch)
 
     return lero_model
 

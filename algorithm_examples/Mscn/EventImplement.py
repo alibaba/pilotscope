@@ -15,22 +15,29 @@ from pilotscope.PilotTransData import PilotTransData
 class MscnPretrainingModelEvent(PretrainingModelEvent):
 
     def __init__(self, config: PilotConfig, bind_pilot_model: PilotModel, data_saving_table, enable_collection=True,
-                 enable_training=True, training_data_file=None):
+                 enable_training=True, training_data_file=None, num_collection = -1, num_training = -1, num_epoch = 100):
         super().__init__(config, bind_pilot_model, data_saving_table, enable_collection, enable_training)
         self.sqls = []
         self.config.once_request_timeout = 60
         self.config.sql_execution_timeout = 60
         self.pilot_data_interactor = PilotDataInteractor(self.config)
         self.training_data_file = training_data_file
+        self.num_collection = num_collection
+        self.num_training = num_training
+        self.num_epoch = num_epoch
 
     def iterative_data_collection(self, db_controller: BaseDBController, train_data_manager: DataManager):
         print("start to collect data for MSCN algorithms")
         self.sqls = load_training_sql(self.config.db)
+        if self.num_collection > 0:
+            train_sqls = self.sqls[:self.num_collection]
+        else:
+            train_sqls = self.sqls
         column_2_value_list = []
-        for i, sql in enumerate(self.sqls):
+        for i, sql in enumerate(train_sqls):
             # print per 10
             if i % 10 == 0:
-                print("current is the {}-th sql,total is {}".format(i, len(self.sqls)))
+                print("current is the {}-th sql, total is {}. (print per 10)".format(i, len(train_sqls)))
             self.pilot_data_interactor.pull_subquery_card()
             data: PilotTransData = self.pilot_data_interactor.execute(sql)
             for sub_sql in data.subquery_2_card.keys():
@@ -51,9 +58,12 @@ class MscnPretrainingModelEvent(PretrainingModelEvent):
             model.fit(tokens, labels + 1, schema)
         else:
             data: DataFrame = data_manager.read_all(self.data_saving_table)
+            if self.num_training > 0:
+                data = data[:self.num_training]
+            print(f"Train mscn on {data.shape[0]} sql-card pairs")
             tables, joins, predicates = parse_queries(data["query"].values)
             schema = load_schema(self.pilot_data_interactor.db_controller)
             model = MscnModel()
             # Mscn can only handler card that is larger than 0, so we add 1 to all cards. In prediction we minus it by 1.
-            model.fit((tables, joins, predicates), data["card"].values + 1, schema)
+            model.fit((tables, joins, predicates), data["card"].values + 1, schema, num_epochs = self.num_epoch)
         return model

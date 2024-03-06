@@ -2,6 +2,7 @@ import sys
 sys.path.append("../")
 import logging
 import readline
+import time
 from functools import wraps
 
 from algorithm_examples.KnobTuning.SparkKnobPresetScheduler import get_knob_spark_preset_scheduler
@@ -98,7 +99,7 @@ class PilotConsole:
 
     def __init__(self) -> None:
         self.config = PostgreSQLConfig()
-        self.config.enable_deep_control_local(example_pg_bin, example_pgdata)
+        self.config.enable_deep_control_local()
         self.taskname2func = {
             "mscn": get_mscn_preset_scheduler,
             "knob_tune": get_knob_preset_scheduler,
@@ -110,7 +111,9 @@ class PilotConsole:
             "spark_default": get_spark_default_scheduler
         }
         self.scheduler = None
-        self.echo = False
+        self.echo_use = True
+        self.echo_run = False
+        self.compared_schedulers = {}
 
     def set_database(self, database_name: str):
         if database_name.upper() == DatabaseEnum.POSTGRESQL.name:
@@ -131,6 +134,46 @@ class PilotConsole:
         # print(self.config.print())
         print(f"set {item_name} to {value} successfully.")
 
+    def _generate_scheduler(self, task_name, *args):
+        if not self.echo_use:
+            func = mute_console_output_decorator(self.taskname2func[task_name])
+        else:
+            func = self.taskname2func[task_name]
+        try:
+            return func(self.config, *args)
+        except:
+            traceback.print_exc()
+
+    def add_comparison(self, task_name, *args):
+        key = task_name+"({})".format(",".join(args))
+        print(f"{key} added.")
+        self.compared_schedulers[key] = self._generate_scheduler(task_name, *args)
+
+    def del_comparison(self, key):
+        if key in self.compared_schedulers:
+            del self.compared_schedulers[key]
+            print(f"{key} will no longer compare.")
+        else:
+            print(f"{key} is not in comparison set. Do nothing.")
+
+    def train(self, task_name, *args):
+        if task_name not in self.taskname2func:
+            print(f"No task named '{task_name}'. Do nothing")
+        if task_name not in ["lero", "mscn"]:
+            print(f"Task '{task_name}' do not need or support training. Do nothing")
+        else:
+            print(f"Training task'{task_name}'")
+            self.scheduler = self._generate_scheduler(task_name, False, True, -1, *args)
+
+    def collect(self, task_name, *args):
+        if task_name not in self.taskname2func:
+            print(f"No task named '{task_name}'. Do nothing")
+        if task_name not in ["lero", "mscn"]:
+            print(f"Task '{task_name}' do not need or support collecting data. Do nothing")
+        else:
+            print(f"Training task'{task_name}'")
+            self.scheduler = self._generate_scheduler(task_name, True, False, args[0], -1, *args[1:])
+
     def use(self, task_name, *args):
         """
         Choose a task. The task name is in self.taskname2func. `args` is the parameters of the function that is the values self.taskname2func.
@@ -140,39 +183,61 @@ class PilotConsole:
             print(f"No task named '{task_name}'. Do nothing")
         else:
             print(f"Changing task to '{task_name}'")
-            if not self.echo:
-                func = mute_console_output_decorator(self.taskname2func[task_name])
-            else:
-                func = self.taskname2func[task_name]
-            try:
-                self.scheduler = func(self.config, *args)
-            except:
-                traceback.print_exc()
+            self.scheduler = self._generate_scheduler(task_name, *args)
+    
+    def close_task(self):
+        if isinstance(self.config, PostgreSQLConfig):
+            self.use("postgres_default")
+        elif isinstance(self.config, SparkConfig):
+            self.use("spark_default")
+
+    def _run(self, scheduler, *args):
+        sql = " ".join(args)
+        data = None
+        if not self.echo_run:
+            func = mute_console_output_decorator(scheduler.execute)
+        else:
+            func = scheduler.execute
+        try:
+            return func(sql)
+        except:
+            traceback.print_exc()
 
     def run(self, *args):
         """
         Use `run <sql statement>` to execute a sql, e.g. `run select * from badges limit 10;`.
         It only can be used after choosing a task, i.e. executing `use <task name>` 
         """
-        sql = " ".join(args)
-        data = None
-        if not self.echo:
-            func = mute_console_output_decorator(self.scheduler.execute)
-        else:
-            func = self.scheduler.execute
-        try:
-            data = func(sql)
-        except:
-            traceback.print_exc()
-        print(data.to_string(index=False))
+        print(self._run(self.scheduler, *args).to_string(index=False))
 
-    def set_echo(self, false_or_true):
+    def run_comparison(self, *args):
+        print("Console default:")
+        st = time.time()
+        data = self._run(self.scheduler, *args)
+        print(data.to_string(index=False), "\nTime: %.4f ms" % (1000*(time.time()-st)))
+        for k, scheduler in self.compared_schedulers.items():
+            print(k + ":")
+            st = time.time()
+            data = self._run(scheduler, *args)
+            print(data.to_string(index=False), "\nTime: %.4f ms" % (1000*(time.time()-st)))
+
+    def set_echo(self, false_or_true, label = "all"):
         """
-        Set self.echo. If self.echo is True, all outputs will print to console. 
+        Set self.echo. If self.echo_use is True, all outputs in running 'use' command will print to console. 
         """
         arg = eval(false_or_true)
-        self.echo = arg
-        print(f"echo set to '{arg}'")
+        if label == "all":
+            self.echo_use = arg
+            self.echo_run = arg
+            print(f"echo_use and echo_run set to '{arg}'")
+        elif label == "use":
+            self.echo_use = arg
+            print(f"echo_use set to '{arg}'")
+        elif label == "run":
+            self.echo_run = arg
+            print(f"echo_run set to '{arg}'")
+        else:
+            raise KeyError("set_echo only accept 'all', 'run' or 'use'.")
 
     def console(self):
         """
