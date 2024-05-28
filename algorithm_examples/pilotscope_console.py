@@ -208,9 +208,15 @@ class PilotConsole:
         Use `run <sql statement>` to execute a sql, e.g. `run select * from badges limit 10;`.
         It only can be used after choosing a task, i.e. executing `use <task name>` 
         """
+        if self.scheduler is None:
+            print("No specific task or algorithm specified, please run  \"use <task name>\" first.")
+            return
         print(self._run(self.scheduler, *args).to_string(index=False))
 
     def run_comparison(self, *args):
+        if self.scheduler is None:
+            print("No specific task or algorithm specified, please run  \"use <task name>\" first.")
+            return
         print("Console default:")
         st = time.time()
         data = self._run(self.scheduler, *args)

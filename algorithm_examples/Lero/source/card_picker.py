@@ -3,7 +3,7 @@ class CardPicker():
                  swing_factor_lower_bound=0.1**2, swing_factor_upper_bound=10**2, swing_factor_step=10) -> None:
         self.rows_arr = rows_arr
         self.table_arr = table_arr
-
+        assert len(self.table_arr) > 0
         # Mapping the number of table in sub-query to the index of its cardinality in rows_arr
         self.table_num_2_card_idx_dict = {}
         for i, tables in enumerate(self.table_arr):

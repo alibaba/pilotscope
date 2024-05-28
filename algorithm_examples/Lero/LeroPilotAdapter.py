@@ -16,14 +16,22 @@ class CardsPickerModel():
         self.join_rel_tables = [x for x, b in zip(self.tables, self.isMultiTables) if b == True]
         self.join_rel_rows = [x for x, b in zip(self.rows, self.isMultiTables) if b == True]
         self.base_rel_rows = [x for x, b in zip(self.rows, self.isMultiTables) if b == False]
-        self.card_picker = CardPicker(self.join_rel_rows, self.join_rel_tables,
-                                self.swing_factor_lower_bound, self.swing_factor_upper_bound, self.swing_factor_step)
+        if len(self.join_rel_rows) > 0:
+            self.card_picker = CardPicker(self.join_rel_rows, self.join_rel_tables,
+                                    self.swing_factor_lower_bound, self.swing_factor_upper_bound, self.swing_factor_step)
+        else:
+            self.card_picker = None
         self.plan_card_replacer = PlanCardReplacer(self.join_rel_tables, self.join_rel_rows)
 
     def get_cards(self):
-        finish = self.card_picker.next()
-        new_cards = self.base_rel_rows + self.card_picker.get_card_list()
-        return finish, new_cards
+        if self.card_picker:
+            finish = self.card_picker.next()
+            new_cards = self.base_rel_rows + self.card_picker.get_card_list()
+            return finish, new_cards
+        else:
+            # No join_rel_rows, we do not need card_picker
+            return True, self.base_rel_rows
+        
     
     # Lero guides the optimizer to generate different plans by changing cardinalities,
     # but row count will be used as the input feature when predicting the plan score.
