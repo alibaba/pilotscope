@@ -28,3 +28,4 @@ PilotScopeDocs/*
 algorithm_examples/temp_log_of_pilotscope_console.txt
 *.DS_Store
 !PilotScope.pdf
+!SIGMOD Tutorial-Learned Query Optimizer.pdf
